@@ -1,56 +1,152 @@
+export type MacroReference = {
+  eventId: number;
+  macroId: number;
+};
+
 export type ObjectKind =
   | 'data-mask'
+  | 'soft-key-mask'
+  | 'key'
+  | 'button'
   | 'output-string'
-  | 'rectangle'
+  | 'output-number'
+  | 'output-rectangle'
+  | 'picture-graphic'
+  | 'font-attribute'
+  | 'line-attribute'
+  | 'fill-attribute'
+  | 'string-variable'
+  | 'number-variable';
+
+export type ToolMode =
+  | 'select'
+  | 'pan'
+  | 'data-mask'
+  | 'output-string'
+  | 'output-rectangle'
+  | 'button'
+  | 'output-number'
+  | 'picture-graphic';
+
+export type ReferenceKind =
   | 'line-attribute'
   | 'fill-attribute'
   | 'font-attribute'
-  | 'string-variable';
-
-export type ToolMode = 'select' | 'pan' | 'data-mask' | 'output-string' | 'rectangle';
-
-export type ReferenceKind = 'line-attribute' | 'fill-attribute' | 'font-attribute' | 'string-variable';
+  | 'string-variable'
+  | 'number-variable';
 
 export type EditorObject = {
+  // ── Core ────────────────────────────────────────────────────────────
   id: string;
   objectId: string;
   name: string;
   kind: ObjectKind;
   parentId?: string;
+  visible: boolean;
+  locked?: boolean;
+  notes?: string;
+  zIndex: number;
+
+  // ── Layout ──────────────────────────────────────────────────────────
   x: number;
   y: number;
   width: number;
   height: number;
+
+  // ── Editor display colors (CSS hex) ─────────────────────────────────
   backgroundColor: string;
   borderColor: string;
-  text?: string;
-  fontSize?: number;
-  visible: boolean;
-  hidden?: boolean;
-  locked?: boolean;
-  childObjectIds?: string[];
+
+  // ── Shared: container + macros ───────────────────────────────────────
+  childObjectIds?: string[];    // Data Mask, Key, Button children
+  macros?: MacroReference[];
+
+  // ── Data Mask (objectType 1) ─────────────────────────────────────────
   softKeyMaskId?: string;
   nextMaskId?: string;
   previousMaskId?: string;
-  lineAttributeId?: string;
-  fillAttributeId?: string;
-  lineColor?: number;
-  lineWidth?: number;
-  lineArt?: string;
-  fillType?: 'solid' | 'hollow' | 'horizontal' | 'vertical' | 'cross-hatch';
-  fillColor?: number;
+
+  // ── Soft Key Mask (objectType 4) ─────────────────────────────────────
+  keys?: string[];              // Key objectId references (ordered)
+  layoutPreview?: 'vertical' | 'horizontal';
+  softKeyCountPreview?: number;
+
+  // ── Key (objectType 5) ───────────────────────────────────────────────
+  icon?: string;                // Picture Graphic objectId
+  actionName?: string;
+  label?: string;
+
+  // ── Button (objectType 6) ────────────────────────────────────────────
+  keyCode?: number;             // uint8
+  buttonOptions?: number;       // uint8 bitfield (bit0=border, bit1=transparent bg)
+  enabled?: boolean;
+  onPressAction?: string;
+  onReleaseAction?: string;
+
+  // ── Output String (objectType 11) ────────────────────────────────────
+  text?: string;
   fontAttributeId?: string;
   stringVariableId?: string;
+  outputOptions?: number;       // uint8 (bit0=transparent bg)
   horizontalAlign?: 'left' | 'center' | 'right';
   verticalAlign?: 'top' | 'center' | 'bottom';
-  fontColor?: number;
-  fontType?: number;
-  fontStyle?: number;
+
+  // ── Output Number (objectType 12) ────────────────────────────────────
+  numberVariableId?: string;
+  offset?: number;              // int32
+  scale?: number;               // float
+  numberOfDecimals?: number;    // uint8
+  numberFormat?: number;        // uint8 (0=decimal, 1=hex)
+  value?: number;               // uint32 — also used by Number Variable
+
+  // ── Output Rectangle (objectType 14) ─────────────────────────────────
+  lineAttributeId?: string;
+  fillAttributeId?: string;
+  lineSuppression?: number;     // uint8 bitmask – hide sides
+
+  // ── Picture Graphic (objectType 20) ──────────────────────────────────
+  actualWidth?: number;         // uint16
+  actualHeight?: number;        // uint16
+  graphicFormat?: number;       // uint8
+  graphicOptions?: number;      // uint8
+  transparencyColor?: number;   // uint8 palette index
+  rawData?: number[];           // byte[]
+  sourceImagePath?: string;
+  previewUrl?: string;
+  originalFormat?: 'png' | 'jpg' | 'svg';
+  convertedPalette?: number[];
+
+  // ── Font Attribute (objectType 23) ───────────────────────────────────
+  fontColor?: number;           // uint8 VT palette index
+  fontType?: number;            // uint8
+  fontStyle?: number;           // uint8 bitfield (1=bold, 2=italic, 4=underline)
   proportional?: boolean;
   fontWidth?: number;
   fontHeight?: number;
+  fontSize?: number;            // CSS helper for rendering
+
+  // ── Line Attribute (objectType 24) ───────────────────────────────────
+  lineColor?: number;           // uint8 VT palette index
+  lineWidth?: number;           // uint8
+  lineArt?: string;             // uint16 hex string (0xFFFF=solid)
+
+  // ── Fill Attribute (objectType 25) ───────────────────────────────────
+  fillType?: number;            // uint8: 0=no fill, 1=line color, 2=fill color, 3=pattern
+  fillColor?: number;           // uint8 VT palette index
+  fillPattern?: string;         // Picture Graphic objectId (for fillType=3)
+
+  // ── String Variable (objectType 22) ──────────────────────────────────
   stringValue?: string;
-  zIndex: number;
+  maxLength?: number;
+
+  // ── Number Variable (objectType 21) ──────────────────────────────────
+  // value (uint32) shared with Output Number above
+  unit?: string;
+  minPreview?: number;
+  maxPreview?: number;
+
+  // ── Editor-only helpers ───────────────────────────────────────────────
+  hidden?: boolean;
 };
 
 export type WorkingSet = {
@@ -62,6 +158,8 @@ export type WorkingSet = {
   activeDataMaskId: string;
   activeSoftKeyMaskId: string;
   backgroundColor: string;
+  selectable?: boolean;
+  description?: string;
   visible: boolean;
 };
 

@@ -17,7 +17,7 @@ export function ToolButton({ children, active, onClick, title }: { children: Rea
   return (
     <button
       title={title}
-      className={`tool-button ${active ? 'active' : ''}`}
+      className={`canvas-tool-button ${active ? 'active' : ''}`}
       onPointerDown={(event) => event.stopPropagation()}
       onClick={(event) => {
         event.stopPropagation();

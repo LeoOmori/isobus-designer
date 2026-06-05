@@ -403,9 +403,8 @@ button.list-row {
 
 .canvas-toolbar {
   position: absolute;
-  top: 50%;
+  top: 16px;
   left: 312px; /* 16px sidebar + 280px width + 16px gap */
-  transform: translateY(-50%);
   z-index: 50;
   display: flex;
   flex-direction: column;
@@ -418,7 +417,7 @@ button.list-row {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
-.tool-button {
+.canvas-tool-button {
   width: 28px;
   height: 28px;
   display: grid;
@@ -426,12 +425,12 @@ button.list-row {
   border-radius: 6px;
 }
 
-.tool-button svg {
+.canvas-tool-button svg {
   width: 16px;
   height: 16px;
 }
 
-.tool-button.active {
+.canvas-tool-button.active {
   color: #2563EB;
   background: rgba(37, 99, 235, 0.08);
 }
@@ -494,6 +493,13 @@ button.list-row {
 
 .canvas-object {
   touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.canvas-object img {
+  user-select: none;
+  -webkit-user-drag: none;
+  pointer-events: none; /* let pointer events fall through to the parent div */
 }
 
 .object-output-string {
@@ -966,4 +972,126 @@ button.list-row {
 @media (max-height: 900px) {
   .left-sidebar .panel:first-child { height: 360px; }
   .right-sidebar .panel:first-child { height: 520px; }
+}
+
+/* ── Soft Key Mask canvas strip ────────────────────────────────────────── */
+.vt-soft-key-mask {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  background: #e8edf4;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+}
+
+.soft-key-slot {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: background 0.1s;
+  min-height: 0;
+}
+
+.soft-key-slot:last-child {
+  border-bottom: none;
+}
+
+.soft-key-slot:hover {
+  background: #eef2f7;
+}
+
+.soft-key-slot.key-selected {
+  outline: 2px solid #2563EB;
+  outline-offset: -2px;
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.soft-key-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-align: center;
+  color: #1f2937;
+  padding: 2px 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+}
+
+.soft-key-empty {
+  font-size: 13px;
+  font-weight: 600;
+  color: #d1d5db;
+  font-variant-numeric: tabular-nums;
+}
+
+/* tool cursor hints */
+.stage.tool-button          { cursor: crosshair; }
+.stage.tool-output-number   { cursor: crosshair; }
+.stage.tool-picture-graphic { cursor: crosshair; }
+.stage.tool-output-string   { cursor: text; }
+.stage.tool-output-rectangle { cursor: crosshair; }
+
+/* ── Picture Graphic upload & preview ────────────────────────────────────── */
+.pic-upload-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: #f1f5f9;
+  border: 1px solid #dce4ee;
+  border-radius: 6px;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.pic-upload-button:hover {
+  background: #e2e8f0;
+}
+
+.pic-preview-wrap {
+  margin: 8px 14px 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.pic-preview-img {
+  max-width: 100%;
+  max-height: 180px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: repeating-conic-gradient(#f1f5f9 0% 25%, #fff 0% 50%) 0 0 / 16px 16px;
+  object-fit: contain;
+}
+
+.pic-preview-empty {
+  width: 100%;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9ca3af;
+  font-size: 12px;
+  border: 1px dashed #dce4ee;
+  border-radius: 6px;
+  background: #fafbfc;
+}
+
+.pic-preview-size {
+  font-size: 10px;
+  color: #9ca3af;
+  font-weight: 500;
 }
