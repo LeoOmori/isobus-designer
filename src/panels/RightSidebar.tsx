@@ -38,6 +38,7 @@ export function RightSidebar({
           <WorkingSetProperties
             workingSet={project.workingSet}
             masks={masks}
+            objects={project.objects}
             onPatch={onPatchWorkingSet}
           />
         ) : (

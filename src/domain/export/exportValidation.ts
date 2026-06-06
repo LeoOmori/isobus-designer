@@ -121,6 +121,19 @@ export function validateForExport(project: ProjectState): string[] {
     }
   }
 
+  // ── Designator objects ────────────────────────────────────────────────────
+  for (const des of workingSet.designatorObjects ?? []) {
+    if (!des.objectId) {
+      errors.push('Export: Working Set designator entry has no object selected');
+      continue;
+    }
+    const obj = objects.find((o) => o.id === des.objectId);
+    if (!obj) {
+      errors.push(`Export: Working Set designator "${des.objectId}" not found in the object pool`);
+      continue;
+    }
+  }
+
   // ── Macros: unsupported in V1 ────────────────────────────────────────────
   for (const obj of objects) {
     if ((obj.macros ?? []).length > 0) {

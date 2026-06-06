@@ -563,6 +563,53 @@ button.list-row {
   font-size: 11px;
 }
 
+.field-btn {
+  display: block;
+  margin: 8px 14px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid #d0d5dd;
+  border-radius: 5px;
+  background: #f9fafb;
+  cursor: pointer;
+  color: #374151;
+}
+.field-btn:hover {
+  background: #eef0f4;
+}
+
+.designator-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 6px 14px;
+  border-bottom: 1px solid #eef0f4;
+}
+.designator-row:last-child {
+  border-bottom: none;
+}
+.designator-fields {
+  flex: 1;
+  min-width: 0;
+}
+.designator-remove {
+  flex-shrink: 0;
+  margin-top: 18px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 3px 5px;
+  cursor: pointer;
+  color: #9ca3af;
+  line-height: 1;
+}
+.designator-remove:hover {
+  color: #ef4444;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
 .inline-text-editor {
   min-width: 1ch;
   max-width: 100%;

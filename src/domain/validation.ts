@@ -310,9 +310,16 @@ export function validate(project: ProjectState): string[] {
   }
 
   // Working set activeMask must be valid
-  const { activeDataMaskId } = project.workingSet;
+  const { activeDataMaskId, designatorObjects } = project.workingSet;
   if (activeDataMaskId && !project.objects.some((o) => o.id === activeDataMaskId && o.kind === 'data-mask')) {
     errors.push(`Working Set: activeDataMaskId "${activeDataMaskId}" not found`);
+  }
+
+  // Working set designator objects must reference existing objects
+  for (const des of designatorObjects ?? []) {
+    if (des.objectId && !project.objects.some((o) => o.id === des.objectId)) {
+      errors.push(`Working Set: designator object "${des.objectId}" not found`);
+    }
   }
 
   return errors;

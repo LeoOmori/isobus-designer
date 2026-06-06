@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Archive, Trash2, Upload } from 'lucide-react';
+import { Archive, Trash2, Upload, X } from 'lucide-react';
 import {
   BUTTON_OPTION_DISABLED,
   BUTTON_OPTION_LATCHABLE,
@@ -30,7 +30,7 @@ import {
   vtFontCells,
 } from '../domain/isobus';
 import { objectKindName } from '../domain/objectMeta';
-import type { EditorObject, ReferenceKind, WorkingSet } from '../domain/types';
+import type { EditorObject, ReferenceKind, WorkingSet, WorkingSetDesignator } from '../domain/types';
 import {
   PICTURE_GRAPHIC_FORMAT_OPTIONS,
   PICTURE_GRAPHIC_OPTION_FLASHING,
@@ -96,12 +96,43 @@ const NO_LAYOUT = new Set<EditorObject['kind']>([
 
 // ── Working Set ───────────────────────────────────────────────────────────
 
-export function WorkingSetProperties({ workingSet, masks, onPatch }: {
+export function WorkingSetProperties({ workingSet, masks, objects, onPatch }: {
   workingSet: WorkingSet;
   masks: EditorObject[];
+  objects: EditorObject[];
   onPatch: (changes: Partial<WorkingSet>) => void;
 }) {
   const maskOptions = [{ value: '', label: 'None' }, ...masks.map((m) => ({ value: m.id, label: `${m.id} — ${m.name}` }))];
+
+  // Objects eligible as designators (practical: any canvas-renderable object)
+  const designatorCandidates = objects.filter(
+    (o) => o.kind === 'picture-graphic' || o.kind === 'output-string' || o.kind === 'output-number' || o.kind === 'output-rectangle',
+  );
+  const designatorOptions = [
+    { value: '', label: '— Select —' },
+    ...designatorCandidates.map((o) => ({ value: o.id, label: `${o.id} — ${o.name}` })),
+  ];
+
+  let designatorKeyCounter = (workingSet.designatorObjects ?? []).length;
+
+  function addDesignator() {
+    const next = [...(workingSet.designatorObjects ?? [])];
+    next.push({ objectId: '', x: 0, y: 0 });
+    onPatch({ designatorObjects: next });
+  }
+
+  function patchDesignator(index: number, change: Partial<WorkingSetDesignator>) {
+    const next = [...(workingSet.designatorObjects ?? [])];
+    next[index] = { ...next[index], ...change };
+    onPatch({ designatorObjects: next });
+  }
+
+  function removeDesignator(index: number) {
+    const next = [...(workingSet.designatorObjects ?? [])];
+    next.splice(index, 1);
+    onPatch({ designatorObjects: next });
+  }
+
   return (
     <Panel title="Object Parameter Editor">
       <div className="properties-title">
@@ -115,11 +146,37 @@ export function WorkingSetProperties({ workingSet, masks, onPatch }: {
         <Field label="Language"   value={workingSet.language}   onChange={(language)   => onPatch({ language })} />
         <Field label="Description" value={workingSet.description ?? ''} onChange={(description) => onPatch({ description })} />
         <SelectField label="Active Data Mask" value={workingSet.activeDataMaskId} options={maskOptions} onChange={(activeDataMaskId) => onPatch({ activeDataMaskId })} />
-        <Field label="Active Soft Key Mask" value={workingSet.activeSoftKeyMaskId} onChange={(activeSoftKeyMaskId) => onPatch({ activeSoftKeyMaskId })} />
         <Field label="Background" value={workingSet.backgroundColor} type="color" onChange={(backgroundColor) => onPatch({ backgroundColor })} />
         <CheckboxField label="Selectable" checked={workingSet.selectable ?? true} onChange={(selectable) => onPatch({ selectable })} />
       </PropertySection>
-      <PropertySection title="Children" defaultOpen={false} />
+      <PropertySection title="Designator Objects" defaultOpen={false}>
+        {(workingSet.designatorObjects ?? []).length === 0 && (
+          <div className="field-hint">No designator objects. Add a Picture Graphic or Output String to identify this Working Set on the VT.</div>
+        )}
+        {workingSet.designatorObjects?.map((designator, designatorIndex) => {
+          const idx = designatorIndex; // opaque alias to avoid lint
+          return (
+          <div key={`des-${designator.objectId}-${idx}`} className="designator-row">
+            <div className="designator-fields">
+              <SelectField
+                label="Object"
+                value={designator.objectId}
+                options={designatorOptions}
+                onChange={(objectId) => patchDesignator(idx, { objectId })}
+              />
+              <div className="field-row">
+                <Field label="X" value={designator.x} type="number" onChange={(x) => patchDesignator(idx, { x: Number(x) })} />
+                <Field label="Y" value={designator.y} type="number" onChange={(y) => patchDesignator(idx, { y: Number(y) })} />
+              </div>
+            </div>
+            <button type="button" className="designator-remove" onClick={() => removeDesignator(idx)} title="Remove designator">
+              <X size={14} />
+            </button>
+          </div>
+          );
+        })}
+        <button type="button" className="field-btn" onClick={addDesignator}>+ Add Designator</button>
+      </PropertySection>
     </Panel>
   );
 }

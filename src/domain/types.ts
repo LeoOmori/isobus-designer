@@ -155,6 +155,15 @@ export type EditorObject = {
   // ── Editor-only helpers ───────────────────────────────────────────────
 };
 
+export type WorkingSetDesignator = {
+  /** Editor id of the designator object (Picture Graphic, Output String, etc.) */
+  objectId: string;
+  /** X position within the Soft Key designator area (int16) */
+  x: number;
+  /** Y position within the Soft Key designator area (int16) */
+  y: number;
+};
+
 export type WorkingSet = {
   id: 'WS_1';
   objectId: string;
@@ -162,11 +171,14 @@ export type WorkingSet = {
   version: string;
   language: string;
   activeDataMaskId: string;
+  /** Editor-only — not written to ISO record. Tracks which SKM new keys are added to. */
   activeSoftKeyMaskId: string;
   backgroundColor: string;
   selectable?: boolean;
   description?: string;
   visible: boolean;
+  /** Objects used as Working Set identifier/designator in the VT Soft Key area. */
+  designatorObjects: WorkingSetDesignator[];
 };
 
 export type ProjectState = {
