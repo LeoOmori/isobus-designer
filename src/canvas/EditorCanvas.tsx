@@ -1,6 +1,8 @@
 import { Fragment, type PointerEvent, type WheelEvent, useCallback, useRef, useState } from 'react';
 import {
   OUTPUT_STRING_OPTION_AUTO_WRAP, OUTPUT_STRING_OPTION_TRANSPARENT, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
+  RECTANGLE_LINE_SUPPRESSION_BOTTOM, RECTANGLE_LINE_SUPPRESSION_LEFT,
+  RECTANGLE_LINE_SUPPRESSION_RIGHT, RECTANGLE_LINE_SUPPRESSION_TOP,
   clamp, fillTypeToBackground, fontCellScaleX, formatOutputNumber,
   horizontalJustificationToFlex, lineArtToCss, snap,
   textJustificationTransformOrigin, verticalJustificationToFlex, vtColor,
@@ -59,13 +61,13 @@ export function EditorCanvas({
     };
   }, [viewport]);
 
-  const screenToMask = useCallback((clientX: number, clientY: number, mask = activeMask) => {
+  const screenToMask = useCallback((clientX: number, clientY: number, mask: EditorObject) => {
     const world = screenToWorld(clientX, clientY);
     return { x: world.x - mask.x, y: world.y - mask.y };
-  }, [activeMask, screenToWorld]);
+  }, [screenToWorld]);
 
   /** Returns the topmost visible Data Mask under the pointer, or the active mask. */
-  function findMaskAt(clientX: number, clientY: number): EditorObject {
+  function findMaskAt(clientX: number, clientY: number): EditorObject | undefined {
     const world = screenToWorld(clientX, clientY);
     return [...masks]
       .sort((a, b) => b.zIndex - a.zIndex)
@@ -76,7 +78,8 @@ export function EditorCanvas({
   }
 
   /** Shared canvas-tool create + reset helper. */
-  function createOnMask(clientX: number, clientY: number, mask: EditorObject) {
+  function createOnMask(clientX: number, clientY: number, mask: EditorObject | undefined) {
+    if (!mask) return;
     const point = screenToMask(clientX, clientY, mask);
     onSelect(mask.id);
     onCreateObject(tool as ObjectKind, snap(point.x), snap(point.y), mask.id);
@@ -110,7 +113,7 @@ export function EditorCanvas({
       createOnMask(event.clientX, event.clientY, findMaskAt(event.clientX, event.clientY));
       return;
     }
-    onSelect(activeMask.id);
+    if (activeMask) onSelect(activeMask.id);
   }
 
   // ── Mask background pointer down ──────────────────────────────────────
@@ -193,13 +196,38 @@ export function EditorCanvas({
     let borderColor: string | undefined;
     let borderWidth: number | undefined;
     let borderStyle: string | undefined;
+    let borderTopWidth: number | undefined;
+    let borderRightWidth: number | undefined;
+    let borderBottomWidth: number | undefined;
+    let borderLeftWidth: number | undefined;
+    let backgroundImage: string | undefined;
+    let backgroundRepeat: string | undefined;
     let background: string | undefined;
+    let boxSizing: 'border-box' | undefined;
 
     if (object.kind === 'output-rectangle') {
+      const lineWidth = line?.lineWidth ?? 1;
+      const suppression = object.lineSuppression ?? 0;
+      const pattern = fill?.fillType === 3 && fill.fillPattern
+        ? project.objects.find((candidate) => candidate.kind === 'picture-graphic' && (candidate.id === fill.fillPattern || candidate.objectId === fill.fillPattern))
+        : undefined;
+      const patternUrl = pattern ? pictureGraphicToDataUrl(pattern) : null;
+
       borderColor = vtColor(line?.lineColor ?? 0);
-      borderWidth = line?.lineWidth ?? 1;
       borderStyle = lineArtToCss(line?.lineArt);
-      background  = fillTypeToBackground(fill?.fillType, vtColor(fill?.fillColor ?? 15));
+      borderTopWidth = (suppression & RECTANGLE_LINE_SUPPRESSION_TOP) !== 0 ? 0 : lineWidth;
+      borderRightWidth = (suppression & RECTANGLE_LINE_SUPPRESSION_RIGHT) !== 0 ? 0 : lineWidth;
+      borderBottomWidth = (suppression & RECTANGLE_LINE_SUPPRESSION_BOTTOM) !== 0 ? 0 : lineWidth;
+      borderLeftWidth = (suppression & RECTANGLE_LINE_SUPPRESSION_LEFT) !== 0 ? 0 : lineWidth;
+      boxSizing = 'border-box';
+
+      if (!fill) background = 'transparent';
+      else if (fill.fillType === 1) background = vtColor(line?.lineColor ?? 0);
+      else if (fill.fillType === 3 && patternUrl) {
+        background = 'transparent';
+        backgroundImage = `url(${patternUrl})`;
+        backgroundRepeat = 'repeat';
+      } else background = fillTypeToBackground(fill.fillType, vtColor(fill.fillColor ?? 15));
     } else if (object.kind === 'button') {
       const hasBorder = ((object.buttonOptions ?? 1) & 1) !== 0;
       borderColor = hasBorder ? '#4b5563' : 'transparent';
@@ -234,7 +262,10 @@ export function EditorCanvas({
         className={`canvas-object object-${object.kind} ${selected ? 'selected-object' : ''}`}
         style={{
           left: object.x, top: object.y, width: object.width, height: object.height,
-          background, borderColor, borderWidth, borderStyle,
+          background, backgroundImage, backgroundRepeat,
+          borderColor, borderWidth, borderStyle,
+          borderTopWidth, borderRightWidth, borderBottomWidth, borderLeftWidth,
+          boxSizing,
           zIndex: 20 + object.zIndex,
           fontSize: fontSizePx,
           fontFamily: (object.kind === 'output-string' || object.kind === 'output-number') && font?.proportional === false

@@ -46,7 +46,8 @@ export function createEditorObject(
   const id = `${KIND_PREFIX[kind]}_${n}`;
 
   const activeMask = current.objects.find((o) => o.id === parentMaskId)
-    ?? current.objects.find((o) => o.id === current.activeMaskId)!;
+    ?? current.objects.find((o) => o.id === current.activeMaskId)
+    ?? { id: '', x: 0, y: 0, width: 480, height: 480 } as Pick<EditorObject, 'id' | 'x' | 'y' | 'width' | 'height'>;
 
   const isRef       = REFERENCE_KINDS.has(kind);
   const isContainer = CONTAINER_KINDS.has(kind);
@@ -69,7 +70,7 @@ export function createEditorObject(
     objectId: toObjectId(n),
     name: `${objectKindName(kind)} ${n}`,
     kind,
-    parentId: isCanvas ? activeMask.id : undefined,
+    parentId: isCanvas && activeMask.id ? activeMask.id : undefined,
     visible: true,
     locked: isContainer ? false : undefined,
     zIndex: current.objects.length + 1,
@@ -135,9 +136,8 @@ export function createEditorObject(
 
     // ── Output Rectangle ─────────────────────────────────────────────────
     lineAttributeId:  kind === 'output-rectangle' ? (defaultLine?.id ?? '') : undefined,
-    fillAttributeId:  kind === 'output-rectangle' ? (defaultFill?.id ?? '') : undefined,
+    fillAttributeId:  kind === 'output-rectangle' ? (defaultFill?.id ?? null) : undefined,
     lineSuppression:  kind === 'output-rectangle' ? 0 : undefined,
-    hidden:           kind === 'output-rectangle' ? false : undefined,
 
     // ── Picture Graphic ──────────────────────────────────────────────────
     targetWidth:      kind === 'picture-graphic' ? 64  : undefined,

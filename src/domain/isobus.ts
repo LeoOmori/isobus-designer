@@ -51,6 +51,11 @@ export const OUTPUT_STRING_OPTION_TRANSPARENT = 1 << 0;
 export const OUTPUT_STRING_OPTION_AUTO_WRAP = 1 << 1;
 export const OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN = 1 << 2;
 
+export const RECTANGLE_LINE_SUPPRESSION_TOP = 1 << 0;
+export const RECTANGLE_LINE_SUPPRESSION_RIGHT = 1 << 1;
+export const RECTANGLE_LINE_SUPPRESSION_BOTTOM = 1 << 2;
+export const RECTANGLE_LINE_SUPPRESSION_LEFT = 1 << 3;
+
 export type HorizontalJustification = 0 | 1 | 2;
 export type VerticalJustification = 0 | 1 | 2;
 

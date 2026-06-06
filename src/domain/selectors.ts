@@ -12,7 +12,8 @@ export const referenceKinds = [
 ] as const;
 
 export function getActiveMask(project: ProjectState) {
-  return project.objects.find((o) => o.id === project.activeMaskId)!;
+  return project.objects.find((o) => o.id === project.activeMaskId && o.kind === 'data-mask')
+    ?? project.objects.find((o) => o.kind === 'data-mask');
 }
 
 /** Children of a Data Mask that should be rendered on the canvas. */
@@ -20,11 +21,11 @@ export function getCanvasChildren(project: ProjectState, maskId: string) {
   const mask = project.objects.find((o) => o.id === maskId);
   const childIds = new Set(mask?.childObjectIds ?? []);
   return project.objects
-    .filter((o) => childIds.has(o.id) && o.visible && !o.hidden && !referenceKinds.includes(o.kind as typeof referenceKinds[number]))
+    .filter((o) => childIds.has(o.id) && o.visible && !referenceKinds.includes(o.kind as typeof referenceKinds[number]))
     .sort((a, b) => a.zIndex - b.zIndex);
 }
 
-/** All children of a Data Mask including hidden/attribute children (for the tree view). */
+/** All children of a Data Mask including attribute children (for the tree view). */
 export function getMaskChildren(project: ProjectState, maskId: string) {
   const mask = project.objects.find((o) => o.id === maskId);
   const childIds = new Set(mask?.childObjectIds ?? []);

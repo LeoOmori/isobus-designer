@@ -86,11 +86,20 @@ export function validate(project: ProjectState): string[] {
 
     // Output Rectangle must reference Line and Fill Attributes
     if (obj.kind === 'output-rectangle') {
-      if (obj.lineAttributeId && objectById.get(obj.lineAttributeId)?.kind !== 'line-attribute') {
+      if (!obj.lineAttributeId) {
+        errors.push(`Output Rectangle ${obj.id}: lineAttributeId is required`);
+      } else if (objectById.get(obj.lineAttributeId)?.kind !== 'line-attribute') {
         errors.push(`Output Rectangle ${obj.id}: unknown lineAttributeId "${obj.lineAttributeId}"`);
       }
       if (obj.fillAttributeId && objectById.get(obj.fillAttributeId)?.kind !== 'fill-attribute') {
         errors.push(`Output Rectangle ${obj.id}: unknown fillAttributeId "${obj.fillAttributeId}"`);
+      }
+      const lineSuppression = obj.lineSuppression ?? 0;
+      if (!Number.isInteger(lineSuppression) || lineSuppression < 0 || lineSuppression > 0x0f) {
+        errors.push(`Output Rectangle ${obj.id}: lineSuppression must be a 4-bit value`);
+      }
+      if (!Number.isInteger(obj.width) || obj.width <= 0 || obj.width > 0xffff || !Number.isInteger(obj.height) || obj.height <= 0 || obj.height > 0xffff) {
+        errors.push(`Output Rectangle ${obj.id}: width/height must fit uint16`);
       }
     }
 
@@ -135,11 +144,6 @@ export function validate(project: ProjectState): string[] {
         errors.push(`Data Mask ${obj.id}: softKeyMaskId "${obj.softKeyMaskId}" not found`);
       }
     }
-  }
-
-  // Must have at least one Data Mask
-  if (!project.objects.some((o) => o.kind === 'data-mask')) {
-    errors.push('Project must have at least one Data Mask');
   }
 
   // Working set activeMask must be valid

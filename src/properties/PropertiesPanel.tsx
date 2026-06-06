@@ -4,6 +4,10 @@ import {
   OUTPUT_STRING_OPTION_AUTO_WRAP,
   OUTPUT_STRING_OPTION_TRANSPARENT,
   OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
+  RECTANGLE_LINE_SUPPRESSION_BOTTOM,
+  RECTANGLE_LINE_SUPPRESSION_LEFT,
+  RECTANGLE_LINE_SUPPRESSION_RIGHT,
+  RECTANGLE_LINE_SUPPRESSION_TOP,
   VT_FILL_TYPE_OPTIONS,
   VT_H_JUSTIFY_OPTIONS,
   VT_NUMBER_FORMAT_OPTIONS,
@@ -46,6 +50,14 @@ function variableReferenceOptions(objects: EditorObject[]) {
     { value: '__null', label: 'NULL — use local text' },
     ...objects.filter((o) => o.kind === 'string-variable').map((o) => ({ value: o.id, label: `${o.id} — ${o.name}` })),
     { value: '__create_string-variable', label: '+ Create String Variable' },
+  ];
+}
+
+function nullableFillAttributeOptions(objects: EditorObject[]) {
+  return [
+    { value: '__null', label: 'NULL — no fill' },
+    ...objects.filter((o) => o.kind === 'fill-attribute').map((o) => ({ value: o.id, label: `${o.id} — ${o.name}` })),
+    { value: '__create_fill-attribute', label: '+ Create Fill Attribute' },
   ];
 }
 
@@ -112,10 +124,10 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
   const skmOptions     = [{ value: '', label: 'None' }, ...softKeyMasks.map((s) => ({ value: s.id, label: `${s.id} — ${s.name}` }))];
 
   const lineAttrOpts   = referenceOptions(objects, 'line-attribute',   '+ Create Line Attribute',   '__create_line-attribute');
-  const fillAttrOpts   = referenceOptions(objects, 'fill-attribute',   '+ Create Fill Attribute',   '__create_fill-attribute');
   const fontAttrOpts   = referenceOptions(objects, 'font-attribute',   '+ Create Font Attribute',   '__create_font-attribute');
   const numVarOpts     = referenceOptions(objects, 'number-variable',  '+ Create Number Variable',  '__create_number-variable');
   const outputStringVariableOpts = variableReferenceOptions(objects);
+  const nullableFillAttrOpts = nullableFillAttributeOptions(objects);
 
   function handleRefSelect(value: string, createPrefix: string, refKind: ReferenceKind, patchFn: (id: string) => Partial<EditorObject>) {
     if (value.startsWith('__create_')) return onCreateAttributeReference(refKind);
@@ -160,9 +172,6 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
           <CheckboxField label="Visible" checked={selectedObject.visible} onChange={(visible) => onPatch({ visible })} />
           {(kind === 'data-mask' || kind === 'soft-key-mask') && (
             <CheckboxField label="Locked" checked={selectedObject.locked ?? false} onChange={(locked) => onPatch({ locked })} />
-          )}
-          {kind === 'output-rectangle' && (
-            <CheckboxField label="Hidden" checked={selectedObject.hidden ?? false} onChange={(hidden) => onPatch({ hidden, visible: !hidden })} />
           )}
         </PropertySection>
       )}
@@ -252,11 +261,19 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
 
       {/* ── Output Rectangle ──────────────────────────────────────────── */}
       {kind === 'output-rectangle' && (
-        <PropertySection title="Appearance">
-          <Field label="Line Suppression" value={selectedObject.lineSuppression ?? 0} type="number" onChange={(v) => onPatch({ lineSuppression: Number(v) })} />
-          <SelectField label="Line Attribute" value={selectedObject.lineAttributeId ?? ''} options={lineAttrOpts} onChange={(v) => handleRefSelect(v, '__create_line-attribute', 'line-attribute', (id) => ({ lineAttributeId: id }))} />
-          <SelectField label="Fill Attribute" value={selectedObject.fillAttributeId ?? ''} options={fillAttrOpts} onChange={(v) => handleRefSelect(v, '__create_fill-attribute', 'fill-attribute', (id) => ({ fillAttributeId: id }))} />
-        </PropertySection>
+        <>
+          <PropertySection title="Appearance">
+            <SelectField label="Line Attribute" value={selectedObject.lineAttributeId ?? ''} options={lineAttrOpts} onChange={(v) => handleRefSelect(v, '__create_line-attribute', 'line-attribute', (id) => ({ lineAttributeId: id }))} />
+            <SelectField label="Fill Attribute" value={selectedObject.fillAttributeId ?? '__null'} options={nullableFillAttrOpts} onChange={(v) => handleRefSelect(v, '__create_fill-attribute', 'fill-attribute', (id) => ({ fillAttributeId: id === '__null' ? null : id }))} />
+          </PropertySection>
+          <PropertySection title="Line Suppression">
+            <CheckboxField label="Top" checked={((selectedObject.lineSuppression ?? 0) & RECTANGLE_LINE_SUPPRESSION_TOP) !== 0} onChange={(v) => onPatch({ lineSuppression: patchBit(selectedObject.lineSuppression, RECTANGLE_LINE_SUPPRESSION_TOP, v) })} />
+            <CheckboxField label="Right" checked={((selectedObject.lineSuppression ?? 0) & RECTANGLE_LINE_SUPPRESSION_RIGHT) !== 0} onChange={(v) => onPatch({ lineSuppression: patchBit(selectedObject.lineSuppression, RECTANGLE_LINE_SUPPRESSION_RIGHT, v) })} />
+            <CheckboxField label="Bottom" checked={((selectedObject.lineSuppression ?? 0) & RECTANGLE_LINE_SUPPRESSION_BOTTOM) !== 0} onChange={(v) => onPatch({ lineSuppression: patchBit(selectedObject.lineSuppression, RECTANGLE_LINE_SUPPRESSION_BOTTOM, v) })} />
+            <CheckboxField label="Left" checked={((selectedObject.lineSuppression ?? 0) & RECTANGLE_LINE_SUPPRESSION_LEFT) !== 0} onChange={(v) => onPatch({ lineSuppression: patchBit(selectedObject.lineSuppression, RECTANGLE_LINE_SUPPRESSION_LEFT, v) })} />
+            <CheckboxField label="Suppress all" checked={(selectedObject.lineSuppression ?? 0) === 0b1111} onChange={(v) => onPatch({ lineSuppression: v ? 0b1111 : 0 })} />
+          </PropertySection>
+        </>
       )}
 
       {/* ── Picture Graphic ───────────────────────────────────────────── */}

@@ -33,7 +33,7 @@ export function RightSidebar({
         onToggleWorkingSetVisible={onToggleWorkingSetVisible}
         onDelete={onDelete}
       />
-      {selectedId === project.workingSet.id
+      {selectedId === project.workingSet.id || !selectedObject
         ? (
           <WorkingSetProperties
             workingSet={project.workingSet}

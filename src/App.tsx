@@ -24,7 +24,7 @@ const CANVAS_KINDS = new Set<ObjectKind>([
 
 export function App() {
   const { project, setProject, commit, undo, redo, canUndo, canRedo } = useProjectState();
-  const [selectedId, setSelectedId] = useState(project.activeMaskId);
+  const [selectedId, setSelectedId] = useState(project.activeMaskId || project.workingSet.id);
   const [tool, setTool] = useState<ToolMode>('select');
   const [viewport, setViewport] = useState<Viewport>({ x: 200, y: 100, zoom: 0.85 });
   const errors = validate(project);
@@ -204,10 +204,10 @@ export function App() {
         });
 
       const activeMaskId = deleteIds.has(current.activeMaskId)
-        ? objects.find((o) => o.kind === 'data-mask')!.id
+        ? objects.find((o) => o.kind === 'data-mask')?.id ?? ''
         : current.activeMaskId;
 
-      setSelectedId(activeMaskId);
+      setSelectedId(activeMaskId || current.workingSet.id);
       return { ...current, activeMaskId, workingSet: { ...current.workingSet, activeDataMaskId: activeMaskId }, objects };
     });
   }
@@ -219,6 +219,7 @@ export function App() {
     const activeMask = project.objects.find((o) => o.id === project.activeMaskId);
     const activeChildIds = new Set(activeMask?.childObjectIds ?? []);
     const siblings = project.objects.filter((o) => activeChildIds.has(o.id));
+    if (!siblings.length) return;
     const max = Math.max(...siblings.map((o) => o.zIndex));
     const min = Math.min(...siblings.map((o) => o.zIndex));
     const next = action === 'front'    ? max + 1
@@ -234,7 +235,7 @@ export function App() {
       <TopToolbar
         zoom={viewport.zoom}
         onZoom={(zoom) => setViewport({ ...viewport, zoom: clamp(zoom, 0.25, 3) })}
-        onReset={() => { setProject(initialProject); setSelectedId('DM_1'); }}
+        onReset={() => { setProject(initialProject); setSelectedId(initialProject.workingSet.id); }}
         onUndo={undo}
         onRedo={redo}
         canUndo={canUndo}

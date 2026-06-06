@@ -106,7 +106,7 @@ export type EditorObject = {
 
   // ── Output Rectangle (objectType 14) ─────────────────────────────────
   lineAttributeId?: string;
-  fillAttributeId?: string;
+  fillAttributeId?: string | null;   // null = 0xFFFF NULL = no fill
   lineSuppression?: number;     // uint8 bitmask – hide sides
 
   // ── Picture Graphic (objectType 20) ──────────────────────────────────
@@ -150,7 +150,6 @@ export type EditorObject = {
   maxPreview?: number;
 
   // ── Editor-only helpers ───────────────────────────────────────────────
-  hidden?: boolean;
 };
 
 export type WorkingSet = {
