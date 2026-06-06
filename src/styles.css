@@ -473,8 +473,7 @@ button.list-row {
   border-radius: 0;
 }
 
-.canvas-text,
-.object-output-string {
+.canvas-text {
   font-weight: 700;
   letter-spacing: -.03em;
 }
@@ -509,6 +508,21 @@ button.list-row {
   border: 1px solid transparent;
   overflow: hidden;
   white-space: pre-wrap;
+}
+
+.object-output-number {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  border: 1px solid transparent;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.field-hint {
+  margin: -4px 14px 8px;
+  color: #64748b;
+  font-size: 11px;
 }
 
 .inline-text-editor {

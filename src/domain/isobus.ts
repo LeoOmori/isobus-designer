@@ -47,18 +47,25 @@ export const VT_NUMBER_FORMAT_OPTIONS = [
   { value: 1, label: 'Hexadecimal' },
 ];
 
+export const OUTPUT_STRING_OPTION_TRANSPARENT = 1 << 0;
+export const OUTPUT_STRING_OPTION_AUTO_WRAP = 1 << 1;
+export const OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN = 1 << 2;
+
+export type HorizontalJustification = 0 | 1 | 2;
+export type VerticalJustification = 0 | 1 | 2;
+
 /** Horizontal justification for Output String / Output Number. */
 export const VT_H_JUSTIFY_OPTIONS = [
-  { value: 'left',   label: 'Left'   },
-  { value: 'center', label: 'Center' },
-  { value: 'right',  label: 'Right'  },
+  { value: 0, label: 'Left'   },
+  { value: 1, label: 'Middle' },
+  { value: 2, label: 'Right'  },
 ];
 
 /** Vertical justification for Output String / Output Number. */
 export const VT_V_JUSTIFY_OPTIONS = [
-  { value: 'top',    label: 'Top'    },
-  { value: 'center', label: 'Middle' },
-  { value: 'bottom', label: 'Bottom' },
+  { value: 0, label: 'Top'    },
+  { value: 1, label: 'Middle' },
+  { value: 2, label: 'Bottom' },
 ];
 
 export function clamp(value: number, min: number, max: number) {
@@ -93,6 +100,25 @@ export function nearestVtColorIndex(hex: string) {
   }, 0);
 }
 
+export function asHorizontalJustification(value: number | undefined): HorizontalJustification {
+  return value === 0 || value === 1 || value === 2 ? value : 0;
+}
+
+export function asVerticalJustification(value: number | undefined): VerticalJustification {
+  return value === 0 || value === 1 || value === 2 ? value : 0;
+}
+
+export function packJustification(horizontal: HorizontalJustification, vertical: VerticalJustification) {
+  return horizontal | (vertical << 2);
+}
+
+export function unpackJustification(justification: number) {
+  return {
+    horizontal: asHorizontalJustification(justification & 0b11),
+    vertical: asVerticalJustification((justification >> 2) & 0b11),
+  };
+}
+
 export function lineArtToCss(lineArt = '0xFFFF') {
   const n = lineArt.toUpperCase();
   if (n === '0XF0F0') return 'dashed';
@@ -116,9 +142,21 @@ export function horizontalAlignToFlex(value: EditorObject['horizontalAlign']) {
   return 'flex-start';
 }
 
+export function horizontalJustificationToFlex(value: HorizontalJustification | undefined) {
+  if (value === 1) return 'center';
+  if (value === 2) return 'flex-end';
+  return 'flex-start';
+}
+
 export function verticalAlignToFlex(value: EditorObject['verticalAlign']) {
   if (value === 'center') return 'center';
   if (value === 'bottom') return 'flex-end';
+  return 'flex-start';
+}
+
+export function verticalJustificationToFlex(value: VerticalJustification | undefined) {
+  if (value === 1) return 'center';
+  if (value === 2) return 'flex-end';
   return 'flex-start';
 }
 
@@ -135,6 +173,12 @@ export function fontCellScaleX(font?: EditorObject) {
 export function textTransformOrigin(horizontalAlign: EditorObject['horizontalAlign']) {
   if (horizontalAlign === 'center') return 'center center';
   if (horizontalAlign === 'right')  return 'right center';
+  return 'left center';
+}
+
+export function textJustificationTransformOrigin(horizontal: HorizontalJustification | undefined) {
+  if (horizontal === 1) return 'center center';
+  if (horizontal === 2) return 'right center';
   return 'left center';
 }
 

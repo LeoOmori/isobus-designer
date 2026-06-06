@@ -90,6 +90,7 @@ export function createEditorObject(
 
     // Editor colors
     backgroundColor: isRef || isSKM || isKey ? 'transparent' : '#ffffff',
+    backgroundColorIndex: isRef || isSKM || isKey ? undefined : 1,
     borderColor:     isRef ? 'transparent' : '#dfe6f0',
 
     // Container children
@@ -116,12 +117,13 @@ export function createEditorObject(
 
     // ── Output String ────────────────────────────────────────────────────
     text:            kind === 'output-string' ? 'New Text' : undefined,
+    length:          kind === 'output-string' ? 32 : undefined,
     fontAttributeId: (kind === 'output-string' || kind === 'output-number') ? (defaultFont?.id ?? '') : undefined,
-    stringVariableId: kind === 'output-string' ? '' : undefined,
+    variableReference: kind === 'output-string' ? null : undefined,
     outputOptions:   (kind === 'output-string' || kind === 'output-number') ? 0 : undefined,
-    horizontalAlign: kind === 'output-string' ? 'left' : undefined,
-    verticalAlign:   kind === 'output-string' ? 'top'  : undefined,
-    fontSize: kind === 'font-attribute' ? 24 : kind === 'output-string' ? 22 : undefined,
+    horizontalJustification: (kind === 'output-string' || kind === 'output-number') ? 0 : undefined,
+    verticalJustification:   (kind === 'output-string' || kind === 'output-number') ? 0 : undefined,
+    fontSize: kind === 'font-attribute' ? 24 : undefined,
 
     // ── Output Number ────────────────────────────────────────────────────
     numberVariableId: kind === 'output-number' ? '' : undefined,
@@ -179,7 +181,7 @@ export function referencePatch(kind: ReferenceKind, id: string): Partial<EditorO
     case 'line-attribute':  return { lineAttributeId: id };
     case 'fill-attribute':  return { fillAttributeId: id };
     case 'font-attribute':  return { fontAttributeId: id };
-    case 'string-variable': return { stringVariableId: id };
+    case 'string-variable': return { variableReference: id };
     case 'number-variable': return { numberVariableId: id };
   }
 }

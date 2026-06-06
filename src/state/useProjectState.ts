@@ -1,6 +1,12 @@
 import { useCallback, useState } from 'react';
 import { initialProject } from '../domain/initialProject';
-import type { ProjectState } from '../domain/types';
+import {
+  OUTPUT_STRING_OPTION_TRANSPARENT,
+  asHorizontalJustification,
+  asVerticalJustification,
+  nearestVtColorIndex,
+} from '../domain/isobus';
+import type { EditorObject, ProjectState } from '../domain/types';
 import { asPictureGraphicFormat, clearUnsupportedPictureGraphicOptions, derivedPictureGraphicHeight } from '../domain/vtPalette';
 
 export const storageKey = 'isobus-iop-editor-project';
@@ -17,29 +23,93 @@ function loadProject(): ProjectState {
 function migrateProject(project: ProjectState): ProjectState {
   return {
     ...project,
-    objects: project.objects.map((object) => {
-      if (object.kind !== 'picture-graphic') return object;
-
-      const targetWidth = object.targetWidth ?? object.width ?? object.actualWidth ?? 64;
-      const actualWidth = object.actualWidth ?? object.width ?? 64;
-      const actualHeight = object.actualHeight ?? object.height ?? 64;
-      const sourceImageDataUrl = object.sourceImageDataUrl ?? legacyImageDataUrl(object.rawData);
-      const rawData = sourceImageDataUrl && !object.sourceImageDataUrl ? [] : object.rawData;
-
-      return {
-        ...object,
-        targetWidth,
-        width: targetWidth,
-        height: derivedPictureGraphicHeight(targetWidth, actualWidth, actualHeight),
-        actualWidth,
-        actualHeight,
-        graphicFormat: sourceImageDataUrl && !object.sourceImageDataUrl ? 2 : asPictureGraphicFormat(object.graphicFormat),
-        graphicOptions: clearUnsupportedPictureGraphicOptions(object.graphicOptions ?? 0),
-        rawData,
-        sourceImageDataUrl,
-      };
-    }),
+    objects: project.objects.map(migrateObject),
   };
+}
+
+function migrateObject(object: EditorObject): EditorObject {
+  const backgroundColorIndex = object.backgroundColorIndex ?? backgroundColorToIndex(object.backgroundColor);
+
+  if (object.kind === 'picture-graphic') {
+    const targetWidth = object.targetWidth ?? object.width ?? object.actualWidth ?? 64;
+    const actualWidth = object.actualWidth ?? object.width ?? 64;
+    const actualHeight = object.actualHeight ?? object.height ?? 64;
+    const sourceImageDataUrl = object.sourceImageDataUrl ?? legacyImageDataUrl(object.rawData);
+    const rawData = sourceImageDataUrl && !object.sourceImageDataUrl ? [] : object.rawData;
+
+    return {
+      ...object,
+      backgroundColorIndex,
+      targetWidth,
+      width: targetWidth,
+      height: derivedPictureGraphicHeight(targetWidth, actualWidth, actualHeight),
+      actualWidth,
+      actualHeight,
+      graphicFormat: sourceImageDataUrl && !object.sourceImageDataUrl ? 2 : asPictureGraphicFormat(object.graphicFormat),
+      graphicOptions: clearUnsupportedPictureGraphicOptions(object.graphicOptions ?? 0),
+      rawData,
+      sourceImageDataUrl,
+    };
+  }
+
+  if (object.kind === 'output-string') {
+    const outputOptions = object.backgroundColor === 'transparent'
+      ? (object.outputOptions ?? 0) | OUTPUT_STRING_OPTION_TRANSPARENT
+      : object.outputOptions ?? 0;
+    const text = object.text ?? '';
+    const variableReference = object.variableReference !== undefined
+      ? object.variableReference
+      : object.stringVariableId ? object.stringVariableId : null;
+    return {
+      ...object,
+      backgroundColorIndex,
+      length: object.length ?? Math.max(32, text.length),
+      variableReference,
+      stringVariableId: undefined,
+      outputOptions,
+      horizontalJustification: object.horizontalJustification ?? horizontalAlignToJustification(object.horizontalAlign),
+      verticalJustification: object.verticalJustification ?? verticalAlignToJustification(object.verticalAlign),
+      horizontalAlign: undefined,
+      verticalAlign: undefined,
+    };
+  }
+
+  if (object.kind === 'output-number') {
+    const outputOptions = object.backgroundColor === 'transparent'
+      ? (object.outputOptions ?? 0) | OUTPUT_STRING_OPTION_TRANSPARENT
+      : object.outputOptions ?? 0;
+    return {
+      ...object,
+      backgroundColorIndex,
+      outputOptions,
+      horizontalJustification: object.horizontalJustification ?? horizontalAlignToJustification(object.horizontalAlign),
+      verticalJustification: object.verticalJustification ?? verticalAlignToJustification(object.verticalAlign),
+      horizontalAlign: undefined,
+      verticalAlign: undefined,
+    };
+  }
+
+  return {
+    ...object,
+    backgroundColorIndex,
+  };
+}
+
+function backgroundColorToIndex(color: string | undefined) {
+  if (!color || color === 'transparent') return 1;
+  return nearestVtColorIndex(color);
+}
+
+function horizontalAlignToJustification(value: EditorObject['horizontalAlign']) {
+  if (value === 'center') return asHorizontalJustification(1);
+  if (value === 'right') return asHorizontalJustification(2);
+  return asHorizontalJustification(0);
+}
+
+function verticalAlignToJustification(value: EditorObject['verticalAlign']) {
+  if (value === 'center') return asVerticalJustification(1);
+  if (value === 'bottom') return asVerticalJustification(2);
+  return asVerticalJustification(0);
 }
 
 function legacyImageDataUrl(rawData: number[] | undefined) {

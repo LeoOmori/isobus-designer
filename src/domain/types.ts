@@ -55,6 +55,7 @@ export type EditorObject = {
 
   // ── Editor display colors (CSS hex) ─────────────────────────────────
   backgroundColor: string;
+  backgroundColorIndex?: number; // uint8 VT palette index, used by spec-backed objects
   borderColor: string;
 
   // ── Shared: container + macros ───────────────────────────────────────
@@ -85,11 +86,15 @@ export type EditorObject = {
 
   // ── Output String (objectType 11) ────────────────────────────────────
   text?: string;
+  length?: number;               // uint16 fixed value byte length
   fontAttributeId?: string;
-  stringVariableId?: string;
-  outputOptions?: number;       // uint8 (bit0=transparent bg)
-  horizontalAlign?: 'left' | 'center' | 'right';
-  verticalAlign?: 'top' | 'center' | 'bottom';
+  variableReference?: string | null; // null = 0xFFFF NULL/use local value
+  stringVariableId?: string;     // legacy: migrated to variableReference
+  outputOptions?: number;        // uint8 (bit0=transparent, bit1=auto-wrap, bit2=wrap-on-hyphen)
+  horizontalJustification?: 0 | 1 | 2;
+  verticalJustification?: 0 | 1 | 2;
+  horizontalAlign?: 'left' | 'center' | 'right'; // legacy: migrated to horizontalJustification
+  verticalAlign?: 'top' | 'center' | 'bottom';   // legacy: migrated to verticalJustification
 
   // ── Output Number (objectType 12) ────────────────────────────────────
   numberVariableId?: string;

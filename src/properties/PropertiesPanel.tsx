@@ -1,6 +1,18 @@
 import { useEffect, useRef } from 'react';
 import { Archive, Trash2, Upload } from 'lucide-react';
-import { VT_FILL_TYPE_OPTIONS, VT_NUMBER_FORMAT_OPTIONS, fontCellValue, vtFontCells } from '../domain/isobus';
+import {
+  OUTPUT_STRING_OPTION_AUTO_WRAP,
+  OUTPUT_STRING_OPTION_TRANSPARENT,
+  OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
+  VT_FILL_TYPE_OPTIONS,
+  VT_H_JUSTIFY_OPTIONS,
+  VT_NUMBER_FORMAT_OPTIONS,
+  VT_V_JUSTIFY_OPTIONS,
+  asHorizontalJustification,
+  asVerticalJustification,
+  fontCellValue,
+  vtFontCells,
+} from '../domain/isobus';
 import { objectKindName } from '../domain/objectMeta';
 import type { EditorObject, ReferenceKind, WorkingSet } from '../domain/types';
 import {
@@ -27,6 +39,18 @@ function referenceOptions(objects: EditorObject[], kind: EditorObject['kind'], c
     ...objects.filter((o) => o.kind === kind).map((o) => ({ value: o.id, label: `${o.id} — ${o.name}` })),
     { value: createValue, label: createLabel },
   ];
+}
+
+function variableReferenceOptions(objects: EditorObject[]) {
+  return [
+    { value: '__null', label: 'NULL — use local text' },
+    ...objects.filter((o) => o.kind === 'string-variable').map((o) => ({ value: o.id, label: `${o.id} — ${o.name}` })),
+    { value: '__create_string-variable', label: '+ Create String Variable' },
+  ];
+}
+
+function patchBit(current: number | undefined, bit: number, enabled: boolean) {
+  return enabled ? (current ?? 0) | bit : (current ?? 0) & ~bit;
 }
 
 const REFERENCE_ONLY = new Set<EditorObject['kind']>([
@@ -90,8 +114,8 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
   const lineAttrOpts   = referenceOptions(objects, 'line-attribute',   '+ Create Line Attribute',   '__create_line-attribute');
   const fillAttrOpts   = referenceOptions(objects, 'fill-attribute',   '+ Create Fill Attribute',   '__create_fill-attribute');
   const fontAttrOpts   = referenceOptions(objects, 'font-attribute',   '+ Create Font Attribute',   '__create_font-attribute');
-  const strVarOpts     = referenceOptions(objects, 'string-variable',  '+ Create String Variable',  '__create_string-variable');
   const numVarOpts     = referenceOptions(objects, 'number-variable',  '+ Create Number Variable',  '__create_number-variable');
+  const outputStringVariableOpts = variableReferenceOptions(objects);
 
   function handleRefSelect(value: string, createPrefix: string, refKind: ReferenceKind, patchFn: (id: string) => Partial<EditorObject>) {
     if (value.startsWith('__create_')) return onCreateAttributeReference(refKind);
@@ -187,13 +211,20 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
         <>
           <PropertySection title="Text">
             <Field label="Value" value={selectedObject.text ?? ''} onChange={(text) => onPatch({ text })} />
-            <SelectField label="Horizontal" value={selectedObject.horizontalAlign ?? 'left'} options={[{ value: 'left', label: 'Left' }, { value: 'center', label: 'Center' }, { value: 'right', label: 'Right' }]} onChange={(v) => onPatch({ horizontalAlign: v as EditorObject['horizontalAlign'] })} />
-            <SelectField label="Vertical"   value={selectedObject.verticalAlign ?? 'top'}    options={[{ value: 'top', label: 'Top' }, { value: 'center', label: 'Middle' }, { value: 'bottom', label: 'Bottom' }]} onChange={(v) => onPatch({ verticalAlign: v as EditorObject['verticalAlign'] })} />
-            <CheckboxField label="Transparent Background" checked={((selectedObject.outputOptions ?? 0) & 1) !== 0} onChange={(v) => onPatch({ outputOptions: v ? (selectedObject.outputOptions ?? 0) | 1 : (selectedObject.outputOptions ?? 0) & ~1 })} />
+            <Field label="Length (bytes)" value={selectedObject.length ?? 32} type="number" onChange={(length) => onPatch({ length: Number(length) })} />
+            <div className="field-hint">{utf8ByteLength(selectedObject.text ?? '')} / {selectedObject.length ?? 32} bytes before padding</div>
+            <VtColorField label="Background" value={selectedObject.backgroundColorIndex ?? 1} onChange={(backgroundColorIndex) => onPatch({ backgroundColorIndex })} />
+            <SelectField label="Horizontal" value={String(selectedObject.horizontalJustification ?? 0)} options={VT_H_JUSTIFY_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))} onChange={(v) => onPatch({ horizontalJustification: asHorizontalJustification(Number(v)) })} />
+            <SelectField label="Vertical" value={String(selectedObject.verticalJustification ?? 0)} options={VT_V_JUSTIFY_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))} onChange={(v) => onPatch({ verticalJustification: asVerticalJustification(Number(v)) })} />
+          </PropertySection>
+          <PropertySection title="Options">
+            <CheckboxField label="Transparent Background" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_STRING_OPTION_TRANSPARENT) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_STRING_OPTION_TRANSPARENT, v) })} />
+            <CheckboxField label="Auto Wrap" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_STRING_OPTION_AUTO_WRAP) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_STRING_OPTION_AUTO_WRAP, v) & (v ? 0xff : ~OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) })} />
+            <CheckboxField label="Wrap on Hyphen" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) !== 0} disabled={((selectedObject.outputOptions ?? 0) & OUTPUT_STRING_OPTION_AUTO_WRAP) === 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN, v) })} />
           </PropertySection>
           <PropertySection title="References">
             <SelectField label="Font Attribute"   value={selectedObject.fontAttributeId ?? ''}  options={fontAttrOpts} onChange={(v) => handleRefSelect(v, '__create_font-attribute', 'font-attribute', (id) => ({ fontAttributeId: id }))} />
-            <SelectField label="String Variable"  value={selectedObject.stringVariableId ?? ''} options={strVarOpts}   onChange={(v) => handleRefSelect(v, '__create_string-variable', 'string-variable', (id) => ({ stringVariableId: id }))} />
+            <SelectField label="Variable Reference" value={selectedObject.variableReference !== undefined ? selectedObject.variableReference ?? '__null' : selectedObject.stringVariableId || '__null'} options={outputStringVariableOpts} onChange={(v) => handleRefSelect(v, '__create_string-variable', 'string-variable', (id) => ({ variableReference: id === '__null' ? null : id }))} />
           </PropertySection>
         </>
       )}
@@ -207,7 +238,10 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
             <Field label="Scale"           value={selectedObject.scale ?? 1}             type="number" onChange={(v) => onPatch({ scale: Number(v) })} />
             <Field label="Decimal Places"  value={selectedObject.numberOfDecimals ?? 0}  type="number" onChange={(v) => onPatch({ numberOfDecimals: Number(v) })} />
             <SelectField label="Format" value={String(selectedObject.numberFormat ?? 0)} options={VT_NUMBER_FORMAT_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))} onChange={(v) => onPatch({ numberFormat: Number(v) })} />
-            <CheckboxField label="Transparent Background" checked={((selectedObject.outputOptions ?? 0) & 1) !== 0} onChange={(v) => onPatch({ outputOptions: v ? (selectedObject.outputOptions ?? 0) | 1 : (selectedObject.outputOptions ?? 0) & ~1 })} />
+            <VtColorField label="Background" value={selectedObject.backgroundColorIndex ?? 1} onChange={(backgroundColorIndex) => onPatch({ backgroundColorIndex })} />
+            <SelectField label="Horizontal" value={String(selectedObject.horizontalJustification ?? 0)} options={VT_H_JUSTIFY_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))} onChange={(v) => onPatch({ horizontalJustification: asHorizontalJustification(Number(v)) })} />
+            <SelectField label="Vertical" value={String(selectedObject.verticalJustification ?? 0)} options={VT_V_JUSTIFY_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))} onChange={(v) => onPatch({ verticalJustification: asVerticalJustification(Number(v)) })} />
+            <CheckboxField label="Transparent Background" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_STRING_OPTION_TRANSPARENT) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_STRING_OPTION_TRANSPARENT, v) })} />
           </PropertySection>
           <PropertySection title="References">
             <SelectField label="Font Attribute"    value={selectedObject.fontAttributeId ?? ''}   options={fontAttrOpts} onChange={(v) => handleRefSelect(v, '__create_font-attribute', 'font-attribute', (id) => ({ fontAttributeId: id }))} />
@@ -462,4 +496,8 @@ function readFileAsDataUrl(file: File) {
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
+}
+
+function utf8ByteLength(value: string) {
+  return new TextEncoder().encode(value).length;
 }

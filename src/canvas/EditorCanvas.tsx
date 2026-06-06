@@ -1,8 +1,9 @@
 import { Fragment, type PointerEvent, type WheelEvent, useCallback, useRef, useState } from 'react';
 import {
+  OUTPUT_STRING_OPTION_AUTO_WRAP, OUTPUT_STRING_OPTION_TRANSPARENT, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
   clamp, fillTypeToBackground, fontCellScaleX, formatOutputNumber,
-  horizontalAlignToFlex, lineArtToCss, snap,
-  textTransformOrigin, verticalAlignToFlex, vtColor,
+  horizontalJustificationToFlex, lineArtToCss, snap,
+  textJustificationTransformOrigin, verticalJustificationToFlex, vtColor,
 } from '../domain/isobus';
 import { getActiveMask, getCanvasChildren, getSoftKeyMaskKeys } from '../domain/selectors';
 import type { DragState, EditorObject, ObjectKind, ProjectState, ToolMode, Viewport } from '../domain/types';
@@ -179,7 +180,8 @@ export function EditorCanvas({
     const line   = lineAttributes.find((a) => a.id === object.lineAttributeId);
     const fill   = fillAttributes.find((a) => a.id === object.fillAttributeId);
     const font   = fontAttributes.find((a) => a.id === object.fontAttributeId);
-    const strVar = stringVariables.find((v) => v.id === object.stringVariableId);
+    const variableReference = object.variableReference !== undefined ? object.variableReference : object.stringVariableId || null;
+    const strVar = variableReference ? stringVariables.find((v) => v.id === variableReference) : undefined;
     const numVar = numberVariables.find((v) => v.id === object.numberVariableId);
     const selected = selectedId === object.id;
 
@@ -204,6 +206,13 @@ export function EditorCanvas({
       borderWidth = hasBorder ? 2 : 0;
       borderStyle = 'solid';
       background  = object.backgroundColor;
+    } else if (object.kind === 'output-string' || object.kind === 'output-number') {
+      borderColor = object.borderColor;
+      borderWidth = 1;
+      borderStyle = 'solid';
+      background = ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_TRANSPARENT) !== 0
+        ? 'transparent'
+        : vtColor(object.backgroundColorIndex ?? 1);
     } else {
       borderColor = object.borderColor;
       borderWidth = 1;
@@ -216,6 +225,8 @@ export function EditorCanvas({
       object.kind === 'output-string' ? (font?.fontHeight ?? font?.fontSize ?? object.fontSize)
       : object.kind === 'output-number' ? (font?.fontHeight ?? font?.fontSize ?? 16)
       : object.fontSize;
+    const outputStringAutoWrap = object.kind === 'output-string' && ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_AUTO_WRAP) !== 0;
+    const outputStringWrapOnHyphen = object.kind === 'output-string' && ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) !== 0;
 
     return (
       <div
@@ -234,11 +245,15 @@ export function EditorCanvas({
             : undefined,
           fontWeight, fontStyle: fontStyleCss, textDecoration,
           justifyContent: (object.kind === 'output-string' || object.kind === 'output-number')
-            ? horizontalAlignToFlex(object.horizontalAlign)
+            ? horizontalJustificationToFlex(object.horizontalJustification)
             : object.kind === 'button' ? 'center' : undefined,
           alignItems: (object.kind === 'output-string' || object.kind === 'output-number')
-            ? verticalAlignToFlex(object.verticalAlign)
+            ? verticalJustificationToFlex(object.verticalJustification)
             : object.kind === 'button' ? 'center' : undefined,
+          whiteSpace: outputStringAutoWrap ? 'pre-wrap' : 'nowrap',
+          overflowWrap: outputStringAutoWrap ? (outputStringWrapOnHyphen ? 'break-word' : 'normal') : undefined,
+          wordBreak: outputStringAutoWrap ? 'normal' : undefined,
+          hyphens: outputStringAutoWrap && outputStringWrapOnHyphen ? 'manual' : 'none',
         }}
         onPointerDown={(e) => beginMove(e, object)}
         onDoubleClick={(e) => {
@@ -254,17 +269,17 @@ export function EditorCanvas({
             ? (
               <input
                 className="inline-text-input" autoFocus
-                value={strVar?.stringValue ?? object.text ?? ''}
-                style={{ transform: `scaleX(${textScaleX})`, transformOrigin: textTransformOrigin(object.horizontalAlign) }}
+                value={object.text ?? ''}
+                style={{ transform: `scaleX(${textScaleX})`, transformOrigin: textJustificationTransformOrigin(object.horizontalJustification) }}
                 onPointerDown={(e) => e.stopPropagation()}
                 onDoubleClick={(e) => e.stopPropagation()}
-                onChange={(e) => onUpdateObject(strVar?.id ?? object.id, strVar ? { stringValue: e.target.value } : { text: e.target.value })}
+                onChange={(e) => onUpdateObject(object.id, { text: e.target.value })}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); setEditingTextObjectId(null); } }}
                 onBlur={() => setEditingTextObjectId(null)}
               />
             ) : (
-              <span className="inline-text-editor" style={{ transform: `scaleX(${textScaleX})`, transformOrigin: textTransformOrigin(object.horizontalAlign) }}>
-                {strVar?.stringValue ?? object.text ?? ''}
+              <span className="inline-text-editor" style={{ transform: `scaleX(${textScaleX})`, transformOrigin: textJustificationTransformOrigin(object.horizontalJustification) }}>
+                {clipUtf8(strVar?.stringValue ?? object.text ?? '', object.length)}
               </span>
             )
         )}
@@ -387,4 +402,22 @@ export function EditorCanvas({
       />
     </main>
   );
+}
+
+function clipUtf8(value: string, maxBytes: number | undefined) {
+  if (!maxBytes || maxBytes < 0 || maxBytes >= utf8ByteLength(value)) return value;
+
+  let result = '';
+  let bytes = 0;
+  for (const char of value) {
+    const charBytes = utf8ByteLength(char);
+    if (bytes + charBytes > maxBytes) break;
+    result += char;
+    bytes += charBytes;
+  }
+  return result;
+}
+
+function utf8ByteLength(value: string) {
+  return new TextEncoder().encode(value).length;
 }
