@@ -57,6 +57,7 @@ export type EditorObject = {
   backgroundColor: string;
   backgroundColorIndex?: number; // uint8 VT palette index, used by spec-backed objects
   borderColor: string;
+  borderColorIndex?: number;     // uint8 VT palette index, used by spec-backed objects
 
   // ── Shared: container + macros ───────────────────────────────────────
   childObjectIds?: string[];    // Data Mask, Key, Button children
@@ -79,10 +80,7 @@ export type EditorObject = {
 
   // ── Button (objectType 6) ────────────────────────────────────────────
   keyCode?: number;             // uint8
-  buttonOptions?: number;       // uint8 bitfield (bit0=border, bit1=transparent bg)
-  enabled?: boolean;
-  onPressAction?: string;
-  onReleaseAction?: string;
+  buttonOptions?: number;       // uint8 bitfield (see BUTTON_OPTION_* constants)
 
   // ── Output String (objectType 11) ────────────────────────────────────
   text?: string;

@@ -16,20 +16,22 @@ export function getActiveMask(project: ProjectState) {
     ?? project.objects.find((o) => o.kind === 'data-mask');
 }
 
+export function getObjectChildren(project: ProjectState, parentId: string) {
+  const parent = project.objects.find((o) => o.id === parentId);
+  const childIds = new Set(parent?.childObjectIds ?? []);
+  return project.objects.filter((o) => childIds.has(o.id)).sort((a, b) => a.zIndex - b.zIndex);
+}
+
 /** Children of a Data Mask that should be rendered on the canvas. */
 export function getCanvasChildren(project: ProjectState, maskId: string) {
-  const mask = project.objects.find((o) => o.id === maskId);
-  const childIds = new Set(mask?.childObjectIds ?? []);
-  return project.objects
-    .filter((o) => childIds.has(o.id) && o.visible && !referenceKinds.includes(o.kind as typeof referenceKinds[number]))
+  return getObjectChildren(project, maskId)
+    .filter((o) => o.visible && !referenceKinds.includes(o.kind as typeof referenceKinds[number]))
     .sort((a, b) => a.zIndex - b.zIndex);
 }
 
 /** All children of a Data Mask including attribute children (for the tree view). */
 export function getMaskChildren(project: ProjectState, maskId: string) {
-  const mask = project.objects.find((o) => o.id === maskId);
-  const childIds = new Set(mask?.childObjectIds ?? []);
-  return project.objects.filter((o) => childIds.has(o.id)).sort((a, b) => a.zIndex - b.zIndex);
+  return getObjectChildren(project, maskId);
 }
 
 /** Children of a Soft Key Mask. */

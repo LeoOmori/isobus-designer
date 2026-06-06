@@ -1,5 +1,11 @@
 import { Fragment, type PointerEvent, type WheelEvent, useCallback, useRef, useState } from 'react';
 import {
+  BUTTON_FACE_INSET,
+  BUTTON_OPTION_DISABLED,
+  BUTTON_OPTION_LATCHED,
+  BUTTON_OPTION_NO_BORDER,
+  BUTTON_OPTION_SUPPRESS_BORDER,
+  BUTTON_OPTION_TRANSPARENT_BACKGROUND,
   OUTPUT_STRING_OPTION_AUTO_WRAP, OUTPUT_STRING_OPTION_TRANSPARENT, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
   RECTANGLE_LINE_SUPPRESSION_BOTTOM, RECTANGLE_LINE_SUPPRESSION_LEFT,
   RECTANGLE_LINE_SUPPRESSION_RIGHT, RECTANGLE_LINE_SUPPRESSION_TOP,
@@ -19,6 +25,10 @@ import { BottomControls, CanvasToolbar } from './CanvasToolbar';
 /** Tools that create a canvas object on click. */
 const CANVAS_TOOLS = new Set<ToolMode>([
   'output-rectangle', 'output-string', 'button', 'output-number', 'picture-graphic',
+]);
+
+const BUTTON_CHILD_TOOLS = new Set<ToolMode>([
+  'output-rectangle', 'output-string', 'output-number', 'picture-graphic',
 ]);
 
 const SKM_SLOTS = 6;
@@ -51,6 +61,7 @@ export function EditorCanvas({
   const fontAttributes  = project.objects.filter((o) => o.kind === 'font-attribute');
   const stringVariables = project.objects.filter((o) => o.kind === 'string-variable');
   const numberVariables = project.objects.filter((o) => o.kind === 'number-variable');
+  const objectById = new Map(project.objects.map((object) => [object.id, object]));
 
   // ── Coordinate helpers ────────────────────────────────────────────────
   const screenToWorld = useCallback((clientX: number, clientY: number) => {
@@ -83,6 +94,36 @@ export function EditorCanvas({
     const point = screenToMask(clientX, clientY, mask);
     onSelect(mask.id);
     onCreateObject(tool as ObjectKind, snap(point.x), snap(point.y), mask.id);
+    onToolChange('select');
+  }
+
+  function buttonFaceInset(button: EditorObject) {
+    return ((button.buttonOptions ?? 0) & BUTTON_OPTION_NO_BORDER) !== 0 ? 0 : BUTTON_FACE_INSET;
+  }
+
+  function objectWorldOrigin(object: EditorObject): { x: number; y: number } {
+    const parent = object.parentId ? objectById.get(object.parentId) : undefined;
+    if (!parent) return { x: object.x, y: object.y };
+
+    const parentOrigin = objectWorldOrigin(parent);
+    const parentFaceInset = parent.kind === 'button' ? buttonFaceInset(parent) : 0;
+    return {
+      x: parentOrigin.x + parentFaceInset + object.x,
+      y: parentOrigin.y + parentFaceInset + object.y,
+    };
+  }
+
+  function screenToButtonFace(clientX: number, clientY: number, button: EditorObject) {
+    const world = screenToWorld(clientX, clientY);
+    const buttonOrigin = objectWorldOrigin(button);
+    const inset = buttonFaceInset(button);
+    return { x: world.x - buttonOrigin.x - inset, y: world.y - buttonOrigin.y - inset };
+  }
+
+  function createOnButton(clientX: number, clientY: number, button: EditorObject) {
+    const point = screenToButtonFace(clientX, clientY, button);
+    onSelect(button.id);
+    onCreateObject(tool as ObjectKind, snap(point.x), snap(point.y), button.id);
     onToolChange('select');
   }
 
@@ -162,7 +203,13 @@ export function EditorCanvas({
   // ── Object drag handles ────────────────────────────────────────────────
   function beginMove(event: PointerEvent<HTMLElement>, object: EditorObject) {
     // When a creation tool is active, let the click bubble up to the mask handler.
-    if (CANVAS_TOOLS.has(tool)) return;
+    if (CANVAS_TOOLS.has(tool)) {
+      if (object.kind === 'button' && BUTTON_CHILD_TOOLS.has(tool)) {
+        event.stopPropagation();
+        createOnButton(event.clientX, event.clientY, object);
+      }
+      return;
+    }
     event.stopPropagation();
     onSelect(object.id);
     if (editingTextObjectId === object.id || object.locked) return;
@@ -187,6 +234,20 @@ export function EditorCanvas({
     const strVar = variableReference ? stringVariables.find((v) => v.id === variableReference) : undefined;
     const numVar = numberVariables.find((v) => v.id === object.numberVariableId);
     const selected = selectedId === object.id;
+    const buttonOptions = object.kind === 'button' ? object.buttonOptions ?? 0 : 0;
+    const buttonNoBorder = (buttonOptions & BUTTON_OPTION_NO_BORDER) !== 0;
+    const buttonSuppressBorder = (buttonOptions & BUTTON_OPTION_SUPPRESS_BORDER) !== 0;
+    const buttonTransparent = (buttonOptions & BUTTON_OPTION_TRANSPARENT_BACKGROUND) !== 0;
+    const buttonDisabled = (buttonOptions & BUTTON_OPTION_DISABLED) !== 0;
+    const buttonLatched = (buttonOptions & BUTTON_OPTION_LATCHED) !== 0;
+    const buttonFaceBackground = object.kind === 'button' && !buttonTransparent
+      ? vtColor(object.backgroundColorIndex ?? 1)
+      : 'transparent';
+    const buttonChildren = object.kind === 'button'
+      ? project.objects
+        .filter((candidate) => (object.childObjectIds ?? []).includes(candidate.id) && candidate.visible)
+        .sort((a, b) => a.zIndex - b.zIndex)
+      : [];
 
     const fontWeight     = (font?.fontStyle ?? 0) & 1 ? 700        : undefined;
     const fontStyleCss   = (font?.fontStyle ?? 0) & 2 ? 'italic'   : undefined;
@@ -229,11 +290,11 @@ export function EditorCanvas({
         backgroundRepeat = 'repeat';
       } else background = fillTypeToBackground(fill.fillType, vtColor(fill.fillColor ?? 15));
     } else if (object.kind === 'button') {
-      const hasBorder = ((object.buttonOptions ?? 1) & 1) !== 0;
-      borderColor = hasBorder ? '#4b5563' : 'transparent';
-      borderWidth = hasBorder ? 2 : 0;
+      borderColor = buttonNoBorder || buttonSuppressBorder ? 'transparent' : vtColor(object.borderColorIndex ?? 0);
+      borderWidth = buttonNoBorder ? 0 : BUTTON_FACE_INSET;
       borderStyle = 'solid';
-      background  = object.backgroundColor;
+      background  = 'transparent';
+      boxSizing = 'border-box';
     } else if (object.kind === 'output-string' || object.kind === 'output-number') {
       borderColor = object.borderColor;
       borderWidth = 1;
@@ -267,6 +328,10 @@ export function EditorCanvas({
           borderTopWidth, borderRightWidth, borderBottomWidth, borderLeftWidth,
           boxSizing,
           zIndex: 20 + object.zIndex,
+          opacity: buttonDisabled ? 0.55 : undefined,
+          filter: buttonLatched ? 'brightness(0.88)' : undefined,
+          boxShadow: buttonLatched ? 'inset 2px 2px 0 rgba(0, 0, 0, .35), inset -2px -2px 0 rgba(255, 255, 255, .25)' : undefined,
+          cursor: buttonDisabled ? 'not-allowed' : undefined,
           fontSize: fontSizePx,
           fontFamily: (object.kind === 'output-string' || object.kind === 'output-number') && font?.proportional === false
             ? 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
@@ -277,10 +342,10 @@ export function EditorCanvas({
           fontWeight, fontStyle: fontStyleCss, textDecoration,
           justifyContent: (object.kind === 'output-string' || object.kind === 'output-number')
             ? horizontalJustificationToFlex(object.horizontalJustification)
-            : object.kind === 'button' ? 'center' : undefined,
+            : undefined,
           alignItems: (object.kind === 'output-string' || object.kind === 'output-number')
             ? verticalJustificationToFlex(object.verticalJustification)
-            : object.kind === 'button' ? 'center' : undefined,
+            : undefined,
           whiteSpace: outputStringAutoWrap ? 'pre-wrap' : 'nowrap',
           overflowWrap: outputStringAutoWrap ? (outputStringWrapOnHyphen ? 'break-word' : 'normal') : undefined,
           wordBreak: outputStringAutoWrap ? 'normal' : undefined,
@@ -338,11 +403,22 @@ export function EditorCanvas({
           })()
         )}
 
-        {/* Button */}
+        {/* Button children render inside the Button Face. */}
         {object.kind === 'button' && (
-          <span style={{ fontSize: font?.fontHeight ?? 13, fontWeight, fontStyle: fontStyleCss, textDecoration, color: vtColor(font?.fontColor ?? 0) }}>
-            {object.label ?? object.text ?? ''}
-          </span>
+          <div
+            className="button-face"
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: 0,
+              width: '100%',
+              height: '100%',
+              background: buttonFaceBackground,
+              overflow: 'hidden',
+            }}
+          >
+            {buttonChildren.map(renderObject)}
+          </div>
         )}
 
         {selected && <span className="resize-handle" onPointerDown={(e) => beginResize(e, object)} />}

@@ -40,14 +40,14 @@ export function createEditorObject(
   current: ProjectState,
   x = 70,
   y = 70,
-  parentMaskId = current.activeMaskId,
+  parentId = current.activeMaskId,
 ): EditorObject {
   const n = current.nextNumber;
   const id = `${KIND_PREFIX[kind]}_${n}`;
 
-  const activeMask = current.objects.find((o) => o.id === parentMaskId)
+  const activeParent = current.objects.find((o) => o.id === parentId)
     ?? current.objects.find((o) => o.id === current.activeMaskId)
-    ?? { id: '', x: 0, y: 0, width: 480, height: 480 } as Pick<EditorObject, 'id' | 'x' | 'y' | 'width' | 'height'>;
+    ?? { id: '', kind: 'data-mask', x: 0, y: 0, width: 480, height: 480 } as Pick<EditorObject, 'id' | 'kind' | 'x' | 'y' | 'width' | 'height'>;
 
   const isRef       = REFERENCE_KINDS.has(kind);
   const isContainer = CONTAINER_KINDS.has(kind);
@@ -70,14 +70,14 @@ export function createEditorObject(
     objectId: toObjectId(n),
     name: `${objectKindName(kind)} ${n}`,
     kind,
-    parentId: isCanvas && activeMask.id ? activeMask.id : undefined,
+    parentId: isCanvas && activeParent.id ? activeParent.id : undefined,
     visible: true,
     locked: isContainer ? false : undefined,
     zIndex: current.objects.length + 1,
 
     // Layout
-    x:      noLayout ? 0 : isMask  ? activeMask.x + 80 : clamp(x, 0, activeMask.width  - 40),
-    y:      noLayout ? 0 : isMask  ? activeMask.y + 80 : clamp(y, 0, activeMask.height - 30),
+    x:      noLayout ? 0 : isMask  ? activeParent.x + 80 : activeParent.kind === 'button' ? x : clamp(x, 0, activeParent.width  - 40),
+    y:      noLayout ? 0 : isMask  ? activeParent.y + 80 : activeParent.kind === 'button' ? y : clamp(y, 0, activeParent.height - 30),
     width:  noLayout ? 0 : isMask  ? 480
           : kind === 'output-string' || kind === 'output-number' ? 220
           : kind === 'button'  ? 120
@@ -93,6 +93,7 @@ export function createEditorObject(
     backgroundColor: isRef || isSKM || isKey ? 'transparent' : '#ffffff',
     backgroundColorIndex: isRef || isSKM || isKey ? undefined : 1,
     borderColor:     isRef ? 'transparent' : '#dfe6f0',
+    borderColorIndex: kind === 'button' ? 0 : undefined,
 
     // Container children
     childObjectIds: (isMask || isKey || kind === 'button') ? [] : undefined,
@@ -113,8 +114,7 @@ export function createEditorObject(
 
     // ── Button ───────────────────────────────────────────────────────────
     keyCode:       kind === 'button' || isKey ? 0 : undefined,
-    buttonOptions: kind === 'button' ? 1 : undefined, // bit0 = border on
-    enabled:       kind === 'button' ? true : undefined,
+    buttonOptions: kind === 'button' ? 0 : undefined,
 
     // ── Output String ────────────────────────────────────────────────────
     text:            kind === 'output-string' ? 'New Text' : undefined,

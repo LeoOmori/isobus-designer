@@ -1,5 +1,7 @@
-import type { ProjectState } from './types';
+import type { ObjectKind, ProjectState } from './types';
 import {
+  BUTTON_OPTION_LATCHABLE,
+  BUTTON_OPTION_LATCHED,
   OUTPUT_STRING_OPTION_AUTO_WRAP,
   OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
 } from './isobus';
@@ -16,6 +18,10 @@ const REFERENCE_ONLY_KINDS = new Set([
   'soft-key-mask', 'key',
 ]);
 
+const BUTTON_CHILD_KINDS = new Set<ObjectKind>([
+  'output-string', 'output-number', 'output-rectangle', 'picture-graphic',
+]);
+
 export function validate(project: ProjectState): string[] {
   const errors: string[] = [];
   const ids = new Set<string>();
@@ -29,6 +35,29 @@ export function validate(project: ProjectState): string[] {
     // Canvas objects must have positive dimensions
     if (!REFERENCE_ONLY_KINDS.has(obj.kind) && (obj.width <= 0 || obj.height <= 0)) {
       errors.push(`Invalid size: ${obj.id} (${obj.width}×${obj.height})`);
+    }
+
+    if (!REFERENCE_ONLY_KINDS.has(obj.kind) && obj.kind !== 'data-mask') {
+      const childContainerIds = project.objects
+        .filter((parent) => (parent.childObjectIds ?? []).includes(obj.id))
+        .map((parent) => parent.id);
+      const parent = obj.parentId ? objectById.get(obj.parentId) : undefined;
+
+      if (obj.parentId && !parent) {
+        errors.push(`${obj.id}: parentId "${obj.parentId}" not found`);
+      }
+      if (obj.parentId && parent?.childObjectIds !== undefined && !childContainerIds.includes(obj.parentId)) {
+        errors.push(`${obj.id}: parentId "${obj.parentId}" must include this object in childObjectIds`);
+      }
+      if (childContainerIds.length > 1) {
+        errors.push(`${obj.id}: object is listed as a child by multiple containers (${childContainerIds.join(', ')})`);
+      }
+      if (childContainerIds.length === 1 && obj.parentId && childContainerIds[0] !== obj.parentId) {
+        errors.push(`${obj.id}: parentId "${obj.parentId}" does not match childObjectIds owner "${childContainerIds[0]}"`);
+      }
+      if (childContainerIds.length === 1 && !obj.parentId) {
+        errors.push(`${obj.id}: child object must set parentId "${childContainerIds[0]}"`);
+      }
     }
 
     // Output String must reference a Font Attribute
@@ -82,6 +111,48 @@ export function validate(project: ProjectState): string[] {
     // Output Number must reference a Font Attribute
     if (obj.kind === 'output-number' && obj.fontAttributeId && objectById.get(obj.fontAttributeId)?.kind !== 'font-attribute') {
       errors.push(`Output Number ${obj.id}: unknown fontAttributeId "${obj.fontAttributeId}"`);
+    }
+
+    if (obj.kind === 'button') {
+      const keyCode = obj.keyCode ?? 0;
+      const options = obj.buttonOptions ?? 0;
+      const backgroundColorIndex = obj.backgroundColorIndex ?? 1;
+      const borderColorIndex = obj.borderColorIndex ?? 0;
+
+      if (!Number.isInteger(keyCode) || keyCode < 0 || keyCode > 0xff) {
+        errors.push(`Button ${obj.id}: keyCode must be 0–255`);
+      }
+      if (!Number.isInteger(options) || options < 0 || options > 0xff) {
+        errors.push(`Button ${obj.id}: buttonOptions must be 0–255`);
+      } else if (options & 0b11000000) {
+        errors.push(`Button ${obj.id}: reserved option bits 6-7 must be 0`);
+      }
+      if ((options & BUTTON_OPTION_LATCHED) && !(options & BUTTON_OPTION_LATCHABLE)) {
+        errors.push(`Button ${obj.id}: latched requires latchable`);
+      }
+      if (!Number.isInteger(obj.width) || obj.width <= 0 || obj.width > 0xffff || !Number.isInteger(obj.height) || obj.height <= 0 || obj.height > 0xffff) {
+        errors.push(`Button ${obj.id}: width/height must fit uint16`);
+      }
+      if (!Number.isInteger(backgroundColorIndex) || backgroundColorIndex < 0 || backgroundColorIndex > 0xff) {
+        errors.push(`Button ${obj.id}: backgroundColorIndex must be 0–255`);
+      }
+      if (!Number.isInteger(borderColorIndex) || borderColorIndex < 0 || borderColorIndex > 0xff) {
+        errors.push(`Button ${obj.id}: borderColorIndex must be 0–255`);
+      }
+
+      for (const childId of obj.childObjectIds ?? []) {
+        const child = objectById.get(childId);
+        if (!child || !BUTTON_CHILD_KINDS.has(child.kind)) {
+          errors.push(`Button ${obj.id}: child "${childId}" must be Output String/Number/Rectangle or Picture Graphic`);
+          continue;
+        }
+        if (child.parentId !== obj.id) {
+          errors.push(`Button ${obj.id}: child "${childId}" parentId must reference the Button`);
+        }
+        if (!Number.isInteger(child.x) || child.x < -0x8000 || child.x > 0x7fff || !Number.isInteger(child.y) || child.y < -0x8000 || child.y > 0x7fff) {
+          errors.push(`Button ${obj.id}: child "${childId}" coordinates must fit int16`);
+        }
+      }
     }
 
     // Output Rectangle must reference Line and Fill Attributes

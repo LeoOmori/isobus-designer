@@ -1,6 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { Archive, Trash2, Upload } from 'lucide-react';
 import {
+  BUTTON_OPTION_DISABLED,
+  BUTTON_OPTION_LATCHABLE,
+  BUTTON_OPTION_LATCHED,
+  BUTTON_OPTION_NO_BORDER,
+  BUTTON_OPTION_SUPPRESS_BORDER,
+  BUTTON_OPTION_TRANSPARENT_BACKGROUND,
   OUTPUT_STRING_OPTION_AUTO_WRAP,
   OUTPUT_STRING_OPTION_TRANSPARENT,
   OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
@@ -14,6 +20,7 @@ import {
   VT_V_JUSTIFY_OPTIONS,
   asHorizontalJustification,
   asVerticalJustification,
+  clamp,
   fontCellValue,
   vtFontCells,
 } from '../domain/isobus';
@@ -128,6 +135,9 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
   const numVarOpts     = referenceOptions(objects, 'number-variable',  '+ Create Number Variable',  '__create_number-variable');
   const outputStringVariableOpts = variableReferenceOptions(objects);
   const nullableFillAttrOpts = nullableFillAttributeOptions(objects);
+  const buttonChildren = kind === 'button'
+    ? objects.filter((object) => (selectedObject.childObjectIds ?? []).includes(object.id))
+    : [];
 
   function handleRefSelect(value: string, createPrefix: string, refKind: ReferenceKind, patchFn: (id: string) => Partial<EditorObject>) {
     if (value.startsWith('__create_')) return onCreateAttributeReference(refKind);
@@ -204,15 +214,31 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
 
       {/* ── Button ───────────────────────────────────────────────────── */}
       {kind === 'button' && (
-        <PropertySection title="Button">
-          <Field label="Label"    value={selectedObject.label ?? ''} onChange={(label) => onPatch({ label })} />
-          <Field label="Key Code" value={selectedObject.keyCode ?? 0} type="number" onChange={(v) => onPatch({ keyCode: Number(v) })} />
-          <Field label="Background" value={selectedObject.backgroundColor} type="color" onChange={(backgroundColor) => onPatch({ backgroundColor })} />
-          <CheckboxField label="Show Border"  checked={((selectedObject.buttonOptions ?? 1) & 1) !== 0}  onChange={(v) => onPatch({ buttonOptions: v ? (selectedObject.buttonOptions ?? 0) | 1 : (selectedObject.buttonOptions ?? 1) & ~1 })} />
-          <CheckboxField label="Enabled"      checked={selectedObject.enabled ?? true}                   onChange={(enabled) => onPatch({ enabled })} />
-          <Field label="On Press Action"    value={selectedObject.onPressAction ?? ''}   onChange={(v) => onPatch({ onPressAction: v })} />
-          <Field label="On Release Action"  value={selectedObject.onReleaseAction ?? ''} onChange={(v) => onPatch({ onReleaseAction: v })} />
-        </PropertySection>
+        <>
+          <PropertySection title="Button">
+            <Field label="Key Code" value={selectedObject.keyCode ?? 0} type="number" onChange={(v) => onPatch({ keyCode: clamp(Math.round(Number(v) || 0), 0, 255) })} />
+            <VtColorField label="Background" value={selectedObject.backgroundColorIndex ?? 1} onChange={(backgroundColorIndex) => onPatch({ backgroundColorIndex })} />
+            <VtColorField label="Border Color" value={selectedObject.borderColorIndex ?? 0} onChange={(borderColorIndex) => onPatch({ borderColorIndex })} />
+          </PropertySection>
+          <PropertySection title="Options">
+            <CheckboxField label="Latchable" checked={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_LATCHABLE) !== 0} onChange={(v) => {
+              const next = patchBit(selectedObject.buttonOptions, BUTTON_OPTION_LATCHABLE, v);
+              onPatch({ buttonOptions: v ? next : next & ~BUTTON_OPTION_LATCHED });
+            }} />
+            <CheckboxField label="Latched" checked={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_LATCHED) !== 0} disabled={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_LATCHABLE) === 0} onChange={(v) => onPatch({ buttonOptions: patchBit(selectedObject.buttonOptions, BUTTON_OPTION_LATCHED, v) })} />
+            <CheckboxField label="Suppress Border" checked={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_SUPPRESS_BORDER) !== 0} onChange={(v) => onPatch({ buttonOptions: patchBit(selectedObject.buttonOptions, BUTTON_OPTION_SUPPRESS_BORDER, v) })} />
+            <CheckboxField label="Transparent Background" checked={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_TRANSPARENT_BACKGROUND) !== 0} onChange={(v) => onPatch({ buttonOptions: patchBit(selectedObject.buttonOptions, BUTTON_OPTION_TRANSPARENT_BACKGROUND, v) })} />
+            <CheckboxField label="Disabled" checked={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_DISABLED) !== 0} onChange={(v) => onPatch({ buttonOptions: patchBit(selectedObject.buttonOptions, BUTTON_OPTION_DISABLED, v) })} />
+            <CheckboxField label="No Border" checked={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_NO_BORDER) !== 0} onChange={(v) => onPatch({ buttonOptions: patchBit(selectedObject.buttonOptions, BUTTON_OPTION_NO_BORDER, v) })} />
+          </PropertySection>
+          <PropertySection title="Children">
+            {buttonChildren.length === 0 ? (
+              <div className="field-hint">Select an output tool, then click inside this Button to add a child object.</div>
+            ) : buttonChildren.map((child) => (
+              <div key={child.id} className="field-hint">{child.id} — {objectKindName(child.kind)} at {child.x}, {child.y}</div>
+            ))}
+          </PropertySection>
+        </>
       )}
 
       {/* ── Output String ─────────────────────────────────────────────── */}

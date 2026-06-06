@@ -126,17 +126,17 @@ export function App() {
   }
 
   // ── Object creation ───────────────────────────────────────────────────
-  function createObject(kind: ObjectKind, x = 70, y = 70, parentMaskId = project.activeMaskId) {
+  function createObject(kind: ObjectKind, x = 70, y = 70, parentId = project.activeMaskId) {
     commit((current) => {
-      const next        = createEditorObject(kind, current, x, y, parentMaskId);
       const isMask      = kind === 'data-mask';
       const isSKM       = kind === 'soft-key-mask';
       const isKey       = kind === 'key';
       const isCanvas    = CANVAS_KINDS.has(kind);
 
-      // Which parent mask/SKM to append this child to
-      const targetMaskId = isCanvas ? parentMaskId : current.activeMaskId;
+      // Which Data Mask or Button to append this canvas child to.
+      const targetParentId = isCanvas ? parentId : current.activeMaskId;
       const activeSKMId  = current.workingSet.activeSoftKeyMaskId;
+      const next        = createEditorObject(kind, current, x, y, targetParentId);
 
       setSelectedId(next.id);
 
@@ -151,8 +151,8 @@ export function App() {
         nextNumber: current.nextNumber + 1,
         objects: [
           ...current.objects.map((o) => {
-            // Add canvas child to data mask childObjectIds
-            if (isCanvas && o.id === targetMaskId) {
+            // Add canvas child to Data Mask/Button childObjectIds.
+            if (isCanvas && o.id === targetParentId) {
               return { ...o, childObjectIds: [...(o.childObjectIds ?? []), next.id] };
             }
             // Add key to soft key mask keys array
@@ -190,11 +190,22 @@ export function App() {
     if (object.kind === 'data-mask' && project.objects.filter((o) => o.kind === 'data-mask').length === 1) return;
 
     commit((current) => {
-      const deleteIds = new Set([id]);
+      const deleteIds = new Set<string>();
+      const objectById = new Map(current.objects.map((candidate) => [candidate.id, candidate]));
+
+      function collectDeleted(currentId: string) {
+        if (deleteIds.has(currentId)) return;
+        deleteIds.add(currentId);
+        const currentObject = objectById.get(currentId);
+        for (const childId of currentObject?.childObjectIds ?? []) collectDeleted(childId);
+        for (const keyId of currentObject?.keys ?? []) collectDeleted(keyId);
+      }
+
+      collectDeleted(id);
       const objects = current.objects
         .filter((o) => !deleteIds.has(o.id))
         .map((o) => {
-          if (o.kind === 'data-mask') {
+          if (o.childObjectIds) {
             return { ...o, childObjectIds: o.childObjectIds?.filter((c) => !deleteIds.has(c)) };
           }
           if (o.kind === 'soft-key-mask') {
@@ -216,9 +227,11 @@ export function App() {
   function layer(action: 'front' | 'back' | 'forward' | 'backward') {
     const selected = project.objects.find((o) => o.id === selectedId);
     if (!selected || selected.kind === 'data-mask') return;
-    const activeMask = project.objects.find((o) => o.id === project.activeMaskId);
-    const activeChildIds = new Set(activeMask?.childObjectIds ?? []);
-    const siblings = project.objects.filter((o) => activeChildIds.has(o.id));
+    const parent = selected.parentId
+      ? project.objects.find((o) => o.id === selected.parentId)
+      : project.objects.find((o) => o.id === project.activeMaskId);
+    const siblingIds = parent?.kind === 'soft-key-mask' ? parent.keys ?? [] : parent?.childObjectIds ?? [];
+    const siblings = project.objects.filter((o) => siblingIds.includes(o.id));
     if (!siblings.length) return;
     const max = Math.max(...siblings.map((o) => o.zIndex));
     const min = Math.min(...siblings.map((o) => o.zIndex));
