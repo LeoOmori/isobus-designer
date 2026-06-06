@@ -1156,3 +1156,99 @@ button.list-row {
 .picture-graphic-flashing {
   animation: picture-graphic-flash 1s infinite step-end;
 }
+
+/* ── Export IOP button ────────────────────────────────────────────────────── */
+.export-iop {
+  background: #0f766e !important;
+}
+.export-iop:hover {
+  background: #0d9488 !important;
+}
+
+/* ── Export errors modal ─────────────────────────────────────────────────── */
+.export-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.export-modal {
+  background: #1e2433;
+  border: 1px solid #2e3a52;
+  border-radius: 10px;
+  width: 520px;
+  max-width: 90vw;
+  max-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.export-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid #2e3a52;
+  gap: 8px;
+  color: #f87171;
+}
+
+.export-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.export-modal-icon {
+  flex-shrink: 0;
+}
+
+.export-modal-close {
+  background: none;
+  border: none;
+  color: #8a99b3;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.export-modal-close:hover {
+  color: #c5d0e0;
+  background: #2a3447;
+}
+
+.export-modal-hint {
+  padding: 10px 16px 4px;
+  font-size: 12px;
+  color: #8a99b3;
+  margin: 0;
+}
+
+.export-errors-list {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.export-error-item {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: #e2e8f0;
+  border-bottom: 1px solid #1a2133;
+  font-family: 'ui-monospace', 'Cascadia Code', 'Menlo', monospace;
+  line-height: 1.5;
+}
+.export-error-item:last-child {
+  border-bottom: none;
+}

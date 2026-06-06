@@ -12,6 +12,9 @@ import {
   expectedPictureGraphicRawDataLength,
   quantizePictureGraphicSource,
 } from './domain/vtPalette';
+import { defaultIopFilename, downloadIopFile } from './domain/export/downloadIop';
+import { exportObjectPool } from './domain/export/exportObjectPool';
+import { ExportErrorsDialog } from './panels/ExportErrorsDialog';
 import { LeftSidebar } from './panels/LeftSidebar';
 import { RightSidebar } from './panels/RightSidebar';
 import { TopToolbar } from './panels/TopToolbar';
@@ -27,6 +30,7 @@ export function App() {
   const [selectedId, setSelectedId] = useState(project.activeMaskId || project.workingSet.id);
   const [tool, setTool] = useState<ToolMode>('select');
   const [viewport, setViewport] = useState<Viewport>({ x: 200, y: 100, zoom: 0.85 });
+  const [exportErrors, setExportErrors] = useState<string[] | null>(null);
   const errors = validate(project);
 
   const masks       = project.objects.filter((o) => o.kind === 'data-mask');
@@ -250,6 +254,16 @@ export function App() {
     patchObject(selected.id, { zIndex: next });
   }
 
+  // ── IOP Export ───────────────────────────────────────────────────────
+  function handleExportIop() {
+    const { bytes, errors: exportErrs } = exportObjectPool(project);
+    if (exportErrs.length > 0) {
+      setExportErrors(exportErrs);
+      return;
+    }
+    downloadIopFile(bytes, defaultIopFilename(project));
+  }
+
   // ── Render ────────────────────────────────────────────────────────────
   return (
     <div className="app-shell">
@@ -263,6 +277,7 @@ export function App() {
         canRedo={canRedo}
         onSave={() => window.localStorage.setItem(storageKey, JSON.stringify(project))}
         onExport={() => navigator.clipboard?.writeText(JSON.stringify(project, null, 2))}
+        onExportIop={handleExportIop}
       />
       <div className="workspace">
         <LeftSidebar
@@ -318,6 +333,9 @@ export function App() {
       <div className={`validation-chip ${errors.length ? 'invalid' : ''}`}>
         {errors.length ? `${errors.length} validation issue(s)` : 'Valid object pool draft'}
       </div>
+      {exportErrors && (
+        <ExportErrorsDialog errors={exportErrors} onClose={() => setExportErrors(null)} />
+      )}
     </div>
   );
 }

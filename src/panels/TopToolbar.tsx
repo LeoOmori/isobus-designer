@@ -1,6 +1,6 @@
 import { Box, Crosshair, Download, File, Minus, Play, Plus, Redo2, Save, Settings, Undo2, Upload } from 'lucide-react';
 
-export function TopToolbar({ zoom, onZoom, onReset, onUndo, onRedo, canUndo, canRedo, onSave, onExport }: {
+export function TopToolbar({ zoom, onZoom, onReset, onUndo, onRedo, canUndo, canRedo, onSave, onExport, onExportIop }: {
   zoom: number;
   onZoom: (zoom: number) => void;
   onReset: () => void;
@@ -10,6 +10,7 @@ export function TopToolbar({ zoom, onZoom, onReset, onUndo, onRedo, canUndo, can
   canRedo: boolean;
   onSave: () => void;
   onExport: () => void;
+  onExportIop: () => void;
 }) {
   return (
     <header className="topbar">
@@ -31,6 +32,7 @@ export function TopToolbar({ zoom, onZoom, onReset, onUndo, onRedo, canUndo, can
       <div className="top-actions">
         <button className="preview"><Play size={18} />Preview</button>
         <button className="export" onClick={onExport}><Download size={18} />Export JSON</button>
+        <button className="export export-iop" onClick={onExportIop}><Download size={18} />Export IOP</button>
         <Settings size={20} />
       </div>
     </header>
