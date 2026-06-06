@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { initialProject } from '../domain/initialProject';
 import {
+  OUTPUT_NUMBER_OPTION_TRANSPARENT,
   OUTPUT_STRING_OPTION_TRANSPARENT,
   asHorizontalJustification,
   asVerticalJustification,
@@ -76,11 +77,16 @@ function migrateObject(object: EditorObject): EditorObject {
 
   if (object.kind === 'output-number') {
     const outputOptions = object.backgroundColor === 'transparent'
-      ? (object.outputOptions ?? 0) | OUTPUT_STRING_OPTION_TRANSPARENT
+      ? (object.outputOptions ?? 0) | OUTPUT_NUMBER_OPTION_TRANSPARENT
       : object.outputOptions ?? 0;
+    const variableReference = object.variableReference !== undefined
+      ? object.variableReference
+      : object.numberVariableId ? object.numberVariableId : null;
     return {
       ...object,
       backgroundColorIndex,
+      variableReference,
+      numberVariableId: undefined,
       outputOptions,
       horizontalJustification: object.horizontalJustification ?? horizontalAlignToJustification(object.horizontalAlign),
       verticalJustification: object.verticalJustification ?? verticalAlignToJustification(object.verticalAlign),

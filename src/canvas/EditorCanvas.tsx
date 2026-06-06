@@ -6,6 +6,7 @@ import {
   BUTTON_OPTION_NO_BORDER,
   BUTTON_OPTION_SUPPRESS_BORDER,
   BUTTON_OPTION_TRANSPARENT_BACKGROUND,
+  OUTPUT_NUMBER_OPTION_TRANSPARENT,
   OUTPUT_STRING_OPTION_AUTO_WRAP, OUTPUT_STRING_OPTION_TRANSPARENT, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
   RECTANGLE_LINE_SUPPRESSION_BOTTOM, RECTANGLE_LINE_SUPPRESSION_LEFT,
   RECTANGLE_LINE_SUPPRESSION_RIGHT, RECTANGLE_LINE_SUPPRESSION_TOP,
@@ -230,9 +231,14 @@ export function EditorCanvas({
     const line   = lineAttributes.find((a) => a.id === object.lineAttributeId);
     const fill   = fillAttributes.find((a) => a.id === object.fillAttributeId);
     const font   = fontAttributes.find((a) => a.id === object.fontAttributeId);
-    const variableReference = object.variableReference !== undefined ? object.variableReference : object.stringVariableId || null;
-    const strVar = variableReference ? stringVariables.find((v) => v.id === variableReference) : undefined;
-    const numVar = numberVariables.find((v) => v.id === object.numberVariableId);
+    const stringVariableReference = object.kind === 'output-string'
+      ? object.variableReference !== undefined ? object.variableReference : object.stringVariableId || null
+      : null;
+    const numberVariableReference = object.kind === 'output-number'
+      ? object.variableReference !== undefined ? object.variableReference : object.numberVariableId || null
+      : null;
+    const strVar = stringVariableReference ? stringVariables.find((v) => v.id === stringVariableReference) : undefined;
+    const numVar = numberVariableReference ? numberVariables.find((v) => v.id === numberVariableReference) : undefined;
     const selected = selectedId === object.id;
     const buttonOptions = object.kind === 'button' ? object.buttonOptions ?? 0 : 0;
     const buttonNoBorder = (buttonOptions & BUTTON_OPTION_NO_BORDER) !== 0;
@@ -299,7 +305,8 @@ export function EditorCanvas({
       borderColor = object.borderColor;
       borderWidth = 1;
       borderStyle = 'solid';
-      background = ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_TRANSPARENT) !== 0
+      const transparentBit = object.kind === 'output-number' ? OUTPUT_NUMBER_OPTION_TRANSPARENT : OUTPUT_STRING_OPTION_TRANSPARENT;
+      background = ((object.outputOptions ?? 0) & transparentBit) !== 0
         ? 'transparent'
         : vtColor(object.backgroundColorIndex ?? 1);
     } else {
@@ -314,6 +321,9 @@ export function EditorCanvas({
       object.kind === 'output-string' ? (font?.fontHeight ?? font?.fontSize ?? object.fontSize)
       : object.kind === 'output-number' ? (font?.fontHeight ?? font?.fontSize ?? 16)
       : object.fontSize;
+    const outputNumberCharWidth = object.kind === 'output-number'
+      ? Math.max(1, Math.floor(Math.max(1, object.width - 8) / (font?.fontWidth ?? font?.fontHeight ?? font?.fontSize ?? 16)))
+      : 0;
     const outputStringAutoWrap = object.kind === 'output-string' && ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_AUTO_WRAP) !== 0;
     const outputStringWrapOnHyphen = object.kind === 'output-string' && ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) !== 0;
 
@@ -387,6 +397,7 @@ export function EditorCanvas({
               numVar?.value ?? object.value ?? 0,
               object.offset ?? 0, object.scale ?? 1,
               object.numberOfDecimals ?? 0, object.numberFormat ?? 0,
+              object.outputOptions ?? 0, outputNumberCharWidth,
             )}
           </span>
         )}

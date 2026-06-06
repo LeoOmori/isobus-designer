@@ -174,12 +174,20 @@ export function App() {
         ...current,
         nextNumber: current.nextNumber + 1,
         objects: current.objects.map((o) =>
-          o.id === selectedId && (CANVAS_KINDS.has(o.kind) || o.kind === 'button')
+          o.id === selectedId && canApplyReferencePatch(o, kind)
             ? { ...o, ...referencePatch(kind, attribute.id) }
             : o,
         ).concat(attribute),
       };
     });
+  }
+
+  function canApplyReferencePatch(object: EditorObject, kind: ReferenceKind) {
+    if (kind === 'font-attribute') return object.kind === 'output-string' || object.kind === 'output-number';
+    if (kind === 'string-variable') return object.kind === 'output-string';
+    if (kind === 'number-variable') return object.kind === 'output-number';
+    if (kind === 'line-attribute' || kind === 'fill-attribute') return object.kind === 'output-rectangle';
+    return false;
   }
 
   // ── Deletion ──────────────────────────────────────────────────────────

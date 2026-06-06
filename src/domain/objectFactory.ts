@@ -120,14 +120,14 @@ export function createEditorObject(
     text:            kind === 'output-string' ? 'New Text' : undefined,
     length:          kind === 'output-string' ? 32 : undefined,
     fontAttributeId: (kind === 'output-string' || kind === 'output-number') ? (defaultFont?.id ?? '') : undefined,
-    variableReference: kind === 'output-string' ? null : undefined,
+    variableReference: (kind === 'output-string' || kind === 'output-number') ? null : undefined,
     outputOptions:   (kind === 'output-string' || kind === 'output-number') ? 0 : undefined,
     horizontalJustification: (kind === 'output-string' || kind === 'output-number') ? 0 : undefined,
     verticalJustification:   (kind === 'output-string' || kind === 'output-number') ? 0 : undefined,
     fontSize: kind === 'font-attribute' ? 24 : undefined,
 
     // ── Output Number ────────────────────────────────────────────────────
-    numberVariableId: kind === 'output-number' ? '' : undefined,
+    numberVariableId: undefined,
     offset:           kind === 'output-number' ? 0  : undefined,
     scale:            kind === 'output-number' ? 1  : undefined,
     numberOfDecimals: kind === 'output-number' ? 0  : undefined,
@@ -182,6 +182,6 @@ export function referencePatch(kind: ReferenceKind, id: string): Partial<EditorO
     case 'fill-attribute':  return { fillAttributeId: id };
     case 'font-attribute':  return { fontAttributeId: id };
     case 'string-variable': return { variableReference: id };
-    case 'number-variable': return { numberVariableId: id };
+    case 'number-variable': return { variableReference: id, numberVariableId: undefined };
   }
 }

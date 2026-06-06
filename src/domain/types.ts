@@ -86,7 +86,7 @@ export type EditorObject = {
   text?: string;
   length?: number;               // uint16 fixed value byte length
   fontAttributeId?: string;
-  variableReference?: string | null; // null = 0xFFFF NULL/use local value
+  variableReference?: string | null; // null = 0xFFFF NULL/use local value; string/number variable id by object kind
   stringVariableId?: string;     // legacy: migrated to variableReference
   outputOptions?: number;        // uint8 (bit0=transparent, bit1=auto-wrap, bit2=wrap-on-hyphen)
   horizontalJustification?: 0 | 1 | 2;
@@ -95,11 +95,11 @@ export type EditorObject = {
   verticalAlign?: 'top' | 'center' | 'bottom';   // legacy: migrated to verticalJustification
 
   // ── Output Number (objectType 12) ────────────────────────────────────
-  numberVariableId?: string;
+  numberVariableId?: string;      // legacy: migrated to variableReference
   offset?: number;              // int32
   scale?: number;               // float
   numberOfDecimals?: number;    // uint8
-  numberFormat?: number;        // uint8 (0=decimal, 1=hex)
+  numberFormat?: number;        // uint8 (0=fixed decimal, 1=exponential)
   value?: number;               // uint32 — also used by Number Variable
 
   // ── Output Rectangle (objectType 14) ─────────────────────────────────

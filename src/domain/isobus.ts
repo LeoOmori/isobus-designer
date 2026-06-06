@@ -43,13 +43,18 @@ export const VT_FILL_TYPE_OPTIONS = [
 
 /** ISO 11783-6 Output Number format values. */
 export const VT_NUMBER_FORMAT_OPTIONS = [
-  { value: 0, label: 'Decimal' },
-  { value: 1, label: 'Hexadecimal' },
+  { value: 0, label: 'Fixed Decimal' },
+  { value: 1, label: 'Exponential' },
 ];
 
 export const OUTPUT_STRING_OPTION_TRANSPARENT = 1 << 0;
 export const OUTPUT_STRING_OPTION_AUTO_WRAP = 1 << 1;
 export const OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN = 1 << 2;
+
+export const OUTPUT_NUMBER_OPTION_TRANSPARENT = 1 << 0;
+export const OUTPUT_NUMBER_OPTION_LEADING_ZEROS = 1 << 1;
+export const OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK = 1 << 2;
+export const OUTPUT_NUMBER_OPTION_TRUNCATE = 1 << 3;
 
 export const BUTTON_OPTION_LATCHABLE = 1 << 0;
 export const BUTTON_OPTION_LATCHED = 1 << 1;
@@ -202,8 +207,66 @@ export function formatOutputNumber(
   scale: number,
   decimals: number,
   format: number,
+  options = 0,
+  fieldCharWidth = 0,
 ) {
   const computed = (raw + offset) * scale;
-  if (format === 1) return `0x${Math.round(computed).toString(16).toUpperCase()}`;
-  return computed.toFixed(decimals);
+  const decimalCount = clamp(Math.round(decimals), 0, 7);
+  const truncate = (options & OUTPUT_NUMBER_OPTION_TRUNCATE) !== 0;
+  const adjusted = truncate ? truncateToDecimals(computed, decimalCount) : roundToDecimals(computed, decimalCount);
+  const zeroAsBlank = format === 1
+    ? computed === 0 || Object.is(computed, -0)
+    : adjusted === 0 || Object.is(adjusted, -0);
+
+  if ((options & OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK) !== 0 && zeroAsBlank) {
+    return '';
+  }
+
+  const formatted = format === 1
+    ? formatExponential(computed, decimalCount, truncate)
+    : adjusted.toFixed(decimalCount);
+  return (options & OUTPUT_NUMBER_OPTION_LEADING_ZEROS) !== 0
+    ? padLeadingZeros(formatted, Math.floor(fieldCharWidth))
+    : formatted;
+}
+
+function roundToDecimals(value: number, decimals: number) {
+  const factor = 10 ** decimals;
+  const sign = Math.sign(value) || 1;
+  return sign * Math.round(Math.abs(value) * factor) / factor;
+}
+
+function truncateToDecimals(value: number, decimals: number) {
+  const factor = 10 ** decimals;
+  return Math.trunc(value * factor) / factor;
+}
+
+function formatExponential(value: number, decimals: number, truncate: boolean) {
+  if (value === 0) return `0${decimals > 0 ? `.${'0'.repeat(decimals)}` : ''}E+00`;
+
+  let exponent = Math.floor(Math.log10(Math.abs(value)));
+  const mantissa = value / (10 ** exponent);
+  let adjustedMantissa = truncate ? truncateToDecimals(mantissa, decimals) : roundToDecimals(mantissa, decimals);
+  if (Math.abs(adjustedMantissa) >= 10) {
+    adjustedMantissa /= 10;
+    exponent += 1;
+  }
+  const sign = exponent < 0 ? '-' : '+';
+  const exponentText = Math.abs(exponent).toString().padStart(2, '0');
+  return `${adjustedMantissa.toFixed(decimals)}E${sign}${exponentText}`;
+}
+
+function padLeadingZeros(value: string, fieldCharWidth: number) {
+  if (fieldCharWidth <= 0 || value.length >= fieldCharWidth) return value;
+
+  const exponentIndex = value.toUpperCase().indexOf('E');
+  const numeric = exponentIndex >= 0 ? value.slice(0, exponentIndex) : value;
+  const exponent = exponentIndex >= 0 ? value.slice(exponentIndex) : '';
+  const sign = value.startsWith('-') ? '-' : '';
+  const unsigned = sign ? numeric.slice(1) : numeric;
+  const [integer, fraction] = unsigned.split('.');
+  const separatorAndFraction = fraction === undefined ? '' : `.${fraction}`;
+  const targetIntegerLength = fieldCharWidth - sign.length - separatorAndFraction.length - exponent.length;
+  if (targetIntegerLength <= integer.length) return value;
+  return `${sign}${integer.padStart(targetIntegerLength, '0')}${separatorAndFraction}${exponent}`;
 }

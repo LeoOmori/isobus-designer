@@ -7,6 +7,10 @@ import {
   BUTTON_OPTION_NO_BORDER,
   BUTTON_OPTION_SUPPRESS_BORDER,
   BUTTON_OPTION_TRANSPARENT_BACKGROUND,
+  OUTPUT_NUMBER_OPTION_LEADING_ZEROS,
+  OUTPUT_NUMBER_OPTION_TRANSPARENT,
+  OUTPUT_NUMBER_OPTION_TRUNCATE,
+  OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK,
   OUTPUT_STRING_OPTION_AUTO_WRAP,
   OUTPUT_STRING_OPTION_TRANSPARENT,
   OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
@@ -22,6 +26,7 @@ import {
   asVerticalJustification,
   clamp,
   fontCellValue,
+  formatOutputNumber,
   vtFontCells,
 } from '../domain/isobus';
 import { objectKindName } from '../domain/objectMeta';
@@ -57,6 +62,14 @@ function variableReferenceOptions(objects: EditorObject[]) {
     { value: '__null', label: 'NULL — use local text' },
     ...objects.filter((o) => o.kind === 'string-variable').map((o) => ({ value: o.id, label: `${o.id} — ${o.name}` })),
     { value: '__create_string-variable', label: '+ Create String Variable' },
+  ];
+}
+
+function numberVariableReferenceOptions(objects: EditorObject[]) {
+  return [
+    { value: '__null', label: 'NULL — use local value' },
+    ...objects.filter((o) => o.kind === 'number-variable').map((o) => ({ value: o.id, label: `${o.id} — ${o.name}` })),
+    { value: '__create_number-variable', label: '+ Create Number Variable' },
   ];
 }
 
@@ -132,12 +145,35 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
 
   const lineAttrOpts   = referenceOptions(objects, 'line-attribute',   '+ Create Line Attribute',   '__create_line-attribute');
   const fontAttrOpts   = referenceOptions(objects, 'font-attribute',   '+ Create Font Attribute',   '__create_font-attribute');
-  const numVarOpts     = referenceOptions(objects, 'number-variable',  '+ Create Number Variable',  '__create_number-variable');
   const outputStringVariableOpts = variableReferenceOptions(objects);
+  const outputNumberVariableOpts = numberVariableReferenceOptions(objects);
   const nullableFillAttrOpts = nullableFillAttributeOptions(objects);
   const buttonChildren = kind === 'button'
     ? objects.filter((object) => (selectedObject.childObjectIds ?? []).includes(object.id))
     : [];
+  const selectedNumberVariableReference = selectedObject.variableReference !== undefined
+    ? selectedObject.variableReference
+    : selectedObject.numberVariableId || null;
+  const selectedNumberVariable = selectedNumberVariableReference
+    ? objects.find((object) => object.id === selectedNumberVariableReference && object.kind === 'number-variable')
+    : undefined;
+  const selectedOutputNumberFont = kind === 'output-number'
+    ? objects.find((object) => object.id === selectedObject.fontAttributeId && object.kind === 'font-attribute')
+    : undefined;
+  const outputNumberPreviewWidth = kind === 'output-number'
+    ? Math.max(1, Math.floor(Math.max(1, selectedObject.width - 8) / (selectedOutputNumberFont?.fontWidth ?? selectedOutputNumberFont?.fontHeight ?? selectedOutputNumberFont?.fontSize ?? 16)))
+    : 0;
+  const outputNumberPreview = kind === 'output-number'
+    ? formatOutputNumber(
+      selectedNumberVariable?.value ?? selectedObject.value ?? 0,
+      selectedObject.offset ?? 0,
+      selectedObject.scale ?? 1,
+      selectedObject.numberOfDecimals ?? 0,
+      selectedObject.numberFormat ?? 0,
+      selectedObject.outputOptions ?? 0,
+      outputNumberPreviewWidth,
+    )
+    : '';
 
   function handleRefSelect(value: string, createPrefix: string, refKind: ReferenceKind, patchFn: (id: string) => Partial<EditorObject>) {
     if (value.startsWith('__create_')) return onCreateAttributeReference(refKind);
@@ -268,19 +304,25 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
       {kind === 'output-number' && (
         <>
           <PropertySection title="Number">
-            <Field label="Default Value"   value={selectedObject.value ?? 0}            type="number" onChange={(v) => onPatch({ value: Number(v) })} />
+            <Field label="Value (Raw)"   value={selectedObject.value ?? 0}            type="number" onChange={(v) => onPatch({ value: clamp(Math.round(Number(v) || 0), 0, 0xffffffff) })} />
             <Field label="Offset"          value={selectedObject.offset ?? 0}            type="number" onChange={(v) => onPatch({ offset: Number(v) })} />
             <Field label="Scale"           value={selectedObject.scale ?? 1}             type="number" onChange={(v) => onPatch({ scale: Number(v) })} />
-            <Field label="Decimal Places"  value={selectedObject.numberOfDecimals ?? 0}  type="number" onChange={(v) => onPatch({ numberOfDecimals: Number(v) })} />
+            <Field label="Decimal Places"  value={selectedObject.numberOfDecimals ?? 0}  type="number" onChange={(v) => onPatch({ numberOfDecimals: clamp(Math.round(Number(v) || 0), 0, 7) })} />
             <SelectField label="Format" value={String(selectedObject.numberFormat ?? 0)} options={VT_NUMBER_FORMAT_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))} onChange={(v) => onPatch({ numberFormat: Number(v) })} />
             <VtColorField label="Background" value={selectedObject.backgroundColorIndex ?? 1} onChange={(backgroundColorIndex) => onPatch({ backgroundColorIndex })} />
             <SelectField label="Horizontal" value={String(selectedObject.horizontalJustification ?? 0)} options={VT_H_JUSTIFY_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))} onChange={(v) => onPatch({ horizontalJustification: asHorizontalJustification(Number(v)) })} />
             <SelectField label="Vertical" value={String(selectedObject.verticalJustification ?? 0)} options={VT_V_JUSTIFY_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))} onChange={(v) => onPatch({ verticalJustification: asVerticalJustification(Number(v)) })} />
-            <CheckboxField label="Transparent Background" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_STRING_OPTION_TRANSPARENT) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_STRING_OPTION_TRANSPARENT, v) })} />
+            <div className="field-hint">Preview: {outputNumberPreview || 'blank'}</div>
+          </PropertySection>
+          <PropertySection title="Options">
+            <CheckboxField label="Transparent Background" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_NUMBER_OPTION_TRANSPARENT) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_NUMBER_OPTION_TRANSPARENT, v) })} />
+            <CheckboxField label="Leading Zeros" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_NUMBER_OPTION_LEADING_ZEROS) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_NUMBER_OPTION_LEADING_ZEROS, v) })} />
+            <CheckboxField label="Zero as Blank" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK, v) })} />
+            <CheckboxField label="Truncate" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_NUMBER_OPTION_TRUNCATE) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_NUMBER_OPTION_TRUNCATE, v) })} />
           </PropertySection>
           <PropertySection title="References">
             <SelectField label="Font Attribute"    value={selectedObject.fontAttributeId ?? ''}   options={fontAttrOpts} onChange={(v) => handleRefSelect(v, '__create_font-attribute', 'font-attribute', (id) => ({ fontAttributeId: id }))} />
-            <SelectField label="Number Variable"   value={selectedObject.numberVariableId ?? ''}  options={numVarOpts}   onChange={(v) => handleRefSelect(v, '__create_number-variable', 'number-variable', (id) => ({ numberVariableId: id }))} />
+            <SelectField label="Variable Reference"   value={selectedNumberVariableReference ?? '__null'}  options={outputNumberVariableOpts}   onChange={(v) => handleRefSelect(v, '__create_number-variable', 'number-variable', (id) => ({ variableReference: id === '__null' ? null : id, numberVariableId: undefined }))} />
           </PropertySection>
         </>
       )}

@@ -2,6 +2,10 @@ import type { ObjectKind, ProjectState } from './types';
 import {
   BUTTON_OPTION_LATCHABLE,
   BUTTON_OPTION_LATCHED,
+  OUTPUT_NUMBER_OPTION_LEADING_ZEROS,
+  OUTPUT_NUMBER_OPTION_TRANSPARENT,
+  OUTPUT_NUMBER_OPTION_TRUNCATE,
+  OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK,
   OUTPUT_STRING_OPTION_AUTO_WRAP,
   OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
 } from './isobus';
@@ -21,6 +25,11 @@ const REFERENCE_ONLY_KINDS = new Set([
 const BUTTON_CHILD_KINDS = new Set<ObjectKind>([
   'output-string', 'output-number', 'output-rectangle', 'picture-graphic',
 ]);
+
+const OUTPUT_NUMBER_OPTION_MASK = OUTPUT_NUMBER_OPTION_TRANSPARENT
+  | OUTPUT_NUMBER_OPTION_LEADING_ZEROS
+  | OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK
+  | OUTPUT_NUMBER_OPTION_TRUNCATE;
 
 export function validate(project: ProjectState): string[] {
   const errors: string[] = [];
@@ -108,9 +117,56 @@ export function validate(project: ProjectState): string[] {
       }
     }
 
-    // Output Number must reference a Font Attribute
-    if (obj.kind === 'output-number' && obj.fontAttributeId && objectById.get(obj.fontAttributeId)?.kind !== 'font-attribute') {
-      errors.push(`Output Number ${obj.id}: unknown fontAttributeId "${obj.fontAttributeId}"`);
+    if (obj.kind === 'output-number') {
+      const options = obj.outputOptions ?? 0;
+      const variableReference = obj.variableReference !== undefined ? obj.variableReference : obj.numberVariableId || null;
+      const variable = variableReference ? objectById.get(variableReference) : undefined;
+      const decimals = obj.numberOfDecimals ?? 0;
+      const format = obj.numberFormat ?? 0;
+      const value = obj.value ?? 0;
+      const offset = obj.offset ?? 0;
+      const scale = obj.scale ?? 1;
+
+      if (!obj.fontAttributeId) {
+        errors.push(`Output Number ${obj.id}: fontAttributeId is required`);
+      } else if (objectById.get(obj.fontAttributeId)?.kind !== 'font-attribute') {
+        errors.push(`Output Number ${obj.id}: unknown fontAttributeId "${obj.fontAttributeId}"`);
+      }
+      if (!Number.isInteger(obj.width) || obj.width <= 0 || obj.width > 0xffff || !Number.isInteger(obj.height) || obj.height <= 0 || obj.height > 0xffff) {
+        errors.push(`Output Number ${obj.id}: width/height must fit uint16`);
+      }
+      if (!Number.isInteger(obj.backgroundColorIndex ?? 0) || (obj.backgroundColorIndex ?? 0) < 0 || (obj.backgroundColorIndex ?? 0) > 255) {
+        errors.push(`Output Number ${obj.id}: backgroundColorIndex must be 0–255`);
+      }
+      if (!Number.isInteger(options) || options < 0 || options > 0xff) {
+        errors.push(`Output Number ${obj.id}: outputOptions must be 0–255`);
+      } else if (options & ~OUTPUT_NUMBER_OPTION_MASK) {
+        errors.push(`Output Number ${obj.id}: outputOptions contains unknown bits`);
+      }
+      if (variableReference && variable?.kind !== 'number-variable') {
+        errors.push(`Output Number ${obj.id}: unknown variableReference "${variableReference}"`);
+      }
+      if (!Number.isInteger(value) || value < 0 || value > 0xffffffff) {
+        errors.push(`Output Number ${obj.id}: value must fit uint32`);
+      }
+      if (!Number.isInteger(offset) || offset < -0x80000000 || offset > 0x7fffffff) {
+        errors.push(`Output Number ${obj.id}: offset must fit int32`);
+      }
+      if (!Number.isFinite(scale)) {
+        errors.push(`Output Number ${obj.id}: scale must be a finite number`);
+      }
+      if (!Number.isInteger(decimals) || decimals < 0 || decimals > 7) {
+        errors.push(`Output Number ${obj.id}: numberOfDecimals must be 0–7`);
+      }
+      if (format !== 0 && format !== 1) {
+        errors.push(`Output Number ${obj.id}: numberFormat must be 0 (fixed decimal) or 1 (exponential)`);
+      }
+      if (![0, 1, 2].includes(obj.horizontalJustification ?? -1)) {
+        errors.push(`Output Number ${obj.id}: invalid horizontal justification`);
+      }
+      if (![0, 1, 2].includes(obj.verticalJustification ?? -1)) {
+        errors.push(`Output Number ${obj.id}: invalid vertical justification`);
+      }
     }
 
     if (obj.kind === 'button') {
