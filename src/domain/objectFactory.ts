@@ -138,9 +138,10 @@ export function createEditorObject(
     hidden:           kind === 'output-rectangle' ? false : undefined,
 
     // ── Picture Graphic ──────────────────────────────────────────────────
+    targetWidth:      kind === 'picture-graphic' ? 64  : undefined,
     actualWidth:      kind === 'picture-graphic' ? 64  : undefined,
     actualHeight:     kind === 'picture-graphic' ? 64  : undefined,
-    graphicFormat:    kind === 'picture-graphic' ? 0   : undefined,
+    graphicFormat:    kind === 'picture-graphic' ? 2   : undefined,
     graphicOptions:   kind === 'picture-graphic' ? 0   : undefined,
     transparencyColor: kind === 'picture-graphic' ? 0  : undefined,
     rawData:          kind === 'picture-graphic' ? []  : undefined,

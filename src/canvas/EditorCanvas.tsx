@@ -1,11 +1,16 @@
 import { Fragment, type PointerEvent, type WheelEvent, useCallback, useRef, useState } from 'react';
 import {
   clamp, fillTypeToBackground, fontCellScaleX, formatOutputNumber,
-  horizontalAlignToFlex, lineArtToCss, rawDataToDataUrl, snap,
+  horizontalAlignToFlex, lineArtToCss, snap,
   textTransformOrigin, verticalAlignToFlex, vtColor,
 } from '../domain/isobus';
 import { getActiveMask, getCanvasChildren, getSoftKeyMaskKeys } from '../domain/selectors';
 import type { DragState, EditorObject, ObjectKind, ProjectState, ToolMode, Viewport } from '../domain/types';
+import {
+  PICTURE_GRAPHIC_OPTION_FLASHING,
+  derivedPictureGraphicHeight,
+  pictureGraphicToDataUrl,
+} from '../domain/vtPalette';
 import { BottomControls, CanvasToolbar } from './CanvasToolbar';
 
 /** Tools that create a canvas object on click. */
@@ -134,6 +139,15 @@ export function EditorCanvas({
     if (drag.type === 'move') {
       onUpdateObject(drag.objectId, { x: snap(drag.startObject.x + dx), y: snap(drag.startObject.y + dy) });
     } else {
+      if (drag.startObject.kind === 'picture-graphic') {
+        const width = Math.max(20, snap(drag.startObject.width + dx));
+        onUpdateObject(drag.objectId, {
+          targetWidth: width,
+          width,
+          height: derivedPictureGraphicHeight(width, drag.startObject.actualWidth ?? width, drag.startObject.actualHeight ?? drag.startObject.height),
+        });
+        return;
+      }
       onUpdateObject(drag.objectId, {
         width:  Math.max(20, snap(drag.startObject.width  + dx)),
         height: Math.max(16, snap(drag.startObject.height + dy)),
@@ -269,9 +283,11 @@ export function EditorCanvas({
         {/* Picture Graphic */}
         {object.kind === 'picture-graphic' && (
           (() => {
-            const imgUrl = rawDataToDataUrl(object.rawData, object.graphicFormat) ?? object.previewUrl;
+            const imgUrl = pictureGraphicToDataUrl(object);
+            const targetWidth = object.targetWidth ?? object.width;
+            const targetHeight = derivedPictureGraphicHeight(targetWidth, object.actualWidth ?? targetWidth, object.actualHeight ?? object.height);
             return imgUrl
-              ? <img src={imgUrl} alt={object.name} draggable={false} onDragStart={(e) => e.preventDefault()} style={{ width: '100%', height: '100%', objectFit: 'contain', userSelect: 'none' }} />
+              ? <img src={imgUrl} alt={object.name} draggable={false} onDragStart={(e) => e.preventDefault()} className={(object.graphicOptions ?? 0) & PICTURE_GRAPHIC_OPTION_FLASHING ? 'picture-graphic-flashing' : undefined} style={{ width: targetWidth, height: targetHeight, objectFit: 'fill', userSelect: 'none', imageRendering: 'pixelated' }} />
               : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 11 }}>🖼 {object.name}</div>;
           })()
         )}

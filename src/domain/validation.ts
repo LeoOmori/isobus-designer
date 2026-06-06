@@ -1,4 +1,10 @@
 import type { ProjectState } from './types';
+import {
+  PICTURE_GRAPHIC_OPTION_RLE,
+  asPictureGraphicFormat,
+  expectedPictureGraphicRawDataLength,
+  pictureFormatMaxIndex,
+} from './vtPalette';
 
 const REFERENCE_ONLY_KINDS = new Set([
   'line-attribute', 'fill-attribute', 'font-attribute',
@@ -43,6 +49,35 @@ export function validate(project: ProjectState): string[] {
     // Fill Attribute: fillType=3 requires fillPattern
     if (obj.kind === 'fill-attribute' && obj.fillType === 3 && !obj.fillPattern) {
       errors.push(`Fill Attribute ${obj.id}: fillType=3 (pattern) requires a fillPattern reference`);
+    }
+
+    if (obj.kind === 'picture-graphic') {
+      const actualWidth = obj.actualWidth ?? 0;
+      const actualHeight = obj.actualHeight ?? 0;
+      const format = asPictureGraphicFormat(obj.graphicFormat);
+      const expectedLength = expectedPictureGraphicRawDataLength(actualWidth, actualHeight, format);
+
+      if (actualWidth <= 0 || actualHeight <= 0) {
+        errors.push(`Picture Graphic ${obj.id}: actualWidth and actualHeight must be positive`);
+      }
+      if ((obj.targetWidth ?? obj.width) <= 0) {
+        errors.push(`Picture Graphic ${obj.id}: target width must be positive`);
+      }
+      if (obj.rawData?.length && obj.rawData.length !== expectedLength) {
+        errors.push(`Picture Graphic ${obj.id}: rawData length ${obj.rawData.length} does not match ${expectedLength} bytes for ${actualWidth}×${actualHeight} format ${format}`);
+      }
+      if ((obj.graphicOptions ?? 0) & PICTURE_GRAPHIC_OPTION_RLE) {
+        errors.push(`Picture Graphic ${obj.id}: RLE compression is not supported in this editor version`);
+      }
+      if ((obj.graphicOptions ?? 0) & ~0b111) {
+        errors.push(`Picture Graphic ${obj.id}: graphicOptions contains unknown bits`);
+      }
+      if ((obj.transparencyColor ?? 0) > pictureFormatMaxIndex(format)) {
+        errors.push(`Picture Graphic ${obj.id}: transparencyColor must fit format ${format}`);
+      }
+      if (obj.rawData?.some((byte) => !Number.isInteger(byte) || byte < 0 || byte > 255)) {
+        errors.push(`Picture Graphic ${obj.id}: rawData must contain byte values only`);
+      }
     }
 
     // Data Mask activeMask reference

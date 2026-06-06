@@ -1,10 +1,7 @@
 import type { EditorObject, ObjectKind } from './types';
+import { VT_PALETTE_HEX } from './vtPalette';
 
-export const vtColors = [
-  '#000000', '#ffffff', '#00ff00', '#ff0000', '#0000ff',
-  '#ffff00', '#ff00ff', '#00ffff', '#808080', '#c0c0c0',
-  '#800000', '#008000', '#000080', '#808000', '#800080', '#ffffff',
-];
+export const vtColors = VT_PALETTE_HEX;
 
 export const vtFontCells = [
   { value: '6x8',   label: '6×8',   width: 6,  height: 8  },
@@ -139,42 +136,6 @@ export function textTransformOrigin(horizontalAlign: EditorObject['horizontalAli
   if (horizontalAlign === 'center') return 'center center';
   if (horizontalAlign === 'right')  return 'right center';
   return 'left center';
-}
-
-/**
- * Cache: rawData array reference → { format, url }.
- * WeakMap so entries are GC-collected when the rawData array is dropped from state.
- */
-const _rawDataUrlCache = new WeakMap<number[], { format: number; url: string }>();
-
-/**
- * Convert raw image bytes (stored in Picture Graphic rawData) to a displayable
- * base64 data URL. graphicFormat 0 = BMP, 1 = PNG.
- *
- * Result is memoised by rawData reference identity so repeated calls during
- * canvas drag re-renders are O(1) after the first call.
- */
-export function rawDataToDataUrl(rawData: number[] | undefined, graphicFormat: number | undefined): string | null {
-  if (!rawData?.length) return null;
-  const format = graphicFormat ?? 0;
-
-  // Return cached URL when rawData reference and format haven't changed
-  const cached = _rawDataUrlCache.get(rawData);
-  if (cached && cached.format === format) return cached.url;
-
-  // Build binary string in 8 KB chunks to avoid stack-overflow on large images
-  // while still being significantly faster than single-character concatenation.
-  const bytes  = new Uint8Array(rawData);
-  const mime   = format === 1 ? 'image/png' : 'image/bmp';
-  let binary   = '';
-  const CHUNK  = 8192;
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    binary += String.fromCharCode(...(bytes.subarray(i, i + CHUNK) as unknown as number[]));
-  }
-  const url = `data:${mime};base64,${btoa(binary)}`;
-
-  _rawDataUrlCache.set(rawData, { format, url });
-  return url;
 }
 
 /** Format an Output Number value using offset, scale, and decimal places. */

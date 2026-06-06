@@ -7,8 +7,8 @@ export function Field({ label, value, onChange, type = 'text', disabled }: { lab
   return <label className="field"><span>{label}</span><div className="field-input editable"><input disabled={disabled} type={type} value={value} onChange={(event) => onChange(event.target.value)} />{disabled && <Lock size={14} />}</div></label>;
 }
 
-export function CheckboxField({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) {
-  return <label className="field"><span>{label}</span><div className="field-input editable"><input type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /></div></label>;
+export function CheckboxField({ label, checked, onChange, disabled }: { label: string; checked: boolean; onChange: (checked: boolean) => void; disabled?: boolean }) {
+  return <label className="field"><span>{label}</span><div className="field-input editable"><input disabled={disabled} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /></div></label>;
 }
 
 export function VtColorField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
@@ -50,7 +50,7 @@ export function PropertySection({ title, children, defaultOpen = true }: { title
 
   return (
     <div className={`property-section ${open ? 'open' : ''}`}>
-      <button className="property-heading" onClick={() => setOpen((current) => !current)}>
+      <button type="button" className="property-heading" onClick={() => setOpen((current) => !current)}>
         <span>{title}</span>
         {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
       </button>

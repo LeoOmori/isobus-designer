@@ -105,16 +105,15 @@ export type EditorObject = {
   lineSuppression?: number;     // uint8 bitmask – hide sides
 
   // ── Picture Graphic (objectType 20) ──────────────────────────────────
-  actualWidth?: number;         // uint16
-  actualHeight?: number;        // uint16
-  graphicFormat?: number;       // uint8
-  graphicOptions?: number;      // uint8
+  targetWidth?: number;         // uint16 — VT stores target width only; target height is derived from aspect ratio
+  actualWidth?: number;         // uint16 — original bitmap width
+  actualHeight?: number;        // uint16 — original bitmap height
+  graphicFormat?: 0 | 1 | 2;    // uint8: 0=mono, 1=4-bit color, 2=8-bit color
+  graphicOptions?: number;      // uint8 bitfield: bit0=transparent, bit1=flashing, bit2=RLE
   transparencyColor?: number;   // uint8 palette index
-  rawData?: number[];           // byte[]
+  rawData?: number[];           // packed palette-indexed pixel bytes
   sourceImagePath?: string;
-  previewUrl?: string;
-  originalFormat?: 'png' | 'jpg' | 'svg';
-  convertedPalette?: number[];
+  sourceImageDataUrl?: string;  // editor-only original upload for re-quantizing format/options
 
   // ── Font Attribute (objectType 23) ───────────────────────────────────
   fontColor?: number;           // uint8 VT palette index

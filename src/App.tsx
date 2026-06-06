@@ -5,6 +5,13 @@ import { initialProject } from './domain/initialProject';
 import { createEditorObject, referencePatch } from './domain/objectFactory';
 import type { EditorObject, ObjectKind, ReferenceKind, ToolMode, Viewport, WorkingSet } from './domain/types';
 import { validate } from './domain/validation';
+import {
+  asPictureGraphicFormat,
+  clearUnsupportedPictureGraphicOptions,
+  derivedPictureGraphicHeight,
+  expectedPictureGraphicRawDataLength,
+  quantizePictureGraphicSource,
+} from './domain/vtPalette';
 import { LeftSidebar } from './panels/LeftSidebar';
 import { RightSidebar } from './panels/RightSidebar';
 import { TopToolbar } from './panels/TopToolbar';
@@ -30,6 +37,61 @@ export function App() {
     const id = window.setInterval(() => window.localStorage.setItem(storageKey, JSON.stringify(project)), 30_000);
     return () => window.clearInterval(id);
   }, [project]);
+
+  // Convert migrated/stale editor source images into spec-compliant indexed rawData
+  // even when the Picture Graphic property panel is not open.
+  useEffect(() => {
+    const pending = project.objects
+      .filter((object) => {
+        if (object.kind !== 'picture-graphic' || !object.sourceImageDataUrl) return false;
+        const format = asPictureGraphicFormat(object.graphicFormat);
+        const expectedLength = expectedPictureGraphicRawDataLength(object.actualWidth ?? 0, object.actualHeight ?? 0, format);
+        return object.rawData?.length !== expectedLength;
+      })
+      .map((object) => ({
+        id: object.id,
+        sourceImageDataUrl: object.sourceImageDataUrl!,
+        format: asPictureGraphicFormat(object.graphicFormat),
+        options: clearUnsupportedPictureGraphicOptions(object.graphicOptions ?? 0),
+        transparencyColor: object.transparencyColor ?? 0,
+      }));
+
+    if (!pending.length) return;
+
+    let cancelled = false;
+    void Promise.all(pending.map(async (item) => ({
+      ...item,
+      quantized: await quantizePictureGraphicSource(item.sourceImageDataUrl, item.format, item.options, item.transparencyColor),
+    }))).then((results) => {
+      if (cancelled) return;
+      setProject((current) => ({
+        ...current,
+        objects: current.objects.map((object) => {
+          const result = results.find((item) => item.id === object.id);
+          if (!result || object.kind !== 'picture-graphic') return object;
+          if (
+            object.sourceImageDataUrl !== result.sourceImageDataUrl ||
+            asPictureGraphicFormat(object.graphicFormat) !== result.format ||
+            clearUnsupportedPictureGraphicOptions(object.graphicOptions ?? 0) !== result.options ||
+            (object.transparencyColor ?? 0) !== result.transparencyColor
+          ) return object;
+
+          const targetWidth = object.targetWidth ?? object.width ?? result.quantized.actualWidth;
+          return {
+            ...object,
+            ...result.quantized,
+            graphicFormat: result.format,
+            graphicOptions: result.options,
+            targetWidth,
+            width: targetWidth,
+            height: derivedPictureGraphicHeight(targetWidth, result.quantized.actualWidth, result.quantized.actualHeight),
+          };
+        }),
+      }));
+    });
+
+    return () => { cancelled = true; };
+  }, [project.objects, setProject]);
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────
   useEffect(() => {

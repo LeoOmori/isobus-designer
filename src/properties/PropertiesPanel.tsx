@@ -1,8 +1,21 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Archive, Trash2, Upload } from 'lucide-react';
-import { rawDataToDataUrl, VT_FILL_TYPE_OPTIONS, VT_NUMBER_FORMAT_OPTIONS, fontCellValue, vtFontCells } from '../domain/isobus';
+import { VT_FILL_TYPE_OPTIONS, VT_NUMBER_FORMAT_OPTIONS, fontCellValue, vtFontCells } from '../domain/isobus';
 import { objectKindName } from '../domain/objectMeta';
 import type { EditorObject, ReferenceKind, WorkingSet } from '../domain/types';
+import {
+  PICTURE_GRAPHIC_FORMAT_OPTIONS,
+  PICTURE_GRAPHIC_OPTION_FLASHING,
+  PICTURE_GRAPHIC_OPTION_RLE,
+  PICTURE_GRAPHIC_OPTION_TRANSPARENT,
+  asPictureGraphicFormat,
+  clearUnsupportedPictureGraphicOptions,
+  derivedPictureGraphicHeight,
+  expectedPictureGraphicRawDataLength,
+  pictureGraphicToDataUrl,
+  pictureFormatMaxIndex,
+  quantizePictureGraphicSource,
+} from '../domain/vtPalette';
 import { Panel } from '../ui/primitives';
 import { CheckboxField, Field, FontStyleField, PropertySection, SelectField, VtColorField } from './fields';
 
@@ -91,9 +104,9 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
       <div className="properties-title">
         <strong>{objectKindName(kind)}: {selectedObject.id}</strong>
         <span>
-          <button onClick={() => onLayer('forward')}>↑</button>
-          <button onClick={() => onLayer('backward')}>↓</button>
-          <button onClick={onDelete}><Trash2 size={16} /></button>
+          <button type="button" onClick={() => onLayer('forward')}>↑</button>
+          <button type="button" onClick={() => onLayer('backward')}>↓</button>
+          <button type="button" onClick={onDelete}><Trash2 size={16} /></button>
         </span>
       </div>
 
@@ -102,7 +115,7 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
         <Field label="Object ID" value={selectedObject.objectId} disabled onChange={() => undefined} />
         <Field label="Name"      value={selectedObject.name}     onChange={(name) => onPatch({ name })} />
         <Field label="Notes"     value={selectedObject.notes ?? ''} onChange={(notes) => onPatch({ notes })} />
-        {!isNoLayout && (
+        {!isNoLayout && kind !== 'picture-graphic' && (
           <div className="field-row">
             <Field label="Width"  value={selectedObject.width}  type="number" onChange={(w) => onPatch({ width: Number(w) })} />
             <Field label="Height" value={selectedObject.height} type="number" onChange={(h) => onPatch({ height: Number(h) })} />
@@ -269,71 +282,146 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
 // ── Picture Graphic Panel ──────────────────────────────────────────────────
 
 function PictureGraphicPanel({ object, onPatch }: { object: EditorObject; onPatch: (changes: Partial<EditorObject>) => void }) {
-  const previewUrl = rawDataToDataUrl(object.rawData, object.graphicFormat);
+  const previewUrl = pictureGraphicToDataUrl(object);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function handleFileSelected(event: React.ChangeEvent<HTMLInputElement>) {
+  const format = asPictureGraphicFormat(object.graphicFormat);
+  const options = clearUnsupportedPictureGraphicOptions(object.graphicOptions ?? 0);
+  const transparent = (options & PICTURE_GRAPHIC_OPTION_TRANSPARENT) !== 0;
+  const flashing = (options & PICTURE_GRAPHIC_OPTION_FLASHING) !== 0;
+  const rle = (options & PICTURE_GRAPHIC_OPTION_RLE) !== 0;
+  const targetWidth = object.targetWidth ?? object.width ?? object.actualWidth ?? 64;
+  const actualWidth = object.actualWidth ?? object.width ?? 64;
+  const actualHeight = object.actualHeight ?? object.height ?? 64;
+  const targetHeight = derivedPictureGraphicHeight(targetWidth, actualWidth, actualHeight);
+  const expectedRawDataLength = expectedPictureGraphicRawDataLength(actualWidth, actualHeight, format);
+
+  function patchTargetWidth(nextTargetWidth: number) {
+    const width = Math.max(1, Math.round(nextTargetWidth));
+    onPatch({
+      targetWidth: width,
+      width,
+      height: derivedPictureGraphicHeight(width, actualWidth, actualHeight),
+    });
+  }
+
+  function patchOption(bit: number, enabled: boolean) {
+    const nextOptions = enabled ? options | bit : options & ~bit;
+    onPatch({ graphicOptions: nextOptions });
+    if (bit === PICTURE_GRAPHIC_OPTION_TRANSPARENT && object.sourceImageDataUrl) {
+      void requantizeFromSource(format, nextOptions, object.transparencyColor ?? 0);
+    }
+  }
+
+  async function requantizeFromSource(
+    nextFormat = format,
+    nextOptions = options,
+    nextTransparencyColor = object.transparencyColor ?? 0,
+  ) {
+    if (!object.sourceImageDataUrl) {
+      onPatch({ graphicFormat: nextFormat, graphicOptions: nextOptions, transparencyColor: nextTransparencyColor, rawData: [] });
+      return;
+    }
+
+    const quantized = await quantizePictureGraphicSource(
+      object.sourceImageDataUrl,
+      nextFormat,
+      nextOptions,
+      nextTransparencyColor,
+    );
+    const nextTargetWidth = object.targetWidth ?? object.width ?? quantized.actualWidth;
+    onPatch({
+      ...quantized,
+      graphicFormat: nextFormat,
+      graphicOptions: nextOptions,
+      transparencyColor: nextTransparencyColor,
+      targetWidth: nextTargetWidth,
+      width: nextTargetWidth,
+      height: derivedPictureGraphicHeight(nextTargetWidth, quantized.actualWidth, quantized.actualHeight),
+    });
+  }
+
+  useEffect(() => {
+    if (!object.sourceImageDataUrl) return;
+    if (object.rawData?.length === expectedRawDataLength) return;
+    void quantizePictureGraphicSource(object.sourceImageDataUrl, format, options, object.transparencyColor ?? 0).then((quantized) => {
+      const nextTargetWidth = object.targetWidth ?? object.width ?? quantized.actualWidth;
+      onPatch({
+        ...quantized,
+        graphicFormat: format,
+        graphicOptions: options,
+        targetWidth: nextTargetWidth,
+        width: nextTargetWidth,
+        height: derivedPictureGraphicHeight(nextTargetWidth, quantized.actualWidth, quantized.actualHeight),
+      });
+    });
+  }, [
+    object.sourceImageDataUrl,
+    object.rawData?.length,
+    object.transparencyColor,
+    object.targetWidth,
+    object.width,
+    expectedRawDataLength,
+    format,
+    options,
+    onPatch,
+  ]);
+
+  async function handleFileSelected(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    const img = new Image();
-    const objectUrl = URL.createObjectURL(file);
-
-    img.onload = () => {
-      URL.revokeObjectURL(objectUrl);
-
-      // Use natural image dimensions as actual render size,
-      // or fall back to existing actualWidth/actualHeight
-      const w = object.actualWidth  ?? img.naturalWidth;
-      const h = object.actualHeight ?? img.naturalHeight;
-
-      const canvas = document.createElement('canvas');
-      canvas.width  = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d')!;
-      ctx.drawImage(img, 0, 0, w, h);
-
-      canvas.toBlob((blob) => {
-        if (!blob) return;
-        blob.arrayBuffer().then((buf) => {
-          onPatch({
-            rawData:         Array.from(new Uint8Array(buf)),
-            graphicFormat:   1, // PNG
-            actualWidth:     w,
-            actualHeight:    h,
-            sourceImagePath: file.name,
-            originalFormat:  file.type === 'image/png' ? 'png'
-                           : file.type === 'image/jpeg' || file.type === 'image/jpg' ? 'jpg'
-                           : 'png',
-          });
-        });
-      }, 'image/png');
-    };
-
-    img.onerror = () => { URL.revokeObjectURL(objectUrl); };
-    img.src = objectUrl;
-
-    // Reset input so re-uploading the same file triggers onChange again
-    event.target.value = '';
+    try {
+      const sourceImageDataUrl = await readFileAsDataUrl(file);
+      const quantized = await quantizePictureGraphicSource(sourceImageDataUrl, format, options, object.transparencyColor ?? 0);
+      const nextTargetWidth = object.targetWidth ?? object.width ?? quantized.actualWidth;
+      onPatch({
+        ...quantized,
+        targetWidth: nextTargetWidth,
+        width: nextTargetWidth,
+        height: derivedPictureGraphicHeight(nextTargetWidth, quantized.actualWidth, quantized.actualHeight),
+        sourceImagePath: file.name,
+        sourceImageDataUrl,
+      });
+    } finally {
+      // Reset input so re-uploading the same file triggers onChange again
+      event.target.value = '';
+    }
   }
 
   return (
     <PropertySection title="Picture Graphic">
       {/* Dimensions */}
+      <Field label="Target Width" value={targetWidth} type="number" onChange={(v) => patchTargetWidth(Number(v))} />
+      <Field label="Derived Height" value={targetHeight} disabled onChange={() => undefined} />
       <div className="field-row">
-        <Field label="Actual W" value={object.actualWidth  ?? object.width}  type="number" onChange={(v) => onPatch({ actualWidth: Number(v) })} />
-        <Field label="Actual H" value={object.actualHeight ?? object.height} type="number" onChange={(v) => onPatch({ actualHeight: Number(v) })} />
+        <Field label="Actual W" value={actualWidth} disabled onChange={() => undefined} />
+        <Field label="Actual H" value={actualHeight} disabled onChange={() => undefined} />
       </div>
-      <Field label="Transparency Color Index" value={object.transparencyColor ?? 0} type="number" onChange={(v) => onPatch({ transparencyColor: Number(v) })} />
+      <SelectField
+        label="Format"
+        value={String(format)}
+        options={PICTURE_GRAPHIC_FORMAT_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))}
+        onChange={(value) => void requantizeFromSource(asPictureGraphicFormat(Number(value)))}
+      />
+      <CheckboxField label="Transparent" checked={transparent} onChange={(checked) => patchOption(PICTURE_GRAPHIC_OPTION_TRANSPARENT, checked)} />
+      <CheckboxField label="Flashing" checked={flashing} onChange={(checked) => patchOption(PICTURE_GRAPHIC_OPTION_FLASHING, checked)} />
+      <CheckboxField label="RLE compressed (V1 unavailable)" checked={rle} disabled onChange={() => undefined} />
+      <VtColorField
+        label="Transparency Color"
+        value={Math.min(pictureFormatMaxIndex(format), object.transparencyColor ?? 0)}
+        onChange={(value) => void requantizeFromSource(format, options, Math.min(pictureFormatMaxIndex(format), value))}
+      />
 
       {/* Upload */}
       <label className="field">
         <span>Image</span>
         <div className="field-input">
           <button
+            type="button"
             className="pic-upload-button"
             onClick={() => fileInputRef.current?.click()}
-            title="Upload image — will be converted to PNG bitmap"
+            title="Upload image — will be converted to ISO VT palette-indexed bitmap bytes"
           >
             <Upload size={14} />
             <span>{object.sourceImagePath ? 'Replace' : 'Upload'} Image</span>
@@ -360,9 +448,18 @@ function PictureGraphicPanel({ object, onPatch }: { object: EditorObject; onPatc
           : <div className="pic-preview-empty">No image uploaded</div>
         }
         {previewUrl && (
-          <div className="pic-preview-size">{object.actualWidth ?? object.width} × {object.actualHeight ?? object.height} px</div>
+          <div className="pic-preview-size">{actualWidth} × {actualHeight} px source → {targetWidth} × {targetHeight} px target</div>
         )}
       </div>
     </PropertySection>
   );
+}
+
+function readFileAsDataUrl(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 }
