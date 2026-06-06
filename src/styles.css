@@ -519,6 +519,44 @@ button.list-row {
   white-space: nowrap;
 }
 
+.object-container {
+  outline: 1px dashed rgba(37, 99, 235, .55);
+  outline-offset: -1px;
+  background: transparent;
+}
+
+.object-container.selected-object {
+  outline: 2px solid #2563EB;
+  outline-offset: -2px;
+}
+
+.container-label {
+  position: absolute;
+  top: 2px;
+  left: 4px;
+  z-index: 1;
+  max-width: calc(100% - 8px);
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, .8);
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.container-clip {
+  pointer-events: none;
+}
+
+.container-clip > .canvas-object {
+  pointer-events: auto;
+}
+
 .field-hint {
   margin: -4px 14px 8px;
   color: #64748b;

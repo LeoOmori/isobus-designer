@@ -8,6 +8,7 @@ export function toObjectId(n: number) {
 
 const KIND_PREFIX: Record<ObjectKind, string> = {
   'data-mask':        'DM',
+  'container':        'CT',
   'soft-key-mask':    'SKM',
   'key':              'KEY',
   'button':           'BTN',
@@ -32,7 +33,7 @@ const CONTAINER_KINDS = new Set<ObjectKind>(['data-mask', 'soft-key-mask']);
 
 /** Kinds that are dropped directly onto a data-mask canvas. */
 const CANVAS_OBJECT_KINDS = new Set<ObjectKind>([
-  'output-string', 'output-number', 'output-rectangle', 'button', 'picture-graphic',
+  'container', 'output-string', 'output-number', 'output-rectangle', 'button', 'picture-graphic',
 ]);
 
 export function createEditorObject(
@@ -76,15 +77,17 @@ export function createEditorObject(
     zIndex: current.objects.length + 1,
 
     // Layout
-    x:      noLayout ? 0 : isMask  ? activeParent.x + 80 : activeParent.kind === 'button' ? x : clamp(x, 0, activeParent.width  - 40),
-    y:      noLayout ? 0 : isMask  ? activeParent.y + 80 : activeParent.kind === 'button' ? y : clamp(y, 0, activeParent.height - 30),
+    x:      noLayout ? 0 : isMask  ? activeParent.x + 80 : activeParent.kind === 'button' || activeParent.kind === 'container' ? x : clamp(x, 0, activeParent.width  - 40),
+    y:      noLayout ? 0 : isMask  ? activeParent.y + 80 : activeParent.kind === 'button' || activeParent.kind === 'container' ? y : clamp(y, 0, activeParent.height - 30),
     width:  noLayout ? 0 : isMask  ? 480
           : kind === 'output-string' || kind === 'output-number' ? 220
+          : kind === 'container' ? 200
           : kind === 'button'  ? 120
           : kind === 'picture-graphic' ? 64
           : 130,
     height: noLayout ? 0 : isMask  ? 480
           : kind === 'output-string' || kind === 'output-number' ? 42
+          : kind === 'container' ? 200
           : kind === 'button'  ? 42
           : kind === 'picture-graphic' ? 64
           : 90,
@@ -96,12 +99,15 @@ export function createEditorObject(
     borderColorIndex: kind === 'button' ? 0 : undefined,
 
     // Container children
-    childObjectIds: (isMask || isKey || kind === 'button') ? [] : undefined,
+    childObjectIds: (isMask || isKey || kind === 'button' || kind === 'container') ? [] : undefined,
 
     // ── Data Mask ───────────────────────────────────────────────────────
     softKeyMaskId:  isMask ? '' : undefined,
     nextMaskId:     isMask ? '' : undefined,
     previousMaskId: isMask ? '' : undefined,
+
+    // ── Container ───────────────────────────────────────────────────────
+    hidden: kind === 'container' ? false : undefined,
 
     // ── Soft Key Mask ────────────────────────────────────────────────────
     keys:                isSKM ? [] : undefined,

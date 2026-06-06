@@ -26,6 +26,10 @@ const BUTTON_CHILD_KINDS = new Set<ObjectKind>([
   'output-string', 'output-number', 'output-rectangle', 'picture-graphic',
 ]);
 
+const CONTAINER_CHILD_KINDS = new Set<ObjectKind>([
+  'container', 'output-string', 'output-number', 'output-rectangle', 'picture-graphic', 'button',
+]);
+
 const OUTPUT_NUMBER_OPTION_MASK = OUTPUT_NUMBER_OPTION_TRANSPARENT
   | OUTPUT_NUMBER_OPTION_LEADING_ZEROS
   | OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK
@@ -66,6 +70,38 @@ export function validate(project: ProjectState): string[] {
       }
       if (childContainerIds.length === 1 && !obj.parentId) {
         errors.push(`${obj.id}: child object must set parentId "${childContainerIds[0]}"`);
+      }
+    }
+
+    if (obj.kind === 'container') {
+      if (typeof (obj.hidden ?? false) !== 'boolean') {
+        errors.push(`Container ${obj.id}: hidden must be boolean`);
+      }
+      if (!Number.isInteger(obj.width) || obj.width <= 0 || obj.width > 0xffff || !Number.isInteger(obj.height) || obj.height <= 0 || obj.height > 0xffff) {
+        errors.push(`Container ${obj.id}: width/height must fit uint16`);
+      }
+      if ((obj.childObjectIds ?? []).length > 0xff) {
+        errors.push(`Container ${obj.id}: child count must fit uint8`);
+      }
+      if ((obj.macros ?? []).length > 0xff) {
+        errors.push(`Container ${obj.id}: macro count must fit uint8`);
+      }
+      if (containsDescendant(obj.id, obj.id, objectById, new Set())) {
+        errors.push(`Container ${obj.id}: contains itself through childObjectIds`);
+      }
+
+      for (const childId of obj.childObjectIds ?? []) {
+        const child = objectById.get(childId);
+        if (!child || !CONTAINER_CHILD_KINDS.has(child.kind)) {
+          errors.push(`Container ${obj.id}: child "${childId}" must be Container/Button/Output String/Number/Rectangle or Picture Graphic`);
+          continue;
+        }
+        if (child.parentId !== obj.id) {
+          errors.push(`Container ${obj.id}: child "${childId}" parentId must reference the Container`);
+        }
+        if (!Number.isInteger(child.x) || child.x < -0x8000 || child.x > 0x7fff || !Number.isInteger(child.y) || child.y < -0x8000 || child.y > 0x7fff) {
+          errors.push(`Container ${obj.id}: child "${childId}" coordinates must fit int16`);
+        }
       }
     }
 
@@ -284,4 +320,20 @@ export function validate(project: ProjectState): string[] {
 
 function utf8ByteLength(value: string) {
   return new TextEncoder().encode(value).length;
+}
+
+function containsDescendant(
+  rootId: string,
+  currentId: string,
+  objectById: Map<string, { childObjectIds?: string[] }>,
+  visited: Set<string>,
+) {
+  if (visited.has(currentId)) return false;
+  visited.add(currentId);
+  const current = objectById.get(currentId);
+  for (const childId of current?.childObjectIds ?? []) {
+    if (childId === rootId) return true;
+    if (containsDescendant(rootId, childId, objectById, visited)) return true;
+  }
+  return false;
 }

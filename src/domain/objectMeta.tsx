@@ -4,6 +4,7 @@ import type { ObjectKind } from './types';
 export function objectKindName(kind: ObjectKind): string {
   switch (kind) {
     case 'data-mask':        return 'Data Mask';
+    case 'container':        return 'Container';
     case 'soft-key-mask':    return 'Soft Key Mask';
     case 'key':              return 'Key';
     case 'button':           return 'Button';
@@ -22,6 +23,7 @@ export function objectKindName(kind: ObjectKind): string {
 export function KindIcon({ kind, size = 16 }: { kind: ObjectKind; size?: number }) {
   switch (kind) {
     case 'data-mask':        return <LayoutPanelLeft size={size} />;
+    case 'container':        return <Grid3X3 size={size} />;
     case 'soft-key-mask':    return <Keyboard size={size} />;
     case 'key':              return <KeyRound size={size} />;
     case 'button':           return <MousePointerClick size={size} />;

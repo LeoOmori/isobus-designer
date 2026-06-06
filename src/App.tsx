@@ -19,7 +19,7 @@ import { storageKey, useProjectState } from './state/useProjectState';
 
 /** Kinds that are placed as children of a Data Mask on the canvas. */
 const CANVAS_KINDS = new Set<ObjectKind>([
-  'output-string', 'output-number', 'output-rectangle', 'button', 'picture-graphic',
+  'container', 'output-string', 'output-number', 'output-rectangle', 'button', 'picture-graphic',
 ]);
 
 export function App() {

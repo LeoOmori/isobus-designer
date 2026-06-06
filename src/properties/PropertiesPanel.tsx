@@ -151,6 +151,9 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
   const buttonChildren = kind === 'button'
     ? objects.filter((object) => (selectedObject.childObjectIds ?? []).includes(object.id))
     : [];
+  const containerChildren = kind === 'container'
+    ? objects.filter((object) => (selectedObject.childObjectIds ?? []).includes(object.id))
+    : [];
   const selectedNumberVariableReference = selectedObject.variableReference !== undefined
     ? selectedObject.variableReference
     : selectedObject.numberVariableId || null;
@@ -271,6 +274,23 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
             {buttonChildren.length === 0 ? (
               <div className="field-hint">Select an output tool, then click inside this Button to add a child object.</div>
             ) : buttonChildren.map((child) => (
+              <div key={child.id} className="field-hint">{child.id} — {objectKindName(child.kind)} at {child.x}, {child.y}</div>
+            ))}
+          </PropertySection>
+        </>
+      )}
+
+      {/* ── Container ────────────────────────────────────────────────── */}
+      {kind === 'container' && (
+        <>
+          <PropertySection title="Container">
+            <CheckboxField label="Hidden at Runtime" checked={selectedObject.hidden ?? false} onChange={(hidden) => onPatch({ hidden })} />
+            <div className="field-hint">Hidden containers and their children are skipped by the VT.</div>
+          </PropertySection>
+          <PropertySection title="Children">
+            {containerChildren.length === 0 ? (
+              <div className="field-hint">Select a canvas tool, then click inside this Container to add a child object.</div>
+            ) : containerChildren.map((child) => (
               <div key={child.id} className="field-hint">{child.id} — {objectKindName(child.kind)} at {child.x}, {child.y}</div>
             ))}
           </PropertySection>

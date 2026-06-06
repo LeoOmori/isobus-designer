@@ -25,11 +25,15 @@ import { BottomControls, CanvasToolbar } from './CanvasToolbar';
 
 /** Tools that create a canvas object on click. */
 const CANVAS_TOOLS = new Set<ToolMode>([
-  'output-rectangle', 'output-string', 'button', 'output-number', 'picture-graphic',
+  'container', 'output-rectangle', 'output-string', 'button', 'output-number', 'picture-graphic',
 ]);
 
 const BUTTON_CHILD_TOOLS = new Set<ToolMode>([
   'output-rectangle', 'output-string', 'output-number', 'picture-graphic',
+]);
+
+const CONTAINER_CHILD_TOOLS = new Set<ToolMode>([
+  'container', 'output-rectangle', 'output-string', 'button', 'output-number', 'picture-graphic',
 ]);
 
 const SKM_SLOTS = 6;
@@ -128,6 +132,19 @@ export function EditorCanvas({
     onToolChange('select');
   }
 
+  function screenToContainer(clientX: number, clientY: number, container: EditorObject) {
+    const world = screenToWorld(clientX, clientY);
+    const containerOrigin = objectWorldOrigin(container);
+    return { x: world.x - containerOrigin.x, y: world.y - containerOrigin.y };
+  }
+
+  function createOnContainer(clientX: number, clientY: number, container: EditorObject) {
+    const point = screenToContainer(clientX, clientY, container);
+    onSelect(container.id);
+    onCreateObject(tool as ObjectKind, snap(point.x), snap(point.y), container.id);
+    onToolChange('select');
+  }
+
   // ── Wheel ──────────────────────────────────────────────────────────────
   function handleWheel(event: WheelEvent<HTMLDivElement>) {
     event.preventDefault();
@@ -209,6 +226,10 @@ export function EditorCanvas({
         event.stopPropagation();
         createOnButton(event.clientX, event.clientY, object);
       }
+      if (object.kind === 'container' && !object.hidden && CONTAINER_CHILD_TOOLS.has(tool)) {
+        event.stopPropagation();
+        createOnContainer(event.clientX, event.clientY, object);
+      }
       return;
     }
     event.stopPropagation();
@@ -228,6 +249,8 @@ export function EditorCanvas({
 
   // ── Canvas object renderer ────────────────────────────────────────────
   function renderObject(object: EditorObject) {
+    if (object.kind === 'container' && object.hidden) return null;
+
     const line   = lineAttributes.find((a) => a.id === object.lineAttributeId);
     const fill   = fillAttributes.find((a) => a.id === object.fillAttributeId);
     const font   = fontAttributes.find((a) => a.id === object.fontAttributeId);
@@ -250,6 +273,11 @@ export function EditorCanvas({
       ? vtColor(object.backgroundColorIndex ?? 1)
       : 'transparent';
     const buttonChildren = object.kind === 'button'
+      ? project.objects
+        .filter((candidate) => (object.childObjectIds ?? []).includes(candidate.id) && candidate.visible)
+        .sort((a, b) => a.zIndex - b.zIndex)
+      : [];
+    const containerChildren = object.kind === 'container'
       ? project.objects
         .filter((candidate) => (object.childObjectIds ?? []).includes(candidate.id) && candidate.visible)
         .sort((a, b) => a.zIndex - b.zIndex)
@@ -300,6 +328,12 @@ export function EditorCanvas({
       borderWidth = buttonNoBorder ? 0 : BUTTON_FACE_INSET;
       borderStyle = 'solid';
       background  = 'transparent';
+      boxSizing = 'border-box';
+    } else if (object.kind === 'container') {
+      borderColor = 'transparent';
+      borderWidth = 0;
+      borderStyle = 'solid';
+      background = 'transparent';
       boxSizing = 'border-box';
     } else if (object.kind === 'output-string' || object.kind === 'output-number') {
       borderColor = object.borderColor;
@@ -430,6 +464,19 @@ export function EditorCanvas({
           >
             {buttonChildren.map(renderObject)}
           </div>
+        )}
+
+        {/* Container children render clipped to the Container bounds. */}
+        {object.kind === 'container' && (
+          <>
+            <div className="container-label">{object.name}</div>
+            <div
+              className="container-clip"
+              style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
+            >
+              {containerChildren.map(renderObject)}
+            </div>
+          </>
         )}
 
         {selected && <span className="resize-handle" onPointerDown={(e) => beginResize(e, object)} />}

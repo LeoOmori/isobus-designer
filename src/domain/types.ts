@@ -5,6 +5,7 @@ export type MacroReference = {
 
 export type ObjectKind =
   | 'data-mask'
+  | 'container'
   | 'soft-key-mask'
   | 'key'
   | 'button'
@@ -22,6 +23,7 @@ export type ToolMode =
   | 'select'
   | 'pan'
   | 'data-mask'
+  | 'container'
   | 'output-string'
   | 'output-rectangle'
   | 'button'
@@ -67,6 +69,9 @@ export type EditorObject = {
   softKeyMaskId?: string;
   nextMaskId?: string;
   previousMaskId?: string;
+
+  // ── Container (objectType 3) ─────────────────────────────────────────
+  hidden?: boolean;             // uint8 in pool: 0=visible, 1=hidden
 
   // ── Soft Key Mask (objectType 4) ─────────────────────────────────────
   keys?: string[];              // Key objectId references (ordered)

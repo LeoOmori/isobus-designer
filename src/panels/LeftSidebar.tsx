@@ -40,6 +40,11 @@ export function LeftSidebar({
           <PaletteCard label="Soft Key Mask" icon={<Keyboard size={24} />}        onClick={() => onCreateObject('soft-key-mask')} />
         </div>
 
+        <SectionHeader title="GROUPS" />
+        <div className="palette-grid supported">
+          <PaletteCard label="Container" icon={<Grid3X3 size={24} />} selected={tool === 'container'} onClick={() => onToolChange('container')} />
+        </div>
+
         <SectionHeader title="OUTPUTS" />
         <div className="palette-grid supported">
           <PaletteCard label="Output String"    icon={<Type size={24} />}                selected={tool === 'output-string'}    onClick={() => onToolChange('output-string')} />
