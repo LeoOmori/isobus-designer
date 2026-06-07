@@ -291,6 +291,8 @@ export function App() {
   return (
     <div className="app-shell">
       <TopToolbar
+        tool={tool}
+        onToolChange={setTool}
         zoom={viewport.zoom}
         onZoom={(zoom) => setViewport({ ...viewport, zoom: clamp(zoom, 0.25, 3) })}
         onReset={() => { setProject(initialProject); setSelectedId(initialProject.workingSet.id); }}

@@ -112,14 +112,6 @@ export function validateForExport(project: ProjectState): string[] {
         errors.push(`Export: Soft Key Mask ${obj.id} has more than 255 key references`);
       }
     }
-    if (obj.kind === 'key') {
-      if (!Number.isInteger(obj.keyCode ?? 1) || (obj.keyCode ?? 1) < 1 || (obj.keyCode ?? 1) > 0xff) {
-        errors.push(`Export: Key ${obj.id} keyCode must be 1–255`);
-      }
-      if ((obj.childObjectIds ?? []).length > 0xff) {
-        errors.push(`Export: Key ${obj.id} has more than 255 child objects`);
-      }
-    }
   }
 
   // ── Picture Graphic constraints ──────────────────────────────────────────

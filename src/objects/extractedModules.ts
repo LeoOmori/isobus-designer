@@ -1,7 +1,10 @@
 import type { ObjectKind } from '../domain/types';
 import type { ObjectModule } from './ObjectModule';
+import { buttonModule } from './button/logic';
+import { containerModule } from './container/logic';
 import { fillAttributeModule } from './fill-attribute/logic';
 import { fontAttributeModule } from './font-attribute/logic';
+import { keyModule } from './key/logic';
 import { lineAttributeModule } from './line-attribute/logic';
 import { numberVariableModule } from './number-variable/logic';
 import { outputNumberModule } from './output-number/logic';
@@ -20,4 +23,7 @@ export const extractedModules: Partial<Record<ObjectKind, ObjectModule>> = {
   'output-number': outputNumberModule,
   'output-rectangle': outputRectangleModule,
   'picture-graphic': pictureGraphicModule,
+  'container': containerModule,
+  'button': buttonModule,
+  'key': keyModule,
 };

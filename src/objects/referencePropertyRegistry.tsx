@@ -1,7 +1,10 @@
 import type { ComponentType } from 'react';
 import type { EditorObject, ObjectKind, ReferenceKind } from '../domain/types';
+import { ButtonProperties } from './button';
+import { ContainerProperties } from './container';
 import { FillAttributeProperties } from './fill-attribute';
 import { FontAttributeProperties } from './font-attribute';
+import { KeyProperties } from './key';
 import { LineAttributeProperties } from './line-attribute';
 import { NumberVariableProperties } from './number-variable';
 import { OutputNumberProperties } from './output-number';
@@ -25,4 +28,7 @@ export const referencePropertyComponents: Partial<Record<ObjectKind, ComponentTy
   'output-number': OutputNumberProperties,
   'output-rectangle': OutputRectangleProperties,
   'picture-graphic': PictureGraphicProperties,
+  'container': ContainerProperties,
+  'button': ButtonProperties,
+  'key': KeyProperties,
 };

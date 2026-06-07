@@ -1,13 +1,5 @@
 import { Archive, Trash2, X } from 'lucide-react';
-import {
-  BUTTON_OPTION_DISABLED,
-  BUTTON_OPTION_LATCHABLE,
-  BUTTON_OPTION_LATCHED,
-  BUTTON_OPTION_NO_BORDER,
-  BUTTON_OPTION_SUPPRESS_BORDER,
-  BUTTON_OPTION_TRANSPARENT_BACKGROUND,
-  clamp,
-} from '../domain/isobus';
+import { clamp } from '../domain/isobus';
 import { objectKindName } from '../domain/objectMeta';
 import type { EditorObject, ReferenceKind, WorkingSet, WorkingSetDesignator } from '../domain/types';
 import { Panel } from '../ui/primitives';
@@ -16,10 +8,6 @@ import { referencePropertyComponents } from '../objects/referencePropertyRegistr
 import { CheckboxField, Field, PropertySection, SelectField, VtColorField } from './fields';
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-
-function patchBit(current: number | undefined, bit: number, enabled: boolean) {
-  return enabled ? (current ?? 0) | bit : (current ?? 0) & ~bit;
-}
 
 const REFERENCE_ONLY = new Set<EditorObject['kind']>([
   'line-attribute', 'fill-attribute', 'font-attribute', 'string-variable', 'number-variable',
@@ -136,19 +124,10 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
   const maskOptions    = [{ value: '', label: 'None' }, ...masks.filter((m) => m.id !== selectedObject.id).map((m) => ({ value: m.id, label: `${m.id} — ${m.name}` }))];
   const skmOptions     = [{ value: '', label: 'None' }, ...softKeyMasks.map((s) => ({ value: s.id, label: `${s.id} — ${s.name}` }))];
 
-  const buttonChildren = kind === 'button'
-    ? objects.filter((object) => (selectedObject.childObjectIds ?? []).includes(object.id))
-    : [];
-  const containerChildren = kind === 'container'
-    ? objects.filter((object) => (selectedObject.childObjectIds ?? []).includes(object.id))
-    : [];
   const selectedSoftKeyMaskKeys = kind === 'soft-key-mask'
     ? (selectedObject.keys ?? [])
         .map((id) => objects.find((object) => object.id === id && object.kind === 'key'))
         .filter((object): object is EditorObject => object !== undefined)
-    : [];
-  const keyChildren = kind === 'key'
-    ? objects.filter((object) => (selectedObject.childObjectIds ?? []).includes(object.id))
     : [];
   const ReferenceProperties = referencePropertyComponents[kind];
 
@@ -236,68 +215,6 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
             );
           })}
         </PropertySection>
-      )}
-
-      {/* ── Key ──────────────────────────────────────────────────────── */}
-      {kind === 'key' && (
-        <PropertySection title="Key">
-          <Field label="Label"      value={selectedObject.label ?? ''}      onChange={(label) => onPatch({ label })} />
-          <Field label="Key Code"   value={selectedObject.keyCode ?? 1}     type="number" onChange={(v) => onPatch({ keyCode: clamp(Math.round(Number(v) || 0), 1, 255) })} />
-          <VtColorField label="Background" value={selectedObject.backgroundColorIndex ?? 1} onChange={(backgroundColorIndex) => onPatch({ backgroundColorIndex })} />
-          <Field label="Action"     value={selectedObject.actionName ?? ''}  onChange={(actionName) => onPatch({ actionName })} />
-          <div className="field-hint">Children</div>
-          {keyChildren.length === 0 ? (
-            <div className="field-hint">No child designator objects.</div>
-          ) : keyChildren.map((child) => (
-            <div key={child.id} className="field-hint">{child.id} — {objectKindName(child.kind)} at {child.x}, {child.y}</div>
-          ))}
-        </PropertySection>
-      )}
-
-      {/* ── Button ───────────────────────────────────────────────────── */}
-      {kind === 'button' && (
-        <>
-          <PropertySection title="Button">
-            <Field label="Key Code" value={selectedObject.keyCode ?? 0} type="number" onChange={(v) => onPatch({ keyCode: clamp(Math.round(Number(v) || 0), 0, 255) })} />
-            <VtColorField label="Background" value={selectedObject.backgroundColorIndex ?? 1} onChange={(backgroundColorIndex) => onPatch({ backgroundColorIndex })} />
-            <VtColorField label="Border Color" value={selectedObject.borderColorIndex ?? 0} onChange={(borderColorIndex) => onPatch({ borderColorIndex })} />
-          </PropertySection>
-          <PropertySection title="Options">
-            <CheckboxField label="Latchable" checked={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_LATCHABLE) !== 0} onChange={(v) => {
-              const next = patchBit(selectedObject.buttonOptions, BUTTON_OPTION_LATCHABLE, v);
-              onPatch({ buttonOptions: v ? next : next & ~BUTTON_OPTION_LATCHED });
-            }} />
-            <CheckboxField label="Latched" checked={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_LATCHED) !== 0} disabled={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_LATCHABLE) === 0} onChange={(v) => onPatch({ buttonOptions: patchBit(selectedObject.buttonOptions, BUTTON_OPTION_LATCHED, v) })} />
-            <CheckboxField label="Suppress Border" checked={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_SUPPRESS_BORDER) !== 0} onChange={(v) => onPatch({ buttonOptions: patchBit(selectedObject.buttonOptions, BUTTON_OPTION_SUPPRESS_BORDER, v) })} />
-            <CheckboxField label="Transparent Background" checked={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_TRANSPARENT_BACKGROUND) !== 0} onChange={(v) => onPatch({ buttonOptions: patchBit(selectedObject.buttonOptions, BUTTON_OPTION_TRANSPARENT_BACKGROUND, v) })} />
-            <CheckboxField label="Disabled" checked={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_DISABLED) !== 0} onChange={(v) => onPatch({ buttonOptions: patchBit(selectedObject.buttonOptions, BUTTON_OPTION_DISABLED, v) })} />
-            <CheckboxField label="No Border" checked={((selectedObject.buttonOptions ?? 0) & BUTTON_OPTION_NO_BORDER) !== 0} onChange={(v) => onPatch({ buttonOptions: patchBit(selectedObject.buttonOptions, BUTTON_OPTION_NO_BORDER, v) })} />
-          </PropertySection>
-          <PropertySection title="Children">
-            {buttonChildren.length === 0 ? (
-              <div className="field-hint">Select an output tool, then click inside this Button to add a child object.</div>
-            ) : buttonChildren.map((child) => (
-              <div key={child.id} className="field-hint">{child.id} — {objectKindName(child.kind)} at {child.x}, {child.y}</div>
-            ))}
-          </PropertySection>
-        </>
-      )}
-
-      {/* ── Container ────────────────────────────────────────────────── */}
-      {kind === 'container' && (
-        <>
-          <PropertySection title="Container">
-            <CheckboxField label="Hidden at Runtime" checked={selectedObject.hidden ?? false} onChange={(hidden) => onPatch({ hidden })} />
-            <div className="field-hint">Hidden containers and their children are skipped by the VT.</div>
-          </PropertySection>
-          <PropertySection title="Children">
-            {containerChildren.length === 0 ? (
-              <div className="field-hint">Select a canvas tool, then click inside this Container to add a child object.</div>
-            ) : containerChildren.map((child) => (
-              <div key={child.id} className="field-hint">{child.id} — {objectKindName(child.kind)} at {child.x}, {child.y}</div>
-            ))}
-          </PropertySection>
-        </>
       )}
 
       {/* ── Output String ─────────────────────────────────────────────── */}

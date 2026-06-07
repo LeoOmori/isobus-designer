@@ -1,26 +1,10 @@
 import type { ObjectKind, ProjectState } from './types';
-import {
-  BUTTON_OPTION_LATCHABLE,
-  BUTTON_OPTION_LATCHED,
-} from './isobus';
 import { extractedModules } from '../objects/extractedModules';
 
 const REFERENCE_ONLY_KINDS = new Set([
   'line-attribute', 'fill-attribute', 'font-attribute',
   'string-variable', 'number-variable',
   'soft-key-mask', 'key',
-]);
-
-const BUTTON_CHILD_KINDS = new Set<ObjectKind>([
-  'output-string', 'output-number', 'output-rectangle', 'picture-graphic',
-]);
-
-const CONTAINER_CHILD_KINDS = new Set<ObjectKind>([
-  'container', 'output-string', 'output-number', 'output-rectangle', 'picture-graphic', 'button',
-]);
-
-const KEY_CHILD_KINDS = new Set<ObjectKind>([
-  'output-string', 'output-number', 'output-rectangle', 'picture-graphic', 'container',
 ]);
 
 export function validate(project: ProjectState): string[] {
@@ -63,38 +47,6 @@ export function validate(project: ProjectState): string[] {
 
     errors.push(...(extractedModules[obj.kind]?.validate?.(obj, project, { objectById }) ?? []));
 
-    if (obj.kind === 'container') {
-      if (typeof (obj.hidden ?? false) !== 'boolean') {
-        errors.push(`Container ${obj.id}: hidden must be boolean`);
-      }
-      if (!Number.isInteger(obj.width) || obj.width <= 0 || obj.width > 0xffff || !Number.isInteger(obj.height) || obj.height <= 0 || obj.height > 0xffff) {
-        errors.push(`Container ${obj.id}: width/height must fit uint16`);
-      }
-      if ((obj.childObjectIds ?? []).length > 0xff) {
-        errors.push(`Container ${obj.id}: child count must fit uint8`);
-      }
-      if ((obj.macros ?? []).length > 0xff) {
-        errors.push(`Container ${obj.id}: macro count must fit uint8`);
-      }
-      if (containsDescendant(obj.id, obj.id, objectById, new Set())) {
-        errors.push(`Container ${obj.id}: contains itself through childObjectIds`);
-      }
-
-      for (const childId of obj.childObjectIds ?? []) {
-        const child = objectById.get(childId);
-        if (!child || !CONTAINER_CHILD_KINDS.has(child.kind)) {
-          errors.push(`Container ${obj.id}: child "${childId}" must be Container/Button/Output String/Number/Rectangle or Picture Graphic`);
-          continue;
-        }
-        if (child.parentId !== obj.id) {
-          errors.push(`Container ${obj.id}: child "${childId}" parentId must reference the Container`);
-        }
-        if (!Number.isInteger(child.x) || child.x < -0x8000 || child.x > 0x7fff || !Number.isInteger(child.y) || child.y < -0x8000 || child.y > 0x7fff) {
-          errors.push(`Container ${obj.id}: child "${childId}" coordinates must fit int16`);
-        }
-      }
-    }
-
     if (obj.kind === 'soft-key-mask') {
       const keys = obj.keys ?? [];
       if (!Number.isInteger(obj.backgroundColorIndex ?? 1) || (obj.backgroundColorIndex ?? 1) < 0 || (obj.backgroundColorIndex ?? 1) > 255) {
@@ -116,77 +68,6 @@ export function validate(project: ProjectState): string[] {
         const key = objectById.get(keyId);
         if (!key || key.kind !== 'key') {
           errors.push(`Soft Key Mask ${obj.id}: key "${keyId}" must reference an existing Key object`);
-        }
-      }
-    }
-
-    if (obj.kind === 'key') {
-      const children = obj.childObjectIds ?? [];
-      if (!Number.isInteger(obj.backgroundColorIndex ?? 1) || (obj.backgroundColorIndex ?? 1) < 0 || (obj.backgroundColorIndex ?? 1) > 255) {
-        errors.push(`Key ${obj.id}: backgroundColorIndex must be 0–255`);
-      }
-      if (!Number.isInteger(obj.keyCode ?? 1) || (obj.keyCode ?? 1) < 1 || (obj.keyCode ?? 1) > 255) {
-        errors.push(`Key ${obj.id}: keyCode must be 1–255`);
-      }
-      if (children.length > 0xff) {
-        errors.push(`Key ${obj.id}: child count must fit uint8`);
-      }
-      if ((obj.macros ?? []).length > 0xff) {
-        errors.push(`Key ${obj.id}: macro count must fit uint8`);
-      }
-      for (const childId of children) {
-        const child = objectById.get(childId);
-        if (!child || !KEY_CHILD_KINDS.has(child.kind)) {
-          errors.push(`Key ${obj.id}: child "${childId}" must be Output String/Number/Rectangle, Picture Graphic, or Container`);
-          continue;
-        }
-        if (child.parentId !== obj.id) {
-          errors.push(`Key ${obj.id}: child "${childId}" parentId must reference the Key`);
-        }
-        if (!Number.isInteger(child.x) || child.x < -0x8000 || child.x > 0x7fff || !Number.isInteger(child.y) || child.y < -0x8000 || child.y > 0x7fff) {
-          errors.push(`Key ${obj.id}: child "${childId}" coordinates must fit int16`);
-        }
-      }
-    }
-
-    if (obj.kind === 'button') {
-      const keyCode = obj.keyCode ?? 0;
-      const options = obj.buttonOptions ?? 0;
-      const backgroundColorIndex = obj.backgroundColorIndex ?? 1;
-      const borderColorIndex = obj.borderColorIndex ?? 0;
-
-      if (!Number.isInteger(keyCode) || keyCode < 0 || keyCode > 0xff) {
-        errors.push(`Button ${obj.id}: keyCode must be 0–255`);
-      }
-      if (!Number.isInteger(options) || options < 0 || options > 0xff) {
-        errors.push(`Button ${obj.id}: buttonOptions must be 0–255`);
-      } else if (options & 0b11000000) {
-        errors.push(`Button ${obj.id}: reserved option bits 6-7 must be 0`);
-      }
-      if ((options & BUTTON_OPTION_LATCHED) && !(options & BUTTON_OPTION_LATCHABLE)) {
-        errors.push(`Button ${obj.id}: latched requires latchable`);
-      }
-      if (!Number.isInteger(obj.width) || obj.width <= 0 || obj.width > 0xffff || !Number.isInteger(obj.height) || obj.height <= 0 || obj.height > 0xffff) {
-        errors.push(`Button ${obj.id}: width/height must fit uint16`);
-      }
-      if (!Number.isInteger(backgroundColorIndex) || backgroundColorIndex < 0 || backgroundColorIndex > 0xff) {
-        errors.push(`Button ${obj.id}: backgroundColorIndex must be 0–255`);
-      }
-      if (!Number.isInteger(borderColorIndex) || borderColorIndex < 0 || borderColorIndex > 0xff) {
-        errors.push(`Button ${obj.id}: borderColorIndex must be 0–255`);
-      }
-
-      for (const childId of obj.childObjectIds ?? []) {
-        const child = objectById.get(childId);
-        if (!child || !BUTTON_CHILD_KINDS.has(child.kind)) {
-          errors.push(`Button ${obj.id}: child "${childId}" must be Output String/Number/Rectangle or Picture Graphic`);
-          continue;
-        }
-        if (child.parentId !== obj.id) {
-          errors.push(`Button ${obj.id}: child "${childId}" parentId must reference the Button`);
-        }
-        if (!Number.isInteger(child.x) || child.x < -0x8000 || child.x > 0x7fff || !Number.isInteger(child.y) || child.y < -0x8000 || child.y > 0x7fff) {
-          errors.push(`Button ${obj.id}: child "${childId}" coordinates must fit int16`);
         }
       }
     }
@@ -214,20 +95,4 @@ export function validate(project: ProjectState): string[] {
   }
 
   return errors;
-}
-
-function containsDescendant(
-  rootId: string,
-  currentId: string,
-  objectById: Map<string, { childObjectIds?: string[] }>,
-  visited: Set<string>,
-) {
-  if (visited.has(currentId)) return false;
-  visited.add(currentId);
-  const current = objectById.get(currentId);
-  for (const childId of current?.childObjectIds ?? []) {
-    if (childId === rootId) return true;
-    if (containsDescendant(rootId, childId, objectById, visited)) return true;
-  }
-  return false;
 }

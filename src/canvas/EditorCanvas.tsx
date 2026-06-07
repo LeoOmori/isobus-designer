@@ -1,11 +1,7 @@
 import { Fragment, type PointerEvent, type WheelEvent, useCallback, useRef, useState } from 'react';
 import {
   BUTTON_FACE_INSET,
-  BUTTON_OPTION_DISABLED,
-  BUTTON_OPTION_LATCHED,
   BUTTON_OPTION_NO_BORDER,
-  BUTTON_OPTION_SUPPRESS_BORDER,
-  BUTTON_OPTION_TRANSPARENT_BACKGROUND,
   OUTPUT_NUMBER_OPTION_TRANSPARENT,
   OUTPUT_STRING_OPTION_AUTO_WRAP, OUTPUT_STRING_OPTION_TRANSPARENT, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
   clamp,
@@ -15,11 +11,14 @@ import {
 import { getActiveMask, getCanvasChildren, getSoftKeyMaskKeys } from '../domain/selectors';
 import type { DragState, EditorObject, ObjectKind, ProjectState, ToolMode, Viewport } from '../domain/types';
 import { derivedPictureGraphicHeight } from '../domain/vtPalette';
+import { ButtonContent, buttonFrameStyle } from '../objects/button';
+import { ContainerContent, containerFrameStyle } from '../objects/container';
+import { KeyContent } from '../objects/key';
 import { OutputNumberContent } from '../objects/output-number/Render';
 import { outputRectangleStyle } from '../objects/output-rectangle/logic';
 import { OutputStringContent } from '../objects/output-string/Render';
 import { PictureGraphicContent } from '../objects/picture-graphic/Render';
-import { BottomControls, CanvasToolbar } from './CanvasToolbar';
+import { BottomControls } from './CanvasToolbar';
 
 /** Tools that create a canvas object on click. */
 const CANVAS_TOOLS = new Set<ToolMode>([
@@ -274,15 +273,6 @@ export function EditorCanvas({
     const strVar = stringVariableReference ? stringVariables.find((v) => v.id === stringVariableReference) : undefined;
     const numVar = numberVariableReference ? numberVariables.find((v) => v.id === numberVariableReference) : undefined;
     const selected = selectedId === object.id;
-    const buttonOptions = object.kind === 'button' ? object.buttonOptions ?? 0 : 0;
-    const buttonNoBorder = (buttonOptions & BUTTON_OPTION_NO_BORDER) !== 0;
-    const buttonSuppressBorder = (buttonOptions & BUTTON_OPTION_SUPPRESS_BORDER) !== 0;
-    const buttonTransparent = (buttonOptions & BUTTON_OPTION_TRANSPARENT_BACKGROUND) !== 0;
-    const buttonDisabled = (buttonOptions & BUTTON_OPTION_DISABLED) !== 0;
-    const buttonLatched = (buttonOptions & BUTTON_OPTION_LATCHED) !== 0;
-    const buttonFaceBackground = object.kind === 'button' && !buttonTransparent
-      ? vtColor(object.backgroundColorIndex ?? 1)
-      : 'transparent';
     const buttonChildren = object.kind === 'button'
       ? project.objects
         .filter((candidate) => (object.childObjectIds ?? []).includes(candidate.id) && candidate.visible)
@@ -323,17 +313,19 @@ export function EditorCanvas({
       backgroundImage = style.backgroundImage as string | undefined;
       backgroundRepeat = style.backgroundRepeat as string | undefined;
     } else if (object.kind === 'button') {
-      borderColor = buttonNoBorder || buttonSuppressBorder ? 'transparent' : vtColor(object.borderColorIndex ?? 0);
-      borderWidth = buttonNoBorder ? 0 : BUTTON_FACE_INSET;
-      borderStyle = 'solid';
-      background  = 'transparent';
-      boxSizing = 'border-box';
+      const style = buttonFrameStyle(object);
+      borderColor = style.borderColor as string | undefined;
+      borderWidth = style.borderWidth as number | undefined;
+      borderStyle = style.borderStyle as string | undefined;
+      background = style.background as string | undefined;
+      boxSizing = style.boxSizing as 'border-box' | undefined;
     } else if (object.kind === 'container') {
-      borderColor = 'transparent';
-      borderWidth = 0;
-      borderStyle = 'solid';
-      background = 'transparent';
-      boxSizing = 'border-box';
+      const style = containerFrameStyle();
+      borderColor = style.borderColor as string | undefined;
+      borderWidth = style.borderWidth as number | undefined;
+      borderStyle = style.borderStyle as string | undefined;
+      background = style.background as string | undefined;
+      boxSizing = style.boxSizing as 'border-box' | undefined;
     } else if (object.kind === 'output-string' || object.kind === 'output-number') {
       borderColor = object.borderColor;
       borderWidth = 1;
@@ -368,10 +360,10 @@ export function EditorCanvas({
           borderTopWidth, borderRightWidth, borderBottomWidth, borderLeftWidth,
           boxSizing,
           zIndex: 20 + object.zIndex,
-          opacity: buttonDisabled ? 0.55 : undefined,
-          filter: buttonLatched ? 'brightness(0.88)' : undefined,
-          boxShadow: buttonLatched ? 'inset 2px 2px 0 rgba(0, 0, 0, .35), inset -2px -2px 0 rgba(255, 255, 255, .25)' : undefined,
-          cursor: buttonDisabled ? 'not-allowed' : undefined,
+          opacity: object.kind === 'button' ? buttonFrameStyle(object).opacity : undefined,
+          filter: object.kind === 'button' ? buttonFrameStyle(object).filter : undefined,
+          boxShadow: object.kind === 'button' ? buttonFrameStyle(object).boxShadow : undefined,
+          cursor: object.kind === 'button' ? buttonFrameStyle(object).cursor : undefined,
           fontSize: fontSizePx,
           fontFamily: (object.kind === 'output-string' || object.kind === 'output-number') && font?.proportional === false
             ? 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
@@ -423,42 +415,25 @@ export function EditorCanvas({
 
         {/* Button children render inside the Button Face. */}
         {object.kind === 'button' && (
-          <div
-            className="button-face"
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              width: '100%',
-              height: '100%',
-              background: buttonFaceBackground,
-              overflow: 'hidden',
-            }}
-          >
+          <ButtonContent object={object}>
             {buttonChildren.map(renderObject)}
-          </div>
+          </ButtonContent>
         )}
 
         {object.kind === 'key' && (
-          <div className="key-child-clip" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+          <KeyContent>
             {project.objects
               .filter((candidate) => (object.childObjectIds ?? []).includes(candidate.id) && candidate.visible)
               .sort((a, b) => a.zIndex - b.zIndex)
               .map(renderObject)}
-          </div>
+          </KeyContent>
         )}
 
         {/* Container children render clipped to the Container bounds. */}
         {object.kind === 'container' && (
-          <>
-            <div className="container-label">{object.name}</div>
-            <div
-              className="container-clip"
-              style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}
-            >
-              {containerChildren.map(renderObject)}
-            </div>
-          </>
+          <ContainerContent object={object}>
+            {containerChildren.map(renderObject)}
+          </ContainerContent>
         )}
 
         {selected && <span className="resize-handle" onPointerDown={(e) => beginResize(e, object)} />}
@@ -476,8 +451,6 @@ export function EditorCanvas({
       onPointerMove={handlePointerMove}
       onPointerUp={() => { dragRef.current = null; }}
     >
-      <CanvasToolbar tool={tool} onToolChange={onToolChange} />
-
       <div className="world" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})` }}>
         {project.workingSet.visible && masks.map((mask) => {
           const children = getCanvasChildren(project, mask.id);
