@@ -47,11 +47,11 @@ export function containerFrameStyle(): CSSProperties {
   return { borderColor: 'transparent', borderWidth: 0, borderStyle: 'solid', background: 'transparent', boxSizing: 'border-box' };
 }
 
-export function ContainerContent({ object, children }: { object: EditorObject; children: ReactNode }) {
+export function ContainerContent({ object, children, clipDisabled }: { object: EditorObject; children: ReactNode; clipDisabled?: boolean }) {
   return (
     <>
       <div className="container-label">{object.name}</div>
-      <div className="container-clip" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+      <div className="container-clip" style={{ position: 'absolute', inset: 0, overflow: clipDisabled ? 'visible' : 'hidden' }}>
         {children}
       </div>
     </>

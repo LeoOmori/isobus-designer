@@ -61,12 +61,30 @@ export function validateSoftKeyMaskForExport(obj: EditorObject): string[] {
   return (obj.keys ?? []).length > 0xff ? [`Export: Soft Key Mask ${obj.id} has more than 255 key references`] : [];
 }
 
+/** Max rows per column in the soft key mask preview. */
+export const SOFT_KEY_ROWS = 6;
+
+/**
+ * Gap between slots in the soft key mask preview (px). Must stay in sync with
+ * the `gap` value in `.vt-soft-key-mask` CSS.
+ */
+export const SKM_SLOT_GAP = 2;
+
+/**
+ * Border width on `.vt-soft-key-mask` (1px all sides). Must stay in sync with CSS.
+ * Added to height/width so `border-box` sizing doesn't clip the last slot row/column.
+ */
+const SKM_BORDER = 2; // top + bottom (or left + right)
+
 export function softKeyMaskFrameStyle(mask: EditorObject, softKeyMask: EditorObject): CSSProperties {
+  const count = softKeyMask.softKeyCountPreview ?? SOFT_KEY_SLOTS;
+  const cols = Math.max(1, Math.ceil(count / SOFT_KEY_ROWS));
+  const rows = Math.min(count, SOFT_KEY_ROWS);
   return {
     left: mask.x + mask.width + SOFT_KEY_GAP,
     top: mask.y,
-    width: SOFT_KEY_WIDTH,
-    height: SOFT_KEY_SLOTS * SOFT_KEY_SLOT_SIZE,
+    width: cols * SOFT_KEY_WIDTH + (cols - 1) * SKM_SLOT_GAP + SKM_BORDER,
+    height: rows * SOFT_KEY_SLOT_SIZE + (rows - 1) * SKM_SLOT_GAP + SKM_BORDER,
     background: vtColor(softKeyMask.backgroundColorIndex ?? 1),
     zIndex: mask.zIndex,
   };

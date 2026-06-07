@@ -39,7 +39,7 @@ describe('top-level object modules', () => {
 
   it('computes top-level styles', () => {
     expect(dataMaskFrameStyle(mask)).toMatchObject({ left: 10, top: 20, width: 480, height: 480, background: '#ffffff', zIndex: 3 });
-    expect(softKeyMaskFrameStyle(mask, skm)).toMatchObject({ left: 494, top: 20, width: 60, height: 360, background: '#FFFFFF', zIndex: 3 });
+    expect(softKeyMaskFrameStyle(mask, skm)).toMatchObject({ left: 494, top: 20, width: 62, height: 372, background: '#FFFFFF', zIndex: 3 });
     expect(softKeySlotStyle(key)).toMatchObject({ width: SOFT_KEY_SLOT_SIZE, height: SOFT_KEY_SLOT_SIZE, background: '#009900' });
   });
 

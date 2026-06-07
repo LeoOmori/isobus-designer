@@ -2,24 +2,16 @@ import { Fragment, type PointerEvent, type WheelEvent, useCallback, useRef, useS
 import {
   BUTTON_FACE_INSET,
   BUTTON_OPTION_NO_BORDER,
-  OUTPUT_NUMBER_OPTION_TRANSPARENT,
-  OUTPUT_STRING_OPTION_AUTO_WRAP, OUTPUT_STRING_OPTION_TRANSPARENT, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
   clamp,
-  horizontalJustificationToFlex, snap,
-  verticalJustificationToFlex, vtColor,
+  snap,
 } from '../domain/isobus';
 import { getActiveMask, getCanvasChildren, getSoftKeyMaskKeys } from '../domain/selectors';
 import type { DragState, EditorObject, ObjectKind, ProjectState, ToolMode, Viewport } from '../domain/types';
 import { derivedPictureGraphicHeight } from '../domain/vtPalette';
-import { ButtonContent, buttonFrameStyle } from '../objects/button';
-import { ContainerContent, containerFrameStyle } from '../objects/container';
 import { dataMaskFrameStyle } from '../objects/data-mask';
-import { KeyContent } from '../objects/key';
-import { OutputNumberContent } from '../objects/output-number/Render';
-import { outputRectangleStyle } from '../objects/output-rectangle/logic';
-import { OutputStringContent } from '../objects/output-string/Render';
-import { PictureGraphicContent } from '../objects/picture-graphic/Render';
-import { SOFT_KEY_GAP, SOFT_KEY_SLOT_SIZE, SOFT_KEY_SLOTS, softKeyMaskFrameStyle, softKeySlotStyle } from '../objects/soft-key-mask';
+import { buttonFrameStyle } from '../objects/button';
+import { canvasObjectFrameStyle, isCanvasObjectRenderable, renderCanvasObjectContent, visibleChildObjects } from '../objects/canvasRenderRegistry';
+import { SOFT_KEY_GAP, SOFT_KEY_SLOT_SIZE, SOFT_KEY_SLOTS, SOFT_KEY_ROWS, SOFT_KEY_WIDTH, softKeyMaskFrameStyle, softKeySlotStyle } from '../objects/soft-key-mask';
 
 
 /** Tools that create a canvas object on click. */
@@ -60,11 +52,6 @@ export function EditorCanvas({
   const activeMask = getActiveMask(project);
   const masks      = project.objects.filter((o) => o.kind === 'data-mask' && o.visible);
 
-  const lineAttributes  = project.objects.filter((o) => o.kind === 'line-attribute');
-  const fillAttributes  = project.objects.filter((o) => o.kind === 'fill-attribute');
-  const fontAttributes  = project.objects.filter((o) => o.kind === 'font-attribute');
-  const stringVariables = project.objects.filter((o) => o.kind === 'string-variable');
-  const numberVariables = project.objects.filter((o) => o.kind === 'number-variable');
   const objectById = new Map(project.objects.map((object) => [object.id, object]));
 
   // ── Coordinate helpers ────────────────────────────────────────────────
@@ -254,97 +241,32 @@ export function EditorCanvas({
     stageRef.current?.setPointerCapture(event.pointerId);
   }
 
+  /** True when an object or any of its descendants is the current selection. */
+  function isSelectedOrDescendant(object: EditorObject): boolean {
+    if (selectedId === object.id) return true;
+    if (!object.childObjectIds) return false;
+    return object.childObjectIds.some((childId) => {
+      const child = objectById.get(childId);
+      return child ? isSelectedOrDescendant(child) : false;
+    });
+  }
+
   // ── Canvas object renderer ────────────────────────────────────────────
   function renderObject(object: EditorObject) {
-    if (object.kind === 'container' && object.hidden) return null;
+    if (!isCanvasObjectRenderable(object)) return null;
 
-    const line   = lineAttributes.find((a) => a.id === object.lineAttributeId);
-    const fill   = fillAttributes.find((a) => a.id === object.fillAttributeId);
-    const font   = fontAttributes.find((a) => a.id === object.fontAttributeId);
-    const stringVariableReference = object.kind === 'output-string'
-      ? object.variableReference !== undefined ? object.variableReference : object.stringVariableId || null
-      : null;
-    const numberVariableReference = object.kind === 'output-number'
-      ? object.variableReference !== undefined ? object.variableReference : object.numberVariableId || null
-      : null;
-    const strVar = stringVariableReference ? stringVariables.find((v) => v.id === stringVariableReference) : undefined;
-    const numVar = numberVariableReference ? numberVariables.find((v) => v.id === numberVariableReference) : undefined;
     const selected = selectedId === object.id;
-    const buttonChildren = object.kind === 'button'
-      ? project.objects
-        .filter((candidate) => (object.childObjectIds ?? []).includes(candidate.id) && candidate.visible)
-        .sort((a, b) => a.zIndex - b.zIndex)
-      : [];
-    const containerChildren = object.kind === 'container'
-      ? project.objects
-        .filter((candidate) => (object.childObjectIds ?? []).includes(candidate.id) && candidate.visible)
-        .sort((a, b) => a.zIndex - b.zIndex)
-      : [];
-
-    const fontWeight     = (font?.fontStyle ?? 0) & 1 ? 700        : undefined;
-    const fontStyleCss   = (font?.fontStyle ?? 0) & 2 ? 'italic'   : undefined;
-    const textDecoration = (font?.fontStyle ?? 0) & 4 ? 'underline': undefined;
-
-    let borderColor: string | undefined;
-    let borderWidth: number | undefined;
-    let borderStyle: string | undefined;
-    let borderTopWidth: number | undefined;
-    let borderRightWidth: number | undefined;
-    let borderBottomWidth: number | undefined;
-    let borderLeftWidth: number | undefined;
-    let backgroundImage: string | undefined;
-    let backgroundRepeat: string | undefined;
-    let background: string | undefined;
-    let boxSizing: 'border-box' | undefined;
-
-    if (object.kind === 'output-rectangle') {
-      const style = outputRectangleStyle(object, line, fill, project.objects);
-      borderColor = style.borderColor as string | undefined;
-      borderStyle = style.borderStyle as string | undefined;
-      borderTopWidth = style.borderTopWidth as number | undefined;
-      borderRightWidth = style.borderRightWidth as number | undefined;
-      borderBottomWidth = style.borderBottomWidth as number | undefined;
-      borderLeftWidth = style.borderLeftWidth as number | undefined;
-      boxSizing = style.boxSizing as 'border-box' | undefined;
-      background = style.background as string | undefined;
-      backgroundImage = style.backgroundImage as string | undefined;
-      backgroundRepeat = style.backgroundRepeat as string | undefined;
-    } else if (object.kind === 'button') {
-      const style = buttonFrameStyle(object);
-      borderColor = style.borderColor as string | undefined;
-      borderWidth = style.borderWidth as number | undefined;
-      borderStyle = style.borderStyle as string | undefined;
-      background = style.background as string | undefined;
-      boxSizing = style.boxSizing as 'border-box' | undefined;
-    } else if (object.kind === 'container') {
-      const style = containerFrameStyle();
-      borderColor = style.borderColor as string | undefined;
-      borderWidth = style.borderWidth as number | undefined;
-      borderStyle = style.borderStyle as string | undefined;
-      background = style.background as string | undefined;
-      boxSizing = style.boxSizing as 'border-box' | undefined;
-    } else if (object.kind === 'output-string' || object.kind === 'output-number') {
-      borderColor = object.borderColor;
-      borderWidth = 1;
-      borderStyle = 'solid';
-      const transparentBit = object.kind === 'output-number' ? OUTPUT_NUMBER_OPTION_TRANSPARENT : OUTPUT_STRING_OPTION_TRANSPARENT;
-      background = ((object.outputOptions ?? 0) & transparentBit) !== 0
-        ? 'transparent'
-        : vtColor(object.backgroundColorIndex ?? 1);
-    } else {
-      borderColor = object.borderColor;
-      borderWidth = 1;
-      borderStyle = 'solid';
-      background  = object.backgroundColor;
-    }
-
-    const isEditingText = editingTextObjectId === object.id;
-    const fontSizePx =
-      object.kind === 'output-string' ? (font?.fontHeight ?? font?.fontSize ?? object.fontSize)
-      : object.kind === 'output-number' ? (font?.fontHeight ?? font?.fontSize ?? 16)
-      : object.fontSize;
-    const outputStringAutoWrap = object.kind === 'output-string' && ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_AUTO_WRAP) !== 0;
-    const outputStringWrapOnHyphen = object.kind === 'output-string' && ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) !== 0;
+    const context = {
+      project,
+      objectById,
+      editingTextObjectId,
+      isSelected: selected,
+      clipDisabled: isSelectedOrDescendant(object),
+      onPatch: onUpdateObject,
+      onEndEditing: () => setEditingTextObjectId(null),
+      renderChildren: (parent: EditorObject) => visibleChildObjects(project, parent).map(renderObject),
+    };
+    const frameStyle = canvasObjectFrameStyle(object, context);
 
     return (
       <div
@@ -352,33 +274,8 @@ export function EditorCanvas({
         className={`canvas-object object-${object.kind} ${selected ? 'selected-object' : ''}`}
         style={{
           left: object.x, top: object.y, width: object.width, height: object.height,
-          background, backgroundImage, backgroundRepeat,
-          borderColor, borderWidth, borderStyle,
-          borderTopWidth, borderRightWidth, borderBottomWidth, borderLeftWidth,
-          boxSizing,
           zIndex: 20 + object.zIndex,
-          opacity: object.kind === 'button' ? buttonFrameStyle(object).opacity : undefined,
-          filter: object.kind === 'button' ? buttonFrameStyle(object).filter : undefined,
-          boxShadow: object.kind === 'button' ? buttonFrameStyle(object).boxShadow : undefined,
-          cursor: object.kind === 'button' ? buttonFrameStyle(object).cursor : undefined,
-          fontSize: fontSizePx,
-          fontFamily: (object.kind === 'output-string' || object.kind === 'output-number') && font?.proportional === false
-            ? 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
-            : undefined,
-          color: (object.kind === 'output-string' || object.kind === 'output-number')
-            ? vtColor(font?.fontColor ?? 0)
-            : undefined,
-          fontWeight, fontStyle: fontStyleCss, textDecoration,
-          justifyContent: (object.kind === 'output-string' || object.kind === 'output-number')
-            ? horizontalJustificationToFlex(object.horizontalJustification)
-            : undefined,
-          alignItems: (object.kind === 'output-string' || object.kind === 'output-number')
-            ? verticalJustificationToFlex(object.verticalJustification)
-            : undefined,
-          whiteSpace: outputStringAutoWrap ? 'pre-wrap' : 'nowrap',
-          overflowWrap: outputStringAutoWrap ? (outputStringWrapOnHyphen ? 'break-word' : 'normal') : undefined,
-          wordBreak: outputStringAutoWrap ? 'normal' : undefined,
-          hyphens: outputStringAutoWrap && outputStringWrapOnHyphen ? 'manual' : 'none',
+          ...frameStyle,
         }}
         onPointerDown={(e) => beginMove(e, object)}
         onDoubleClick={(e) => {
@@ -388,50 +285,7 @@ export function EditorCanvas({
           setEditingTextObjectId(object.id);
         }}
       >
-        {/* Output String */}
-        {object.kind === 'output-string' && (
-          <OutputStringContent
-            object={object}
-            font={font}
-            stringVariable={strVar}
-            isEditing={isEditingText}
-            onPatch={(changes) => onUpdateObject(object.id, changes)}
-            onEndEditing={() => setEditingTextObjectId(null)}
-          />
-        )}
-
-        {/* Output Number */}
-        {object.kind === 'output-number' && (
-          <OutputNumberContent object={object} font={font} numberVariable={numVar} />
-        )}
-
-        {/* Picture Graphic */}
-        {object.kind === 'picture-graphic' && (
-          <PictureGraphicContent object={object} />
-        )}
-
-        {/* Button children render inside the Button Face. */}
-        {object.kind === 'button' && (
-          <ButtonContent object={object}>
-            {buttonChildren.map(renderObject)}
-          </ButtonContent>
-        )}
-
-        {object.kind === 'key' && (
-          <KeyContent>
-            {project.objects
-              .filter((candidate) => (object.childObjectIds ?? []).includes(candidate.id) && candidate.visible)
-              .sort((a, b) => a.zIndex - b.zIndex)
-              .map(renderObject)}
-          </KeyContent>
-        )}
-
-        {/* Container children render clipped to the Container bounds. */}
-        {object.kind === 'container' && (
-          <ContainerContent object={object}>
-            {containerChildren.map(renderObject)}
-          </ContainerContent>
-        )}
+        {renderCanvasObjectContent(object, context)}
 
         {selected && <span className="resize-handle" onPointerDown={(e) => beginResize(e, object)} />}
       </div>
@@ -478,9 +332,11 @@ export function EditorCanvas({
                   onPointerDown={(e) => { e.stopPropagation(); onSelect(skm.id); }}
                 >
                   <div className="mask-label">{skm.id}</div>
-                  {Array.from({ length: SOFT_KEY_SLOTS }, (_, i) => {
+                  {Array.from({ length: skm.softKeyCountPreview ?? SOFT_KEY_SLOTS }, (_, i) => {
                     const key = skmKeys[i];
                     const keySelected = key && selectedId === key.id;
+                    const col = Math.floor(i / SOFT_KEY_ROWS);
+                    const row = i % SOFT_KEY_ROWS;
                     return (
                       <div
                         key={key?.id ?? `skm-slot-${i}`}
@@ -489,7 +345,7 @@ export function EditorCanvas({
                         onPointerDown={(e) => {
                           e.stopPropagation();
                           if (KEY_CHILD_TOOLS.has(tool) && key) {
-                            createOnKeySlot(e.clientX, e.clientY, key, mask.x + mask.width + SOFT_KEY_GAP, mask.y + i * SOFT_KEY_SLOT_SIZE);
+                            createOnKeySlot(e.clientX, e.clientY, key, mask.x + mask.width + SOFT_KEY_GAP + col * SOFT_KEY_WIDTH, mask.y + row * SOFT_KEY_SLOT_SIZE);
                             return;
                           }
                           onSelect(key?.id ?? skm.id);
@@ -497,7 +353,7 @@ export function EditorCanvas({
                       >
                         {key
                           ? <>
-                              <div className="key-face" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+                              <div className="key-face" style={{ position: 'absolute', inset: 0, overflow: key && isSelectedOrDescendant(key) ? 'visible' : 'hidden' }}>
                                 {(key.childObjectIds ?? [])
                                   .map((childId) => project.objects.find((candidate) => candidate.id === childId))
                                   .filter((candidate): candidate is EditorObject => candidate !== undefined && candidate.visible)

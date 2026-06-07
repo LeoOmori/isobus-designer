@@ -60,8 +60,8 @@ export function validateKeyForExport(obj: EditorObject): string[] {
   return errors;
 }
 
-export function KeyContent({ children }: { children: ReactNode }) {
-  return <div className="key-child-clip" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>{children}</div>;
+export function KeyContent({ children, clipDisabled }: { children: ReactNode; clipDisabled?: boolean }) {
+  return <div className="key-child-clip" style={{ position: 'absolute', inset: 0, overflow: clipDisabled ? 'visible' : 'hidden' }}>{children}</div>;
 }
 
 export const keyModule = {

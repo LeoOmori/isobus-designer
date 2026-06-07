@@ -80,9 +80,9 @@ export function buttonFaceBackground(object: EditorObject) {
   return ((object.buttonOptions ?? 0) & BUTTON_OPTION_TRANSPARENT_BACKGROUND) !== 0 ? 'transparent' : vtColor(object.backgroundColorIndex ?? 1);
 }
 
-export function ButtonContent({ object, children }: { object: EditorObject; children: ReactNode }) {
+export function ButtonContent({ object, children, clipDisabled }: { object: EditorObject; children: ReactNode; clipDisabled?: boolean }) {
   return (
-    <div className="button-face" style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', background: buttonFaceBackground(object), overflow: 'hidden' }}>
+    <div className="button-face" style={{ position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', background: buttonFaceBackground(object), overflow: clipDisabled ? 'visible' : 'hidden' }}>
       {children}
     </div>
   );

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ObjectKind } from '../domain/types';
+import { canvasObjectRenderers } from './canvasRenderRegistry';
 import { extractedModules } from './extractedModules';
 import { metaRegistry } from './metaRegistry';
 import { objectPropertyComponents } from './objectPropertyRegistry';
@@ -17,6 +18,12 @@ describe('object registries', () => {
     expect(Object.keys(extractedModules).sort()).toEqual([...kinds].sort());
     expect(Object.keys(metaRegistry).sort()).toEqual([...kinds].sort());
     expect(Object.keys(objectPropertyComponents).sort()).toEqual([...kinds].sort());
+  });
+
+  it('contains canvas renderers for canvas-renderable child kinds', () => {
+    expect(Object.keys(canvasObjectRenderers).sort()).toEqual([
+      'button', 'container', 'key', 'output-number', 'output-rectangle', 'output-string', 'picture-graphic',
+    ].sort());
   });
 
   it('contains writer, export order, metadata, and default factory coverage', () => {
