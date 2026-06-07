@@ -25,8 +25,8 @@ export function createDefaultOutputString({ current, x, y, parentId }: CreateObj
 
     x: isNestedParent ? x : clamp(x, 0, activeParent.width - 40),
     y: isNestedParent ? y : clamp(y, 0, activeParent.height - 30),
-    width: 220,
-    height: 42,
+    width: 80,
+    height: 30,
 
     backgroundColor: '#ffffff',
     backgroundColorIndex: 1,

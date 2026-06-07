@@ -156,6 +156,20 @@ button:focus-visible {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.canvas-tool-button:disabled,
+.zoom-btn:disabled,
+.panels-toggle:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.canvas-tool-button:disabled:hover,
+.zoom-btn:disabled:hover,
+.panels-toggle:disabled:hover {
+  color: rgba(255, 255, 255, 0.55);
+  background: transparent;
+}
+
 .canvas-tool-button svg { width: 16px; height: 16px; }
 
 .canvas-tool-button.active {

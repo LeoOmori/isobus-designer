@@ -25,7 +25,7 @@ const OUTPUT_NUMBER_OPTION_MASK = OUTPUT_NUMBER_OPTION_TRANSPARENT
 export function createDefaultOutputNumber({ current, x, y, parentId }: CreateObjectContext): EditorObject {
   const defaultFont = current.objects.find((object) => object.kind === 'font-attribute');
   return {
-    ...createCanvasBase('output-number', outputNumberMeta.name, current, x, y, parentId, 220, 42),
+    ...createCanvasBase('output-number', outputNumberMeta.name, current, x, y, parentId, 80, 30),
     fontAttributeId: defaultFont?.id ?? '',
     variableReference: null,
     numberVariableId: undefined,

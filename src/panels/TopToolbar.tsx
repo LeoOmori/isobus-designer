@@ -1,8 +1,8 @@
-import { Box, Crosshair, Download, Eye, EyeOff, Grid3X3, Hand, Hash, Image, Minus, MousePointer2, MousePointerClick, Plus, Square, Type } from 'lucide-react';
+import { Box, Crosshair, Download, Eye, EyeOff, Grid3X3, Hand, Hash, Image, Minus, MousePointer2, MousePointerClick, Plus, Redo2, Square, Type, Undo2 } from 'lucide-react';
 import type { ToolMode } from '../domain/types';
 import { ToolButton } from '../ui/primitives';
 
-export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, sidebarsVisible, onToggleSidebars }: {
+export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, sidebarsVisible, onToggleSidebars, onUndo, onRedo, canUndo, canRedo }: {
   tool: ToolMode;
   onToolChange: (tool: ToolMode) => void;
   zoom: number;
@@ -10,12 +10,19 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, side
   onExportIop: () => void;
   sidebarsVisible: boolean;
   onToggleSidebars: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }) {
   return (
     <header className="topbar">
       <div className="brand"><div className="app-logo"><Box size={20} /></div><span>ISOBUS IOP Editor</span></div>
       <div className="canvas-tools">
-        <button className="panels-toggle" onClick={onToggleSidebars} title={sidebarsVisible ? 'Hide panels' : 'Show panels'}>{sidebarsVisible ? <Eye size={18} /> : <EyeOff size={18} />}</button>
+        <button type="button" className="panels-toggle" onClick={onToggleSidebars} title={sidebarsVisible ? 'Hide panels' : 'Show panels'}>{sidebarsVisible ? <Eye size={18} /> : <EyeOff size={18} />}</button>
+        <span className="divider" />
+        <button type="button" className="canvas-tool-button" onClick={onUndo} disabled={!canUndo} title="Undo"><Undo2 size={18} /></button>
+        <button type="button" className="canvas-tool-button" onClick={onRedo} disabled={!canRedo} title="Redo"><Redo2 size={18} /></button>
         <span className="divider" />
         <ToolButton active={tool === 'select'}           onClick={() => onToolChange('select')}           title="Select">          <MousePointer2 size={20} /></ToolButton>
         <ToolButton active={tool === 'pan'}              onClick={() => onToolChange('pan')}              title="Pan">             <Hand size={20} /></ToolButton>
@@ -27,13 +34,13 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, side
         <ToolButton active={tool === 'button'}           onClick={() => onToolChange('button')}           title="Button">          <MousePointerClick size={20} /></ToolButton>
         <ToolButton active={tool === 'picture-graphic'}  onClick={() => onToolChange('picture-graphic')}  title="Picture Graphic"> <Image size={20} /></ToolButton>
         <span className="divider" />
-        <button className="zoom-btn" onClick={() => onZoom(zoom - 0.1)}><Minus size={17} /></button>
+        <button type="button" className="zoom-btn" onClick={() => onZoom(zoom - 0.1)}><Minus size={17} /></button>
         <strong className="zoom-label">{Math.round(zoom * 100)}%</strong>
-        <button className="zoom-btn" onClick={() => onZoom(zoom + 0.1)}><Plus size={17} /></button>
-        <button className="zoom-btn" onClick={() => onZoom(1)}><Crosshair size={17} /></button>
+        <button type="button" className="zoom-btn" onClick={() => onZoom(zoom + 0.1)}><Plus size={17} /></button>
+        <button type="button" className="zoom-btn" onClick={() => onZoom(1)}><Crosshair size={17} /></button>
       </div>
       <div className="top-actions">
-        <button className="export export-iop" onClick={onExportIop}><Download size={18} />Export IOP</button>
+        <button type="button" className="export export-iop" onClick={onExportIop}><Download size={18} />Export IOP</button>
       </div>
     </header>
   );

@@ -43,8 +43,8 @@ describe('output-string object module', () => {
       parentId: 'DM_1',
       x: 440,
       y: 450,
-      width: 220,
-      height: 42,
+      width: 80,
+      height: 30,
       fontAttributeId: 'FONT_1',
       variableReference: null,
     });

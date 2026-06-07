@@ -37,6 +37,11 @@ export function App() {
   const masks       = project.objects.filter((o) => o.kind === 'data-mask');
   const softKeyMasks = project.objects.filter((o) => o.kind === 'soft-key-mask');
 
+  useEffect(() => {
+    const selectedExists = selectedId === project.workingSet.id || project.objects.some((object) => object.id === selectedId);
+    if (!selectedExists) setSelectedId(project.activeMaskId || project.workingSet.id);
+  }, [project, selectedId]);
+
   // ── Persistence ───────────────────────────────────────────────────────
   useEffect(() => {
     const id = window.setInterval(() => window.localStorage.setItem(storageKey, JSON.stringify(project)), 30_000);
@@ -120,9 +125,14 @@ export function App() {
   // ── Keyboard shortcuts ────────────────────────────────────────────────
   useEffect(() => {
     function handler(event: KeyboardEvent) {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'z') {
+      if (!(event.metaKey || event.ctrlKey)) return;
+      const key = event.key.toLowerCase();
+      if (key === 'z') {
         event.preventDefault();
         if (event.shiftKey) redo(); else undo();
+      } else if (key === 'y') {
+        event.preventDefault();
+        redo();
       }
     }
     window.addEventListener('keydown', handler);
@@ -299,6 +309,10 @@ export function App() {
         onExportIop={handleExportIop}
         sidebarsVisible={sidebarsVisible}
         onToggleSidebars={() => setSidebarsVisible((v) => !v)}
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
       />
       <div className={`workspace ${sidebarsVisible ? '' : 'sidebars-hidden'}`}>
         <LeftSidebar

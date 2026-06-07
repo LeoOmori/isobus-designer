@@ -92,7 +92,7 @@ export function clamp(value: number, min: number, max: number) {
 }
 
 export function snap(value: number) {
-  return Math.round(value / 10) * 10;
+  return Math.round(value);
 }
 
 export function vtColor(index = 0) {

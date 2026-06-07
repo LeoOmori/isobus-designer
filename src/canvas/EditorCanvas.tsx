@@ -47,7 +47,9 @@ export function EditorCanvas({
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const dragRef  = useRef<DragState | null>(null);
+  const dragPreviewRef = useRef<{ objectId: string; changes: Partial<EditorObject> } | null>(null);
   const [editingTextObjectId, setEditingTextObjectId] = useState<string | null>(null);
+  const [dragPreview, setDragPreview] = useState<{ objectId: string; changes: Partial<EditorObject> } | null>(null);
 
   const activeMask = getActiveMask(project);
   const masks      = project.objects.filter((o) => o.kind === 'data-mask' && o.visible);
@@ -194,22 +196,42 @@ export function EditorCanvas({
     const dy = (event.clientY - drag.startY) / viewport.zoom;
     if (drag.startObject.locked) return;
     if (drag.type === 'move') {
-      onUpdateObject(drag.objectId, { x: snap(drag.startObject.x + dx), y: snap(drag.startObject.y + dy) });
+      updateDragPreview({ objectId: drag.objectId, changes: { x: snap(drag.startObject.x + dx), y: snap(drag.startObject.y + dy) } });
     } else {
       if (drag.startObject.kind === 'picture-graphic') {
         const width = Math.max(20, snap(drag.startObject.width + dx));
-        onUpdateObject(drag.objectId, {
+        updateDragPreview({ objectId: drag.objectId, changes: {
           targetWidth: width,
           width,
           height: derivedPictureGraphicHeight(width, drag.startObject.actualWidth ?? width, drag.startObject.actualHeight ?? drag.startObject.height),
-        });
+        } });
         return;
       }
-      onUpdateObject(drag.objectId, {
+      updateDragPreview({ objectId: drag.objectId, changes: {
         width:  Math.max(20, snap(drag.startObject.width  + dx)),
         height: Math.max(16, snap(drag.startObject.height + dy)),
-      });
+      } });
     }
+  }
+
+  function updateDragPreview(next: { objectId: string; changes: Partial<EditorObject> }) {
+    dragPreviewRef.current = next;
+    setDragPreview(next);
+  }
+
+  function handlePointerUp() {
+    const drag = dragRef.current;
+    const preview = dragPreviewRef.current;
+    if (drag && drag.type !== 'pan' && preview?.objectId === drag.objectId && hasObjectChanges(drag.startObject, preview.changes)) {
+      onUpdateObject(drag.objectId, preview.changes);
+    }
+    dragRef.current = null;
+    dragPreviewRef.current = null;
+    setDragPreview(null);
+  }
+
+  function hasObjectChanges(object: EditorObject, changes: Partial<EditorObject>) {
+    return Object.entries(changes).some(([key, value]) => object[key as keyof EditorObject] !== value);
   }
 
   // ── Object drag handles ────────────────────────────────────────────────
@@ -229,6 +251,8 @@ export function EditorCanvas({
     event.stopPropagation();
     onSelect(object.id);
     if (editingTextObjectId === object.id || object.locked) return;
+    dragPreviewRef.current = null;
+    setDragPreview(null);
     dragRef.current = { type: 'move', objectId: object.id, startX: event.clientX, startY: event.clientY, startObject: object };
     stageRef.current?.setPointerCapture(event.pointerId);
   }
@@ -237,6 +261,8 @@ export function EditorCanvas({
     event.stopPropagation();
     onSelect(object.id);
     if (object.locked) return;
+    dragPreviewRef.current = null;
+    setDragPreview(null);
     dragRef.current = { type: 'resize', objectId: object.id, startX: event.clientX, startY: event.clientY, startObject: object };
     stageRef.current?.setPointerCapture(event.pointerId);
   }
@@ -255,39 +281,40 @@ export function EditorCanvas({
   function renderObject(object: EditorObject) {
     if (!isCanvasObjectRenderable(object)) return null;
 
-    const selected = selectedId === object.id;
+    const renderedObject = dragPreview?.objectId === object.id ? { ...object, ...dragPreview.changes } : object;
+    const selected = selectedId === renderedObject.id;
     const context = {
       project,
       objectById,
       editingTextObjectId,
       isSelected: selected,
-      clipDisabled: isSelectedOrDescendant(object),
+      clipDisabled: isSelectedOrDescendant(renderedObject),
       onPatch: onUpdateObject,
       onEndEditing: () => setEditingTextObjectId(null),
       renderChildren: (parent: EditorObject) => visibleChildObjects(project, parent).map(renderObject),
     };
-    const frameStyle = canvasObjectFrameStyle(object, context);
+    const frameStyle = canvasObjectFrameStyle(renderedObject, context);
 
     return (
       <div
-        key={object.id}
-        className={`canvas-object object-${object.kind} ${selected ? 'selected-object' : ''}`}
+        key={renderedObject.id}
+        className={`canvas-object object-${renderedObject.kind} ${selected ? 'selected-object' : ''}`}
         style={{
-          left: object.x, top: object.y, width: object.width, height: object.height,
-          zIndex: 20 + object.zIndex,
+          left: renderedObject.x, top: renderedObject.y, width: renderedObject.width, height: renderedObject.height,
+          zIndex: 20 + renderedObject.zIndex,
           ...frameStyle,
         }}
-        onPointerDown={(e) => beginMove(e, object)}
+        onPointerDown={(e) => beginMove(e, renderedObject)}
         onDoubleClick={(e) => {
-          if (object.kind !== 'output-string') return;
+          if (renderedObject.kind !== 'output-string') return;
           e.stopPropagation();
-          onSelect(object.id);
-          setEditingTextObjectId(object.id);
+          onSelect(renderedObject.id);
+          setEditingTextObjectId(renderedObject.id);
         }}
       >
-        {renderCanvasObjectContent(object, context)}
+        {renderCanvasObjectContent(renderedObject, context)}
 
-        {selected && <span className="resize-handle" onPointerDown={(e) => beginResize(e, object)} />}
+        {selected && <span className="resize-handle" onPointerDown={(e) => beginResize(e, renderedObject)} />}
       </div>
     );
   }
@@ -300,7 +327,8 @@ export function EditorCanvas({
       onWheel={handleWheel}
       onPointerDown={handleStagePointerDown}
       onPointerMove={handlePointerMove}
-      onPointerUp={() => { dragRef.current = null; }}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
     >
       <div className="world" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})` }}>
         {project.workingSet.visible && masks.map((mask) => {

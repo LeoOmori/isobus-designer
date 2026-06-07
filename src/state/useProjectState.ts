@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type SetStateAction } from 'react';
 import { initialProject } from '../domain/initialProject';
 import { nearestVtColorIndex } from '../domain/isobus';
 import type { EditorObject, ProjectState } from '../domain/types';
@@ -39,43 +39,64 @@ function backgroundColorToIndex(color: string | undefined) {
 }
 
 export function useProjectState() {
-  const [project, setProject] = useState<ProjectState>(loadProject);
-  const [past, setPast] = useState<ProjectState[]>([]);
-  const [future, setFuture] = useState<ProjectState[]>([]);
+  const [history, setHistory] = useState(() => ({
+    project: loadProject(),
+    past: [] as ProjectState[],
+    future: [] as ProjectState[],
+  }));
+
+  const setProject = useCallback((action: SetStateAction<ProjectState>) => {
+    setHistory((current) => {
+      const next = typeof action === 'function'
+        ? (action as (project: ProjectState) => ProjectState)(current.project)
+        : action;
+      return next === current.project ? current : { ...current, project: next };
+    });
+  }, []);
 
   const commit = useCallback((updater: (project: ProjectState) => ProjectState) => {
-    setProject((current) => {
-      const next = updater(current);
-      if (next === current) return current;
-      setPast((items) => [...items.slice(-49), current]);
-      setFuture([]);
-      return next;
+    setHistory((current) => {
+      const next = updater(current.project);
+      if (next === current.project) return current;
+      return {
+        project: next,
+        past: [...current.past.slice(-49), current.project],
+        future: [],
+      };
     });
   }, []);
 
   const undo = useCallback(() => {
-    setPast((items) => {
-      if (!items.length) return items;
-      const previous = items[items.length - 1];
-      setProject((current) => {
-        setFuture((futureItems) => [current, ...futureItems]);
-        return previous;
-      });
-      return items.slice(0, -1);
+    setHistory((current) => {
+      if (!current.past.length) return current;
+      const previous = current.past[current.past.length - 1];
+      return {
+        project: previous,
+        past: current.past.slice(0, -1),
+        future: [current.project, ...current.future],
+      };
     });
   }, []);
 
   const redo = useCallback(() => {
-    setFuture((items) => {
-      if (!items.length) return items;
-      const [next, ...rest] = items;
-      setProject((current) => {
-        setPast((pastItems) => [...pastItems, current]);
-        return next;
-      });
-      return rest;
+    setHistory((current) => {
+      if (!current.future.length) return current;
+      const [next, ...future] = current.future;
+      return {
+        project: next,
+        past: [...current.past.slice(-49), current.project],
+        future,
+      };
     });
   }, []);
 
-  return { project, setProject, commit, undo, redo, canUndo: past.length > 0, canRedo: future.length > 0 };
+  return {
+    project: history.project,
+    setProject,
+    commit,
+    undo,
+    redo,
+    canUndo: history.past.length > 0,
+    canRedo: history.future.length > 0,
+  };
 }
