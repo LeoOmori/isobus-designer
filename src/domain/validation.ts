@@ -6,8 +6,6 @@ import {
   OUTPUT_NUMBER_OPTION_TRANSPARENT,
   OUTPUT_NUMBER_OPTION_TRUNCATE,
   OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK,
-  OUTPUT_STRING_OPTION_AUTO_WRAP,
-  OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
 } from './isobus';
 import {
   PICTURE_GRAPHIC_OPTION_RLE,
@@ -15,6 +13,7 @@ import {
   expectedPictureGraphicRawDataLength,
   pictureFormatMaxIndex,
 } from './vtPalette';
+import { extractedModules } from '../objects/extractedModules';
 
 const REFERENCE_ONLY_KINDS = new Set([
   'line-attribute', 'fill-attribute', 'font-attribute',
@@ -76,6 +75,8 @@ export function validate(project: ProjectState): string[] {
         errors.push(`${obj.id}: child object must set parentId "${childContainerIds[0]}"`);
       }
     }
+
+    errors.push(...(extractedModules[obj.kind]?.validate?.(obj, project, { objectById }) ?? []));
 
     if (obj.kind === 'container') {
       if (typeof (obj.hidden ?? false) !== 'boolean') {
@@ -159,54 +160,6 @@ export function validate(project: ProjectState): string[] {
         }
         if (!Number.isInteger(child.x) || child.x < -0x8000 || child.x > 0x7fff || !Number.isInteger(child.y) || child.y < -0x8000 || child.y > 0x7fff) {
           errors.push(`Key ${obj.id}: child "${childId}" coordinates must fit int16`);
-        }
-      }
-    }
-
-    // Output String must reference a Font Attribute
-    if (obj.kind === 'output-string') {
-      if (!obj.fontAttributeId) {
-        errors.push(`Output String ${obj.id}: fontAttributeId is required`);
-      } else if (objectById.get(obj.fontAttributeId)?.kind !== 'font-attribute') {
-        errors.push(`Output String ${obj.id}: unknown fontAttributeId "${obj.fontAttributeId}"`);
-      }
-
-      const length = obj.length ?? 0;
-      const textByteLength = utf8ByteLength(obj.text ?? '');
-      const options = obj.outputOptions ?? 0;
-      const variableReference = obj.variableReference !== undefined ? obj.variableReference : obj.stringVariableId || null;
-      const variable = variableReference ? objectById.get(variableReference) : undefined;
-
-      if (!Number.isInteger(length) || length <= 0 || length > 0xffff) {
-        errors.push(`Output String ${obj.id}: length must be 1–65535 bytes`);
-      } else if (textByteLength > length) {
-        errors.push(`Output String ${obj.id}: text is ${textByteLength} bytes but fixed length is ${length}`);
-      }
-
-      if (options & ~0b111) {
-        errors.push(`Output String ${obj.id}: outputOptions contains unknown bits`);
-      }
-      if ((options & OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) && !(options & OUTPUT_STRING_OPTION_AUTO_WRAP)) {
-        errors.push(`Output String ${obj.id}: wrap-on-hyphen requires auto-wrap`);
-      }
-      if (![0, 1, 2].includes(obj.horizontalJustification ?? -1)) {
-        errors.push(`Output String ${obj.id}: invalid horizontal justification`);
-      }
-      if (![0, 1, 2].includes(obj.verticalJustification ?? -1)) {
-        errors.push(`Output String ${obj.id}: invalid vertical justification`);
-      }
-      if (!Number.isInteger(obj.backgroundColorIndex ?? 0) || (obj.backgroundColorIndex ?? 0) < 0 || (obj.backgroundColorIndex ?? 0) > 255) {
-        errors.push(`Output String ${obj.id}: backgroundColorIndex must be 0–255`);
-      }
-      if (variableReference && variable?.kind !== 'string-variable') {
-        errors.push(`Output String ${obj.id}: unknown variableReference "${variableReference}"`);
-      } else if (variable?.kind === 'string-variable') {
-        const variableBytes = utf8ByteLength(variable.stringValue ?? '');
-        if (length > 0 && variableBytes > length) {
-          errors.push(`Output String ${obj.id}: referenced String Variable is ${variableBytes} bytes but fixed length is ${length}`);
-        }
-        if ((variable.maxLength ?? 0) > length) {
-          errors.push(`Output String ${obj.id}: referenced String Variable maxLength ${variable.maxLength} exceeds fixed length ${length}`);
         }
       }
     }
@@ -324,11 +277,6 @@ export function validate(project: ProjectState): string[] {
       }
     }
 
-    // Fill Attribute: fillType=3 requires fillPattern
-    if (obj.kind === 'fill-attribute' && obj.fillType === 3 && !obj.fillPattern) {
-      errors.push(`Fill Attribute ${obj.id}: fillType=3 (pattern) requires a fillPattern reference`);
-    }
-
     if (obj.kind === 'picture-graphic') {
       const actualWidth = obj.actualWidth ?? 0;
       const actualHeight = obj.actualHeight ?? 0;
@@ -381,10 +329,6 @@ export function validate(project: ProjectState): string[] {
   }
 
   return errors;
-}
-
-function utf8ByteLength(value: string) {
-  return new TextEncoder().encode(value).length;
 }
 
 function containsDescendant(

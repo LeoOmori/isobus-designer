@@ -11,23 +11,17 @@ import {
   OUTPUT_NUMBER_OPTION_TRANSPARENT,
   OUTPUT_NUMBER_OPTION_TRUNCATE,
   OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK,
-  OUTPUT_STRING_OPTION_AUTO_WRAP,
-  OUTPUT_STRING_OPTION_TRANSPARENT,
-  OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
   RECTANGLE_LINE_SUPPRESSION_BOTTOM,
   RECTANGLE_LINE_SUPPRESSION_LEFT,
   RECTANGLE_LINE_SUPPRESSION_RIGHT,
   RECTANGLE_LINE_SUPPRESSION_TOP,
-  VT_FILL_TYPE_OPTIONS,
   VT_H_JUSTIFY_OPTIONS,
   VT_NUMBER_FORMAT_OPTIONS,
   VT_V_JUSTIFY_OPTIONS,
   asHorizontalJustification,
   asVerticalJustification,
   clamp,
-  fontCellValue,
   formatOutputNumber,
-  vtFontCells,
 } from '../domain/isobus';
 import { objectKindName } from '../domain/objectMeta';
 import type { EditorObject, ReferenceKind, WorkingSet, WorkingSetDesignator } from '../domain/types';
@@ -45,7 +39,9 @@ import {
   quantizePictureGraphicSource,
 } from '../domain/vtPalette';
 import { Panel } from '../ui/primitives';
-import { CheckboxField, Field, FontStyleField, PropertySection, SelectField, VtColorField } from './fields';
+import { OutputStringProperties } from '../objects/output-string/Properties';
+import { referencePropertyComponents } from '../objects/referencePropertyRegistry';
+import { CheckboxField, Field, PropertySection, SelectField, VtColorField } from './fields';
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -54,14 +50,6 @@ function referenceOptions(objects: EditorObject[], kind: EditorObject['kind'], c
     { value: '', label: 'None' },
     ...objects.filter((o) => o.kind === kind).map((o) => ({ value: o.id, label: `${o.id} — ${o.name}` })),
     { value: createValue, label: createLabel },
-  ];
-}
-
-function variableReferenceOptions(objects: EditorObject[]) {
-  return [
-    { value: '__null', label: 'NULL — use local text' },
-    ...objects.filter((o) => o.kind === 'string-variable').map((o) => ({ value: o.id, label: `${o.id} — ${o.name}` })),
-    { value: '__create_string-variable', label: '+ Create String Variable' },
   ];
 }
 
@@ -202,7 +190,6 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
 
   const lineAttrOpts   = referenceOptions(objects, 'line-attribute',   '+ Create Line Attribute',   '__create_line-attribute');
   const fontAttrOpts   = referenceOptions(objects, 'font-attribute',   '+ Create Font Attribute',   '__create_font-attribute');
-  const outputStringVariableOpts = variableReferenceOptions(objects);
   const outputNumberVariableOpts = numberVariableReferenceOptions(objects);
   const nullableFillAttrOpts = nullableFillAttributeOptions(objects);
   const buttonChildren = kind === 'button'
@@ -242,6 +229,7 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
       outputNumberPreviewWidth,
     )
     : '';
+  const ReferenceProperties = referencePropertyComponents[kind];
 
   function handleRefSelect(value: string, createPrefix: string, refKind: ReferenceKind, patchFn: (id: string) => Partial<EditorObject>) {
     if (value.startsWith('__create_')) return onCreateAttributeReference(refKind);
@@ -398,25 +386,12 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
 
       {/* ── Output String ─────────────────────────────────────────────── */}
       {kind === 'output-string' && (
-        <>
-          <PropertySection title="Text">
-            <Field label="Value" value={selectedObject.text ?? ''} onChange={(text) => onPatch({ text })} />
-            <Field label="Length (bytes)" value={selectedObject.length ?? 32} type="number" onChange={(length) => onPatch({ length: Number(length) })} />
-            <div className="field-hint">{utf8ByteLength(selectedObject.text ?? '')} / {selectedObject.length ?? 32} bytes before padding</div>
-            <VtColorField label="Background" value={selectedObject.backgroundColorIndex ?? 1} onChange={(backgroundColorIndex) => onPatch({ backgroundColorIndex })} />
-            <SelectField label="Horizontal" value={String(selectedObject.horizontalJustification ?? 0)} options={VT_H_JUSTIFY_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))} onChange={(v) => onPatch({ horizontalJustification: asHorizontalJustification(Number(v)) })} />
-            <SelectField label="Vertical" value={String(selectedObject.verticalJustification ?? 0)} options={VT_V_JUSTIFY_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))} onChange={(v) => onPatch({ verticalJustification: asVerticalJustification(Number(v)) })} />
-          </PropertySection>
-          <PropertySection title="Options">
-            <CheckboxField label="Transparent Background" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_STRING_OPTION_TRANSPARENT) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_STRING_OPTION_TRANSPARENT, v) })} />
-            <CheckboxField label="Auto Wrap" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_STRING_OPTION_AUTO_WRAP) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_STRING_OPTION_AUTO_WRAP, v) & (v ? 0xff : ~OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) })} />
-            <CheckboxField label="Wrap on Hyphen" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) !== 0} disabled={((selectedObject.outputOptions ?? 0) & OUTPUT_STRING_OPTION_AUTO_WRAP) === 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN, v) })} />
-          </PropertySection>
-          <PropertySection title="References">
-            <SelectField label="Font Attribute"   value={selectedObject.fontAttributeId ?? ''}  options={fontAttrOpts} onChange={(v) => handleRefSelect(v, '__create_font-attribute', 'font-attribute', (id) => ({ fontAttributeId: id }))} />
-            <SelectField label="Variable Reference" value={selectedObject.variableReference !== undefined ? selectedObject.variableReference ?? '__null' : selectedObject.stringVariableId || '__null'} options={outputStringVariableOpts} onChange={(v) => handleRefSelect(v, '__create_string-variable', 'string-variable', (id) => ({ variableReference: id === '__null' ? null : id }))} />
-          </PropertySection>
-        </>
+        <OutputStringProperties
+          object={selectedObject}
+          objects={objects}
+          onPatch={onPatch}
+          onCreateAttributeReference={onCreateAttributeReference}
+        />
       )}
 
       {/* ── Output Number ─────────────────────────────────────────────── */}
@@ -466,49 +441,13 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
       {/* ── Picture Graphic ───────────────────────────────────────────── */}
       {kind === 'picture-graphic' && <PictureGraphicPanel object={selectedObject} objects={objects} onPatch={onPatch} />}
 
-      {/* ── Font Attribute ────────────────────────────────────────────── */}
-      {kind === 'font-attribute' && (
-        <PropertySection title="Font">
-          <VtColorField label="Font Color"  value={selectedObject.fontColor ?? 0} onChange={(fontColor) => onPatch({ fontColor })} />
-          <SelectField  label="Font Type"   value={selectedObject.proportional === false ? 'monospace' : 'proportional'} options={[{ value: 'proportional', label: 'Proportional' }, { value: 'monospace', label: 'Monospace' }]} onChange={(v) => onPatch({ proportional: v === 'proportional' })} />
-          <SelectField  label="Font Size"   value={fontCellValue(selectedObject)} options={vtFontCells.map((c) => ({ value: c.value, label: c.label }))} onChange={(v) => { const c = vtFontCells.find((x) => x.value === v) ?? vtFontCells[5]; onPatch({ fontWidth: c.width, fontHeight: c.height, fontSize: c.height }); }} />
-          <FontStyleField value={selectedObject.fontStyle ?? 0} onChange={(fontStyle) => onPatch({ fontStyle })} />
-        </PropertySection>
-      )}
-
-      {/* ── Line Attribute ────────────────────────────────────────────── */}
-      {kind === 'line-attribute' && (
-        <PropertySection title="Line">
-          <VtColorField label="Line Color" value={selectedObject.lineColor ?? 0} onChange={(lineColor) => onPatch({ lineColor })} />
-          <Field label="Line Width" value={selectedObject.lineWidth ?? 1} type="number" onChange={(v) => onPatch({ lineWidth: Number(v) })} />
-          <SelectField label="Line Art" value={selectedObject.lineArt ?? '0xFFFF'} options={[{ value: '0xFFFF', label: 'Solid' }, { value: '0xF0F0', label: 'Dashed' }, { value: '0xAAAA', label: 'Dotted' }]} onChange={(lineArt) => onPatch({ lineArt })} />
-        </PropertySection>
-      )}
-
-      {/* ── Fill Attribute ────────────────────────────────────────────── */}
-      {kind === 'fill-attribute' && (
-        <PropertySection title="Fill">
-          <SelectField label="Fill Type"  value={String(selectedObject.fillType ?? 2)} options={VT_FILL_TYPE_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))} onChange={(v) => onPatch({ fillType: Number(v) })} />
-          <VtColorField label="Fill Color" value={selectedObject.fillColor ?? 15} onChange={(fillColor) => onPatch({ fillColor })} />
-        </PropertySection>
-      )}
-
-      {/* ── String Variable ───────────────────────────────────────────── */}
-      {kind === 'string-variable' && (
-        <PropertySection title="String Variable">
-          <Field label="Value"      value={selectedObject.stringValue ?? ''}  onChange={(stringValue) => onPatch({ stringValue })} />
-          <Field label="Max Length" value={selectedObject.maxLength ?? 128}   type="number" onChange={(v) => onPatch({ maxLength: Number(v) })} />
-        </PropertySection>
-      )}
-
-      {/* ── Number Variable ───────────────────────────────────────────── */}
-      {kind === 'number-variable' && (
-        <PropertySection title="Number Variable">
-          <Field label="Value"       value={selectedObject.value ?? 0}       type="number" onChange={(v) => onPatch({ value: Number(v) })} />
-          <Field label="Unit"        value={selectedObject.unit ?? ''}       onChange={(unit) => onPatch({ unit })} />
-          <Field label="Min Preview" value={selectedObject.minPreview ?? 0}  type="number" onChange={(v) => onPatch({ minPreview: Number(v) })} />
-          <Field label="Max Preview" value={selectedObject.maxPreview ?? 100} type="number" onChange={(v) => onPatch({ maxPreview: Number(v) })} />
-        </PropertySection>
+      {ReferenceProperties && (
+        <ReferenceProperties
+          object={selectedObject}
+          objects={objects}
+          onPatch={onPatch}
+          onCreateAttributeReference={onCreateAttributeReference}
+        />
       )}
 
       {/* ── Events & Macros (placeholder) ─────────────────────────────── */}
@@ -731,8 +670,4 @@ function readFileAsDataUrl(file: File) {
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(file);
   });
-}
-
-function utf8ByteLength(value: string) {
-  return new TextEncoder().encode(value).length;
 }

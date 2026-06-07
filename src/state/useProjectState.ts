@@ -2,13 +2,13 @@ import { useCallback, useState } from 'react';
 import { initialProject } from '../domain/initialProject';
 import {
   OUTPUT_NUMBER_OPTION_TRANSPARENT,
-  OUTPUT_STRING_OPTION_TRANSPARENT,
   asHorizontalJustification,
   asVerticalJustification,
   nearestVtColorIndex,
 } from '../domain/isobus';
 import type { EditorObject, ProjectState } from '../domain/types';
 import { asPictureGraphicFormat, clearUnsupportedPictureGraphicOptions, derivedPictureGraphicHeight } from '../domain/vtPalette';
+import { migrateOutputString } from '../objects/output-string/defaults';
 
 export const storageKey = 'isobus-iop-editor-project';
 
@@ -54,25 +54,7 @@ function migrateObject(object: EditorObject): EditorObject {
   }
 
   if (object.kind === 'output-string') {
-    const outputOptions = object.backgroundColor === 'transparent'
-      ? (object.outputOptions ?? 0) | OUTPUT_STRING_OPTION_TRANSPARENT
-      : object.outputOptions ?? 0;
-    const text = object.text ?? '';
-    const variableReference = object.variableReference !== undefined
-      ? object.variableReference
-      : object.stringVariableId ? object.stringVariableId : null;
-    return {
-      ...object,
-      backgroundColorIndex,
-      length: object.length ?? Math.max(32, text.length),
-      variableReference,
-      stringVariableId: undefined,
-      outputOptions,
-      horizontalJustification: object.horizontalJustification ?? horizontalAlignToJustification(object.horizontalAlign),
-      verticalJustification: object.verticalJustification ?? verticalAlignToJustification(object.verticalAlign),
-      horizontalAlign: undefined,
-      verticalAlign: undefined,
-    };
+    return migrateOutputString({ ...object, backgroundColorIndex });
   }
 
   if (object.kind === 'output-number') {

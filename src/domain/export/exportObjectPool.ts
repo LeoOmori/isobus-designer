@@ -1,23 +1,10 @@
 import type { EditorObject, ProjectState } from '../types';
+import { writerModules } from '../../objects/writerRegistry';
 import { ByteWriter } from './byteWriter';
 import type { WriteContext } from './context';
 import { validateForExport } from './exportValidation';
 import { buildIdMap, resolveRef } from './idResolver';
 import { smokeValidateObjectPool } from './smokeValidateObjectPool';
-import { writeButton } from './writers/button';
-import { writeContainer } from './writers/container';
-import { writeDataMask } from './writers/dataMask';
-import { writeFillAttributes } from './writers/fillAttributes';
-import { writeFontAttributes } from './writers/fontAttributes';
-import { writeKey } from './writers/key';
-import { writeLineAttributes } from './writers/lineAttributes';
-import { writeNumberVariable } from './writers/numberVariable';
-import { writeOutputNumber } from './writers/outputNumber';
-import { writeOutputRectangle } from './writers/outputRectangle';
-import { writeOutputString } from './writers/outputString';
-import { writePictureGraphic } from './writers/pictureGraphic';
-import { writeSoftKeyMask } from './writers/softKeyMask';
-import { writeStringVariable } from './writers/stringVariable';
 import { writeWorkingSet } from './writers/workingSet';
 
 export type ExportResult = {
@@ -37,51 +24,17 @@ export type ExportResult = {
  * Working Set is written last (after the loop) since it lives in
  * project.workingSet rather than project.objects[].
  */
-const KIND_ORDER: Record<string, number> = {
-  'font-attribute':    0,
-  'line-attribute':    1,
-  'fill-attribute':    2,
-  'number-variable':   3,
-  'string-variable':   4,
-  'picture-graphic':   5,
-  'output-string':     6,
-  'output-number':     7,
-  'output-rectangle':  8,
-  'container':         9,
-  'button':           10,
-  'key':              11,
-  'soft-key-mask':    12,
-  'data-mask':        13,
-  // Working Set = 14 (written explicitly after loop)
-};
-
 function orderObjectsForExport(objects: EditorObject[]): EditorObject[] {
   return [...objects].sort((a, b) => {
-    const oa = KIND_ORDER[a.kind] ?? 99;
-    const ob = KIND_ORDER[b.kind] ?? 99;
+    const oa = writerModules[a.kind].exportOrder;
+    const ob = writerModules[b.kind].exportOrder;
     if (oa !== ob) return oa - ob;
     return a.objectId.localeCompare(b.objectId); // stable within same kind
   });
 }
 
 function writeObject(obj: EditorObject, ctx: WriteContext): void {
-  switch (obj.kind) {
-    case 'font-attribute':    writeFontAttributes(obj, ctx); break;
-    case 'line-attribute':    writeLineAttributes(obj, ctx); break;
-    case 'fill-attribute':    writeFillAttributes(obj, ctx); break;
-    case 'number-variable':   writeNumberVariable(obj, ctx); break;
-    case 'string-variable':   writeStringVariable(obj, ctx); break;
-    case 'picture-graphic':   writePictureGraphic(obj, ctx); break;
-    case 'output-string':     writeOutputString(obj, ctx); break;
-    case 'output-number':     writeOutputNumber(obj, ctx); break;
-    case 'output-rectangle':  writeOutputRectangle(obj, ctx); break;
-    case 'container':         writeContainer(obj, ctx); break;
-    case 'button':            writeButton(obj, ctx); break;
-    case 'key':               writeKey(obj, ctx); break;
-    case 'soft-key-mask':     writeSoftKeyMask(obj, ctx); break;
-    case 'data-mask':         writeDataMask(obj, ctx); break;
-    // Unknown kinds are silently skipped — validator should have caught them.
-  }
+  writerModules[obj.kind].writer(obj, ctx);
 }
 
 /**

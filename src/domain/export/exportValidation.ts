@@ -1,9 +1,8 @@
-import { vtFontCells } from '../isobus';
 import type { ProjectState } from '../types';
 import { validate } from '../validation';
 import { asPictureGraphicFormat, expectedPictureGraphicRawDataLength, PICTURE_GRAPHIC_OPTION_RLE } from '../vtPalette';
-import { encodeLatin1Padded, fontSizeEnum, isLatin1 } from './encoding';
 import { parseHexObjectId } from './idResolver';
+import { extractedModules } from '../../objects/extractedModules';
 
 /**
  * Run all pre-export validations for V1 .iop export.
@@ -107,6 +106,7 @@ export function validateForExport(project: ProjectState): string[] {
 
   // ── Latin-1 string validation ────────────────────────────────────────────
   for (const obj of objects) {
+    errors.push(...(extractedModules[obj.kind]?.validateExport?.(obj, project, { objectById }) ?? []));
     if (obj.kind === 'soft-key-mask') {
       if ((obj.keys ?? []).length > 0xff) {
         errors.push(`Export: Soft Key Mask ${obj.id} has more than 255 key references`);
@@ -118,41 +118,6 @@ export function validateForExport(project: ProjectState): string[] {
       }
       if ((obj.childObjectIds ?? []).length > 0xff) {
         errors.push(`Export: Key ${obj.id} has more than 255 child objects`);
-      }
-    }
-    if (obj.kind === 'output-string') {
-      const text = obj.text ?? '';
-      if (!isLatin1(text)) {
-        errors.push(`Export: Output String ${obj.id} text contains non-Latin-1 characters (V1 supports ISO 8859-1 only)`);
-      } else {
-        // Verify the encoded text fits within the fixed length field
-        const length = obj.length ?? 0;
-        if (length > 0) {
-          const encoded = encodeLatin1Padded(text, length);
-          // encodeLatin1Padded silently truncates — check raw char count instead
-          if (text.length > length) {
-            errors.push(`Export: Output String ${obj.id} text (${text.length} chars) exceeds fixed length ${length}`);
-          }
-          void encoded; // used only to confirm encoding works
-        }
-      }
-    }
-    if (obj.kind === 'string-variable') {
-      const text = obj.stringValue ?? '';
-      if (!isLatin1(text)) {
-        errors.push(`Export: String Variable ${obj.id} value contains non-Latin-1 characters (V1 supports ISO 8859-1 only)`);
-      }
-    }
-  }
-
-  // ── Font Attribute cell size enum ────────────────────────────────────────
-  for (const obj of objects) {
-    if (obj.kind === 'font-attribute') {
-      const w = obj.fontWidth ?? 16;
-      const h = obj.fontHeight ?? 24;
-      if (fontSizeEnum(w, h) === -1) {
-        const valid = vtFontCells.map((c) => c.label).join(', ');
-        errors.push(`Export: Font Attribute ${obj.id} size ${w}×${h} is not a standard V1 cell size. Valid sizes: ${valid}`);
       }
     }
   }

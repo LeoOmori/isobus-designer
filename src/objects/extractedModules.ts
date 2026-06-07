@@ -1,0 +1,17 @@
+import type { ObjectKind } from '../domain/types';
+import type { ObjectModule } from './ObjectModule';
+import { fillAttributeModule } from './fill-attribute/logic';
+import { fontAttributeModule } from './font-attribute/logic';
+import { lineAttributeModule } from './line-attribute/logic';
+import { numberVariableModule } from './number-variable/logic';
+import { outputStringModule } from './output-string/module';
+import { stringVariableModule } from './string-variable/logic';
+
+export const extractedModules: Partial<Record<ObjectKind, ObjectModule>> = {
+  'font-attribute': fontAttributeModule,
+  'line-attribute': lineAttributeModule,
+  'fill-attribute': fillAttributeModule,
+  'number-variable': numberVariableModule,
+  'string-variable': stringVariableModule,
+  'output-string': outputStringModule,
+};

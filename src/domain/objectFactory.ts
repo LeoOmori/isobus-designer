@@ -1,6 +1,7 @@
 import { clamp } from './isobus';
 import { objectKindName } from './objectMeta';
 import type { EditorObject, ObjectKind, ProjectState, ReferenceKind } from './types';
+import { extractedModules } from '../objects/extractedModules';
 
 export function toObjectId(n: number) {
   return `0x${(0x200 + n).toString(16).padStart(4, '0').toUpperCase()}`;
@@ -43,6 +44,11 @@ export function createEditorObject(
   y = 70,
   parentId = current.activeMaskId,
 ): EditorObject {
+  const extractedModule = extractedModules[kind];
+  if (extractedModule?.createDefault) {
+    return extractedModule.createDefault({ current, x, y, parentId });
+  }
+
   const n = current.nextNumber;
   const id = `${KIND_PREFIX[kind]}_${n}`;
 

@@ -10,9 +10,9 @@ import {
   OUTPUT_STRING_OPTION_AUTO_WRAP, OUTPUT_STRING_OPTION_TRANSPARENT, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
   RECTANGLE_LINE_SUPPRESSION_BOTTOM, RECTANGLE_LINE_SUPPRESSION_LEFT,
   RECTANGLE_LINE_SUPPRESSION_RIGHT, RECTANGLE_LINE_SUPPRESSION_TOP,
-  clamp, fillTypeToBackground, fontCellScaleX, formatOutputNumber,
+  clamp, fillTypeToBackground, formatOutputNumber,
   horizontalJustificationToFlex, lineArtToCss, snap,
-  textJustificationTransformOrigin, verticalJustificationToFlex, vtColor,
+  verticalJustificationToFlex, vtColor,
 } from '../domain/isobus';
 import { getActiveMask, getCanvasChildren, getSoftKeyMaskKeys } from '../domain/selectors';
 import type { DragState, EditorObject, ObjectKind, ProjectState, ToolMode, Viewport } from '../domain/types';
@@ -21,6 +21,7 @@ import {
   derivedPictureGraphicHeight,
   pictureGraphicToDataUrl,
 } from '../domain/vtPalette';
+import { OutputStringContent } from '../objects/output-string/Render';
 import { BottomControls, CanvasToolbar } from './CanvasToolbar';
 
 /** Tools that create a canvas object on click. */
@@ -299,7 +300,6 @@ export function EditorCanvas({
     const fontWeight     = (font?.fontStyle ?? 0) & 1 ? 700        : undefined;
     const fontStyleCss   = (font?.fontStyle ?? 0) & 2 ? 'italic'   : undefined;
     const textDecoration = (font?.fontStyle ?? 0) & 4 ? 'underline': undefined;
-    const textScaleX     = object.kind === 'output-string' ? fontCellScaleX(font) : 1;
 
     let borderColor: string | undefined;
     let borderWidth: number | undefined;
@@ -418,23 +418,14 @@ export function EditorCanvas({
       >
         {/* Output String */}
         {object.kind === 'output-string' && (
-          isEditingText
-            ? (
-              <input
-                className="inline-text-input" autoFocus
-                value={object.text ?? ''}
-                style={{ transform: `scaleX(${textScaleX})`, transformOrigin: textJustificationTransformOrigin(object.horizontalJustification) }}
-                onPointerDown={(e) => e.stopPropagation()}
-                onDoubleClick={(e) => e.stopPropagation()}
-                onChange={(e) => onUpdateObject(object.id, { text: e.target.value })}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); setEditingTextObjectId(null); } }}
-                onBlur={() => setEditingTextObjectId(null)}
-              />
-            ) : (
-              <span className="inline-text-editor" style={{ transform: `scaleX(${textScaleX})`, transformOrigin: textJustificationTransformOrigin(object.horizontalJustification) }}>
-                {clipUtf8(strVar?.stringValue ?? object.text ?? '', object.length)}
-              </span>
-            )
+          <OutputStringContent
+            object={object}
+            font={font}
+            stringVariable={strVar}
+            isEditing={isEditingText}
+            onPatch={(changes) => onUpdateObject(object.id, changes)}
+            onEndEditing={() => setEditingTextObjectId(null)}
+          />
         )}
 
         {/* Output Number */}
@@ -607,22 +598,4 @@ export function EditorCanvas({
       />
     </main>
   );
-}
-
-function clipUtf8(value: string, maxBytes: number | undefined) {
-  if (!maxBytes || maxBytes < 0 || maxBytes >= utf8ByteLength(value)) return value;
-
-  let result = '';
-  let bytes = 0;
-  for (const char of value) {
-    const charBytes = utf8ByteLength(char);
-    if (bytes + charBytes > maxBytes) break;
-    result += char;
-    bytes += charBytes;
-  }
-  return result;
-}
-
-function utf8ByteLength(value: string) {
-  return new TextEncoder().encode(value).length;
 }
