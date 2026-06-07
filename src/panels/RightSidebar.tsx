@@ -1,5 +1,6 @@
 import type { EditorObject, ProjectState, ReferenceKind, WorkingSet } from '../domain/types';
-import { PropertiesPanel, WorkingSetProperties } from '../properties/PropertiesPanel';
+import { PropertiesPanel } from '../properties/PropertiesPanel';
+import { WorkingSetProperties } from '../objects/working-set/Properties';
 import { ObjectTree } from './ObjectTree';
 import { ResizableSplit } from '../ui/primitives';
 

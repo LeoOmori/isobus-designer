@@ -5,7 +5,7 @@ import type { WriteContext } from './context';
 import { validateForExport } from './exportValidation';
 import { buildIdMap, resolveRef } from './idResolver';
 import { smokeValidateObjectPool } from './smokeValidateObjectPool';
-import { writeWorkingSet } from './writers/workingSet';
+import { workingSetModule } from '../../objects/working-set/logic';
 
 export type ExportResult = {
   /** Binary .iop pool bytes. Empty if errors are present. */
@@ -70,7 +70,7 @@ export function exportObjectPool(project: ProjectState): ExportResult {
   }
 
   // ── 4. Working Set last ──────────────────────────────────────────────────
-  writeWorkingSet(project.workingSet, ctx);
+  workingSetModule.writer(project.workingSet, ctx);
 
   const bytes = w.result();
   const smoke = smokeValidateObjectPool(bytes);

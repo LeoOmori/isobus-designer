@@ -13,11 +13,13 @@ import type { DragState, EditorObject, ObjectKind, ProjectState, ToolMode, Viewp
 import { derivedPictureGraphicHeight } from '../domain/vtPalette';
 import { ButtonContent, buttonFrameStyle } from '../objects/button';
 import { ContainerContent, containerFrameStyle } from '../objects/container';
+import { dataMaskFrameStyle } from '../objects/data-mask';
 import { KeyContent } from '../objects/key';
 import { OutputNumberContent } from '../objects/output-number/Render';
 import { outputRectangleStyle } from '../objects/output-rectangle/logic';
 import { OutputStringContent } from '../objects/output-string/Render';
 import { PictureGraphicContent } from '../objects/picture-graphic/Render';
+import { SOFT_KEY_GAP, SOFT_KEY_SLOT_SIZE, SOFT_KEY_SLOTS, softKeyMaskFrameStyle, softKeySlotStyle } from '../objects/soft-key-mask';
 
 
 /** Tools that create a canvas object on click. */
@@ -36,11 +38,6 @@ const CONTAINER_CHILD_TOOLS = new Set<ToolMode>([
 const KEY_CHILD_TOOLS = new Set<ToolMode>([
   'container', 'output-rectangle', 'output-string', 'output-number', 'picture-graphic',
 ]);
-
-const SKM_SLOTS = 6;
-const SKM_WIDTH = 60;
-const SKM_SLOT_SIZE = 60;
-const SKM_GAP   = 4;
 
 export function EditorCanvas({
   project, selectedId, viewport, tool,
@@ -466,13 +463,7 @@ export function EditorCanvas({
               {/* ── Data Mask ─────────────────────────────────────────── */}
               <div
                 className={`vt-card interactive ${selectedId === mask.id ? 'selected-object' : ''}`}
-                style={{
-                  left: mask.x, top: mask.y, width: mask.width, height: mask.height,
-                  background: mask.backgroundColor,
-                  opacity: mask.visible ? 1 : 0,
-                  pointerEvents: mask.visible ? 'auto' : 'none',
-                  zIndex: mask.zIndex,
-                }}
+                style={dataMaskFrameStyle(mask)}
                 onPointerDown={(e) => handleMaskPointerDown(e, mask)}
               >
                 <div className="mask-label">{mask.id}</div>
@@ -483,29 +474,22 @@ export function EditorCanvas({
               {skm && (
                 <div
                   className={`vt-soft-key-mask ${selectedId === skm.id ? 'selected-object' : ''}`}
-                  style={{
-                    left: mask.x + mask.width + SKM_GAP,
-                    top:  mask.y,
-                    width:  SKM_WIDTH,
-                    height: SKM_SLOTS * SKM_SLOT_SIZE,
-                    background: vtColor(skm.backgroundColorIndex ?? 1),
-                    zIndex: mask.zIndex,
-                  }}
+                  style={softKeyMaskFrameStyle(mask, skm)}
                   onPointerDown={(e) => { e.stopPropagation(); onSelect(skm.id); }}
                 >
                   <div className="mask-label">{skm.id}</div>
-                  {Array.from({ length: SKM_SLOTS }, (_, i) => {
+                  {Array.from({ length: SOFT_KEY_SLOTS }, (_, i) => {
                     const key = skmKeys[i];
                     const keySelected = key && selectedId === key.id;
                     return (
                       <div
                         key={key?.id ?? `skm-slot-${i}`}
                         className={`soft-key-slot ${keySelected ? 'key-selected' : ''}`}
-                        style={{ width: SKM_SLOT_SIZE, height: SKM_SLOT_SIZE, flex: `0 0 ${SKM_SLOT_SIZE}px`, background: key ? vtColor(key.backgroundColorIndex ?? 1) : undefined }}
+                        style={softKeySlotStyle(key)}
                         onPointerDown={(e) => {
                           e.stopPropagation();
                           if (KEY_CHILD_TOOLS.has(tool) && key) {
-                            createOnKeySlot(e.clientX, e.clientY, key, mask.x + mask.width + SKM_GAP, mask.y + i * SKM_SLOT_SIZE);
+                            createOnKeySlot(e.clientX, e.clientY, key, mask.x + mask.width + SOFT_KEY_GAP, mask.y + i * SOFT_KEY_SLOT_SIZE);
                             return;
                           }
                           onSelect(key?.id ?? skm.id);

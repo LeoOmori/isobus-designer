@@ -3,6 +3,7 @@ import { validate } from '../validation';
 import { asPictureGraphicFormat } from '../vtPalette';
 import { parseHexObjectId } from './idResolver';
 import { extractedModules } from '../../objects/extractedModules';
+import { workingSetModule } from '../../objects/working-set/logic';
 
 /**
  * Run all pre-export validations for V1 .iop export.
@@ -27,19 +28,7 @@ export function validateForExport(project: ProjectState): string[] {
   const objectById = new Map(objects.map((o) => [o.id, o]));
 
   // ── Working Set & pool structure ────────────────────────────────────────
-  if (!workingSet.activeDataMaskId) {
-    errors.push('Export: Working Set must have an Active Data Mask set');
-  } else {
-    const activeMask = objectById.get(workingSet.activeDataMaskId);
-    if (!activeMask) {
-      errors.push(`Export: Working Set active Data Mask "${workingSet.activeDataMaskId}" not found in object pool`);
-    } else if (activeMask.kind !== 'data-mask') {
-      errors.push(`Export: Working Set activeDataMaskId "${workingSet.activeDataMaskId}" must reference a Data Mask`);
-    }
-  }
-  if (!objects.some((o) => o.kind === 'data-mask')) {
-    errors.push('Export: Pool must contain at least one Data Mask');
-  }
+  errors.push(...workingSetModule.validateExport(project, { objectById }));
 
   const keyIcons = objects.filter((o) => o.kind === 'key' && (o.childObjectIds ?? []).some((childId) => objectById.get(childId)?.kind === 'picture-graphic'));
   const keyIconPictureIds = new Set<string>();
@@ -107,11 +96,6 @@ export function validateForExport(project: ProjectState): string[] {
   // ── Latin-1 string validation ────────────────────────────────────────────
   for (const obj of objects) {
     errors.push(...(extractedModules[obj.kind]?.validateExport?.(obj, project, { objectById }) ?? []));
-    if (obj.kind === 'soft-key-mask') {
-      if ((obj.keys ?? []).length > 0xff) {
-        errors.push(`Export: Soft Key Mask ${obj.id} has more than 255 key references`);
-      }
-    }
   }
 
   // ── Picture Graphic constraints ──────────────────────────────────────────
@@ -141,19 +125,6 @@ export function validateForExport(project: ProjectState): string[] {
           errors.push(`Export: Picture Graphic ${obj.id} rawData length must be 2304 bytes for a 48×48 key icon`);
         }
       }
-    }
-  }
-
-  // ── Designator objects ────────────────────────────────────────────────────
-  for (const des of workingSet.designatorObjects ?? []) {
-    if (!des.objectId) {
-      errors.push('Export: Working Set designator entry has no object selected');
-      continue;
-    }
-    const obj = objects.find((o) => o.id === des.objectId);
-    if (!obj) {
-      errors.push(`Export: Working Set designator "${des.objectId}" not found in the object pool`);
-      continue;
     }
   }
 

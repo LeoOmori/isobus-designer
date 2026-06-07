@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import type { EditorObject, ObjectKind, ReferenceKind } from '../domain/types';
 import { ButtonProperties } from './button';
 import { ContainerProperties } from './container';
+import { DataMaskProperties } from './data-mask';
 import { FillAttributeProperties } from './fill-attribute';
 import { FontAttributeProperties } from './font-attribute';
 import { KeyProperties } from './key';
@@ -10,6 +11,7 @@ import { NumberVariableProperties } from './number-variable';
 import { OutputNumberProperties } from './output-number';
 import { OutputRectangleProperties } from './output-rectangle';
 import { PictureGraphicProperties } from './picture-graphic';
+import { SoftKeyMaskProperties } from './soft-key-mask';
 import { StringVariableProperties } from './string-variable';
 
 export type ObjectPropertiesProps = {
@@ -31,4 +33,6 @@ export const referencePropertyComponents: Partial<Record<ObjectKind, ComponentTy
   'container': ContainerProperties,
   'button': ButtonProperties,
   'key': KeyProperties,
+  'data-mask': DataMaskProperties,
+  'soft-key-mask': SoftKeyMaskProperties,
 };

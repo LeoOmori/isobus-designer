@@ -1,12 +1,12 @@
 import type { ObjectKind } from '../domain/types';
-import { writeDataMask } from '../domain/export/writers/dataMask';
 import { buttonModule } from './button/logic';
 import { containerModule } from './container/logic';
+import { dataMaskModule } from './data-mask/logic';
 import { outputNumberModule } from './output-number/logic';
 import { outputRectangleModule } from './output-rectangle/logic';
 import { outputStringModule } from './output-string/module';
 import { pictureGraphicModule } from './picture-graphic/logic';
-import { writeSoftKeyMask } from '../domain/export/writers/softKeyMask';
+import { softKeyMaskModule } from './soft-key-mask/logic';
 import type { ObjectModule } from './ObjectModule';
 import { fillAttributeModule } from './fill-attribute/logic';
 import { fontAttributeModule } from './font-attribute/logic';
@@ -28,6 +28,6 @@ export const writerModules = {
   'container':         containerModule,
   'button':            buttonModule,
   'key':               keyModule,
-  'soft-key-mask':     { exportOrder: 12, writer: writeSoftKeyMask },
-  'data-mask':         { exportOrder: 13, writer: writeDataMask },
+  'soft-key-mask':     softKeyMaskModule,
+  'data-mask':         dataMaskModule,
 } satisfies Record<ObjectKind, Pick<ObjectModule, 'exportOrder' | 'writer'>>;

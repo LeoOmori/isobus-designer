@@ -1,8 +1,8 @@
-import { Keyboard, LayoutPanelLeft } from 'lucide-react';
 import type { ObjectKind } from '../domain/types';
 import type { ObjectMeta } from './ObjectModule';
 import { buttonMeta } from './button/logic';
 import { containerMeta } from './container/logic';
+import { dataMaskMeta } from './data-mask/logic';
 import { fillAttributeMeta } from './fill-attribute/logic';
 import { fontAttributeMeta } from './font-attribute/logic';
 import { keyMeta } from './key/logic';
@@ -12,12 +12,13 @@ import { outputNumberMeta } from './output-number/logic';
 import { outputRectangleMeta } from './output-rectangle/logic';
 import { outputStringMeta } from './output-string/meta';
 import { pictureGraphicMeta } from './picture-graphic/logic';
+import { softKeyMaskMeta } from './soft-key-mask/logic';
 import { stringVariableMeta } from './string-variable/logic';
 
 export const metaRegistry = {
-  'data-mask':        { name: 'Data Mask',        Icon: LayoutPanelLeft,   category: 'screen',    isReference: false, hasLayout: true },
+  'data-mask':        dataMaskMeta,
   'container':        containerMeta,
-  'soft-key-mask':    { name: 'Soft Key Mask',    Icon: Keyboard,          category: 'screen',    isReference: false, hasLayout: false },
+  'soft-key-mask':    softKeyMaskMeta,
   'key':              keyMeta,
   'button':           buttonMeta,
   'output-string':    outputStringMeta,

@@ -1,5 +1,6 @@
 import type { ObjectKind, ProjectState } from './types';
 import { extractedModules } from '../objects/extractedModules';
+import { workingSetModule } from '../objects/working-set/logic';
 
 const REFERENCE_ONLY_KINDS = new Set([
   'line-attribute', 'fill-attribute', 'font-attribute',
@@ -47,52 +48,9 @@ export function validate(project: ProjectState): string[] {
 
     errors.push(...(extractedModules[obj.kind]?.validate?.(obj, project, { objectById }) ?? []));
 
-    if (obj.kind === 'soft-key-mask') {
-      const keys = obj.keys ?? [];
-      if (!Number.isInteger(obj.backgroundColorIndex ?? 1) || (obj.backgroundColorIndex ?? 1) < 0 || (obj.backgroundColorIndex ?? 1) > 255) {
-        errors.push(`Soft Key Mask ${obj.id}: backgroundColorIndex must be 0–255`);
-      }
-      if (keys.length > 0xff) {
-        errors.push(`Soft Key Mask ${obj.id}: key count must fit uint8`);
-      }
-      if ((obj.macros ?? []).length > 0xff) {
-        errors.push(`Soft Key Mask ${obj.id}: macro count must fit uint8`);
-      }
-      const seen = new Set<string>();
-      for (const keyId of keys) {
-        if (seen.has(keyId)) {
-          errors.push(`Soft Key Mask ${obj.id}: duplicate key reference "${keyId}"`);
-          continue;
-        }
-        seen.add(keyId);
-        const key = objectById.get(keyId);
-        if (!key || key.kind !== 'key') {
-          errors.push(`Soft Key Mask ${obj.id}: key "${keyId}" must reference an existing Key object`);
-        }
-      }
-    }
-
-    // Data Mask activeMask reference
-    if (obj.kind === 'data-mask' && obj.softKeyMaskId) {
-      const skmExists = project.objects.some((o) => o.id === obj.softKeyMaskId && o.kind === 'soft-key-mask');
-      if (!skmExists) {
-        errors.push(`Data Mask ${obj.id}: softKeyMaskId "${obj.softKeyMaskId}" not found`);
-      }
-    }
   }
 
-  // Working set activeMask must be valid
-  const { activeDataMaskId, designatorObjects } = project.workingSet;
-  if (activeDataMaskId && !project.objects.some((o) => o.id === activeDataMaskId && o.kind === 'data-mask')) {
-    errors.push(`Working Set: activeDataMaskId "${activeDataMaskId}" not found`);
-  }
-
-  // Working set designator objects must reference existing objects
-  for (const des of designatorObjects ?? []) {
-    if (des.objectId && !project.objects.some((o) => o.id === des.objectId)) {
-      errors.push(`Working Set: designator object "${des.objectId}" not found`);
-    }
-  }
+  errors.push(...workingSetModule.validate(project, { objectById }));
 
   return errors;
 }
