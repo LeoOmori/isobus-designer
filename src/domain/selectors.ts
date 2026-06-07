@@ -37,8 +37,9 @@ export function getMaskChildren(project: ProjectState, maskId: string) {
 /** Children of a Soft Key Mask. */
 export function getSoftKeyMaskKeys(project: ProjectState, skmId: string) {
   const skm = project.objects.find((o) => o.id === skmId);
-  const keyIds = new Set(skm?.keys ?? []);
-  return project.objects.filter((o) => keyIds.has(o.id)).sort((a, b) => a.zIndex - b.zIndex);
+  return (skm?.keys ?? [])
+    .map((id) => project.objects.find((o) => o.id === id))
+    .filter((o): o is EditorObject => o !== undefined);
 }
 
 /** All attribute / variable reference objects (not rendered on canvas). */

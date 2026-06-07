@@ -219,10 +219,12 @@ export async function quantizePictureGraphicSource(
   format: PictureGraphicFormat,
   options: number,
   transparencyColor: number,
+  resizeWidth?: number,
+  resizeHeight?: number,
 ) {
   const img = await loadImage(source);
-  const actualWidth = img.naturalWidth || img.width;
-  const actualHeight = img.naturalHeight || img.height;
+  const actualWidth = resizeWidth ?? (img.naturalWidth || img.width);
+  const actualHeight = resizeHeight ?? (img.naturalHeight || img.height);
   const canvas = document.createElement('canvas');
   canvas.width = actualWidth;
   canvas.height = actualHeight;

@@ -3,7 +3,7 @@ import type { ProjectState } from '../types';
 import { validate } from '../validation';
 import { asPictureGraphicFormat, expectedPictureGraphicRawDataLength, PICTURE_GRAPHIC_OPTION_RLE } from '../vtPalette';
 import { encodeLatin1Padded, fontSizeEnum, isLatin1 } from './encoding';
-import { buildIdMap, parseHexObjectId } from './idResolver';
+import { parseHexObjectId } from './idResolver';
 
 /**
  * Run all pre-export validations for V1 .iop export.
@@ -25,13 +25,57 @@ export function validateForExport(project: ProjectState): string[] {
   const errors = [...validate(project)];
 
   const { workingSet, objects } = project;
+  const objectById = new Map(objects.map((o) => [o.id, o]));
 
   // ── Working Set & pool structure ────────────────────────────────────────
   if (!workingSet.activeDataMaskId) {
     errors.push('Export: Working Set must have an Active Data Mask set');
+  } else {
+    const activeMask = objectById.get(workingSet.activeDataMaskId);
+    if (!activeMask) {
+      errors.push(`Export: Working Set active Data Mask "${workingSet.activeDataMaskId}" not found in object pool`);
+    } else if (activeMask.kind !== 'data-mask') {
+      errors.push(`Export: Working Set activeDataMaskId "${workingSet.activeDataMaskId}" must reference a Data Mask`);
+    }
   }
   if (!objects.some((o) => o.kind === 'data-mask')) {
     errors.push('Export: Pool must contain at least one Data Mask');
+  }
+
+  const keyIcons = objects.filter((o) => o.kind === 'key' && (o.childObjectIds ?? []).some((childId) => objectById.get(childId)?.kind === 'picture-graphic'));
+  const keyIconPictureIds = new Set<string>();
+  for (const key of keyIcons) {
+    for (const childId of key.childObjectIds ?? []) {
+      if (objectById.get(childId)?.kind === 'picture-graphic') keyIconPictureIds.add(childId);
+    }
+  }
+  const dmsBySkmId = new Map<string, string[]>();
+  for (const dm of objects) {
+    if (dm.kind === 'data-mask' && dm.softKeyMaskId) {
+      const list = dmsBySkmId.get(dm.softKeyMaskId) ?? [];
+      list.push(dm.id);
+      dmsBySkmId.set(dm.softKeyMaskId, list);
+    }
+  }
+
+  for (const key of keyIcons) {
+    const skmRefs = objects.filter((o) => o.kind === 'soft-key-mask' && (o.keys ?? []).includes(key.id));
+    if (skmRefs.length === 0) {
+      errors.push(`Export: Key ${key.id} contains a Picture Graphic child but is not referenced by any Soft Key Mask`);
+      continue;
+    }
+
+    for (const skm of skmRefs) {
+      const dmRefs = dmsBySkmId.get(skm.id) ?? [];
+      if (dmRefs.length === 0) {
+        errors.push(`Export: Soft Key Mask ${skm.id} references Key ${key.id} but is not referenced by any Data Mask`);
+        continue;
+      }
+      const activeUsesThisSkm = dmRefs.some((dmId) => dmId === workingSet.activeDataMaskId);
+      if (!activeUsesThisSkm) {
+        errors.push(`Export: Key ${key.id} icon path requires Working Set active Data Mask "${workingSet.activeDataMaskId}" to reference Soft Key Mask ${skm.id}`);
+      }
+    }
   }
 
   // ── uint16 objectId uniqueness ──────────────────────────────────────────
@@ -63,6 +107,19 @@ export function validateForExport(project: ProjectState): string[] {
 
   // ── Latin-1 string validation ────────────────────────────────────────────
   for (const obj of objects) {
+    if (obj.kind === 'soft-key-mask') {
+      if ((obj.keys ?? []).length > 0xff) {
+        errors.push(`Export: Soft Key Mask ${obj.id} has more than 255 key references`);
+      }
+    }
+    if (obj.kind === 'key') {
+      if (!Number.isInteger(obj.keyCode ?? 1) || (obj.keyCode ?? 1) < 1 || (obj.keyCode ?? 1) > 0xff) {
+        errors.push(`Export: Key ${obj.id} keyCode must be 1–255`);
+      }
+      if ((obj.childObjectIds ?? []).length > 0xff) {
+        errors.push(`Export: Key ${obj.id} has more than 255 child objects`);
+      }
+    }
     if (obj.kind === 'output-string') {
       const text = obj.text ?? '';
       if (!isLatin1(text)) {
@@ -109,6 +166,7 @@ export function validateForExport(project: ProjectState): string[] {
       const format = asPictureGraphicFormat(obj.graphicFormat);
       const actualWidth = obj.actualWidth ?? 0;
       const actualHeight = obj.actualHeight ?? 0;
+      const targetWidth = obj.targetWidth ?? 0;
       const expectedLength = expectedPictureGraphicRawDataLength(actualWidth, actualHeight, format);
       if (expectedLength === 0) {
         errors.push(`Export: Picture Graphic ${obj.id} has no image data (actualWidth or actualHeight is zero)`);
@@ -117,6 +175,26 @@ export function validateForExport(project: ProjectState): string[] {
           `Export: Picture Graphic ${obj.id} rawData length ${obj.rawData?.length ?? 0} ` +
           `does not match expected ${expectedLength} bytes for ${actualWidth}×${actualHeight} format ${format}`,
         );
+      }
+      if (keyIconPictureIds.has(obj.id)) {
+        if ((obj.graphicOptions ?? 0) & 0b010) {
+          errors.push(`Export: Picture Graphic ${obj.id} has flashing enabled; key icons must not flash for IOP compatibility`);
+        }
+        if (format !== 2) {
+          errors.push(`Export: Picture Graphic ${obj.id} graphicFormat must be 2 (8-bit color) for key icon compatibility`);
+        }
+        if (targetWidth !== 48) {
+          errors.push(`Export: Picture Graphic ${obj.id} targetWidth must be 48 for key icon compatibility`);
+        }
+        if (actualWidth !== 48 || actualHeight !== 48) {
+          errors.push(`Export: Picture Graphic ${obj.id} actualWidth and actualHeight must both be 48 for key icon compatibility`);
+        }
+        if (obj.x !== 6 || obj.y !== 6) {
+          errors.push(`Export: Picture Graphic ${obj.id} should be positioned at x=6, y=6 for key icon compatibility`);
+        }
+        if ((obj.rawData ?? []).length !== 2304) {
+          errors.push(`Export: Picture Graphic ${obj.id} rawData length must be 2304 bytes for a 48×48 key icon`);
+        }
       }
     }
   }

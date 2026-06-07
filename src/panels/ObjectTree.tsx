@@ -1,5 +1,5 @@
 import { Archive, ChevronDown, ChevronRight, Eye, EyeOff, Grid3X3, Keyboard, MoreVertical, Trash2, Zap } from 'lucide-react';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { KindIcon } from '../domain/objectMeta';
 import { getMaskChildren, getObjectChildren, getReferenceObjects, getSoftKeyMaskKeys } from '../domain/selectors';
 import type { EditorObject, ProjectState } from '../domain/types';
@@ -23,9 +23,13 @@ export function ObjectTree({
   function isExpanded(id: string) { return expanded[id] ?? true; }
   function toggle(id: string) { setExpanded((s) => ({ ...s, [id]: !isExpanded(id) })); }
 
-  function renderCanvasObjectRow(object: EditorObject, depth = 0) {
+  function renderCanvasObjectRow(object: EditorObject, depth = 0, includeSelf = true): ReactNode {
     const children = getObjectChildren(project, object.id);
     const hasChildren = children.length > 0;
+
+    if (!includeSelf) {
+      return <>{hasChildren && isExpanded(object.id) && children.map((child) => renderCanvasObjectRow(child, depth + 1))}</>;
+    }
 
     return (
       <div key={object.id}>
@@ -101,12 +105,15 @@ export function ObjectTree({
                   <button onClick={() => onDelete(skm.id)}><MoreVertical size={14} /></button>
                 </div>
                 {isExpanded(skm.id) && getSoftKeyMaskKeys(project, skm.id).map((key) => (
-                  <div key={key.id} className={`tree-row child ${selectedId === key.id ? 'selected' : ''}`}>
-                    <button className="tree-select" onClick={() => onSelect(key.id)}>
-                      <KindIcon kind={key.kind} /><span>{key.name}</span>
-                    </button>
-                    <span />
-                    <button onClick={() => onDelete(key.id)}><Trash2 size={14} /></button>
+                  <div key={key.id}>
+                    <div className={`tree-row child ${selectedId === key.id ? 'selected' : ''}`}>
+                      <button className="tree-select" onClick={() => onSelect(key.id)}>
+                        <KindIcon kind={key.kind} /><span>{key.name}</span>
+                      </button>
+                      <span />
+                      <button onClick={() => onDelete(key.id)}><Trash2 size={14} /></button>
+                    </div>
+                    {renderCanvasObjectRow(key, 1, false)}
                   </div>
                 ))}
               </div>

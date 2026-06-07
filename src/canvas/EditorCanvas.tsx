@@ -36,8 +36,13 @@ const CONTAINER_CHILD_TOOLS = new Set<ToolMode>([
   'container', 'output-rectangle', 'output-string', 'button', 'output-number', 'picture-graphic',
 ]);
 
+const KEY_CHILD_TOOLS = new Set<ToolMode>([
+  'container', 'output-rectangle', 'output-string', 'output-number', 'picture-graphic',
+]);
+
 const SKM_SLOTS = 6;
 const SKM_WIDTH = 60;
+const SKM_SLOT_SIZE = 60;
 const SKM_GAP   = 4;
 
 export function EditorCanvas({
@@ -142,6 +147,14 @@ export function EditorCanvas({
     const point = screenToContainer(clientX, clientY, container);
     onSelect(container.id);
     onCreateObject(tool as ObjectKind, snap(point.x), snap(point.y), container.id);
+    onToolChange('select');
+  }
+
+  function createOnKeySlot(clientX: number, clientY: number, key: EditorObject, originX: number, originY: number) {
+    const world = screenToWorld(clientX, clientY);
+    const point = { x: world.x - originX, y: world.y - originY };
+    onSelect(key.id);
+    onCreateObject(tool as ObjectKind, snap(point.x), snap(point.y), key.id);
     onToolChange('select');
   }
 
@@ -466,6 +479,15 @@ export function EditorCanvas({
           </div>
         )}
 
+        {object.kind === 'key' && (
+          <div className="key-child-clip" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+            {project.objects
+              .filter((candidate) => (object.childObjectIds ?? []).includes(candidate.id) && candidate.visible)
+              .sort((a, b) => a.zIndex - b.zIndex)
+              .map(renderObject)}
+          </div>
+        )}
+
         {/* Container children render clipped to the Container bounds. */}
         {object.kind === 'container' && (
           <>
@@ -532,7 +554,8 @@ export function EditorCanvas({
                     left: mask.x + mask.width + SKM_GAP,
                     top:  mask.y,
                     width:  SKM_WIDTH,
-                    height: mask.height,
+                    height: SKM_SLOTS * SKM_SLOT_SIZE,
+                    background: vtColor(skm.backgroundColorIndex ?? 1),
                     zIndex: mask.zIndex,
                   }}
                   onPointerDown={(e) => { e.stopPropagation(); onSelect(skm.id); }}
@@ -543,12 +566,29 @@ export function EditorCanvas({
                     const keySelected = key && selectedId === key.id;
                     return (
                       <div
-                        key={i}
+                        key={key?.id ?? `skm-slot-${i}`}
                         className={`soft-key-slot ${keySelected ? 'key-selected' : ''}`}
-                        onPointerDown={(e) => { e.stopPropagation(); onSelect(key?.id ?? skm.id); }}
+                        style={{ width: SKM_SLOT_SIZE, height: SKM_SLOT_SIZE, flex: `0 0 ${SKM_SLOT_SIZE}px`, background: key ? vtColor(key.backgroundColorIndex ?? 1) : undefined }}
+                        onPointerDown={(e) => {
+                          e.stopPropagation();
+                          if (KEY_CHILD_TOOLS.has(tool) && key) {
+                            createOnKeySlot(e.clientX, e.clientY, key, mask.x + mask.width + SKM_GAP, mask.y + i * SKM_SLOT_SIZE);
+                            return;
+                          }
+                          onSelect(key?.id ?? skm.id);
+                        }}
                       >
                         {key
-                          ? <span className="soft-key-label">{key.label || key.name}</span>
+                          ? <>
+                              <div className="key-face" style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>
+                                {(key.childObjectIds ?? [])
+                                  .map((childId) => project.objects.find((candidate) => candidate.id === childId))
+                                  .filter((candidate): candidate is EditorObject => candidate !== undefined && candidate.visible)
+                                  .sort((a, b) => a.zIndex - b.zIndex)
+                                  .map(renderObject)}
+                              </div>
+                              {((key.childObjectIds ?? []).length === 0) && <span className="soft-key-label">{key.label || key.name}</span>}
+                            </>
                           : <span className="soft-key-empty">{i + 1}</span>
                         }
                       </div>

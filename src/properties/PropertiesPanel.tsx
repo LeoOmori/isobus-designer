@@ -220,6 +220,14 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
   const selectedOutputNumberFont = kind === 'output-number'
     ? objects.find((object) => object.id === selectedObject.fontAttributeId && object.kind === 'font-attribute')
     : undefined;
+  const selectedSoftKeyMaskKeys = kind === 'soft-key-mask'
+    ? (selectedObject.keys ?? [])
+        .map((id) => objects.find((object) => object.id === id && object.kind === 'key'))
+        .filter((object): object is EditorObject => object !== undefined)
+    : [];
+  const keyChildren = kind === 'key'
+    ? objects.filter((object) => (selectedObject.childObjectIds ?? []).includes(object.id))
+    : [];
   const outputNumberPreviewWidth = kind === 'output-number'
     ? Math.max(1, Math.floor(Math.max(1, selectedObject.width - 8) / (selectedOutputNumberFont?.fontWidth ?? selectedOutputNumberFont?.fontHeight ?? selectedOutputNumberFont?.fontSize ?? 16)))
     : 0;
@@ -294,8 +302,35 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
       {/* ── Soft Key Mask ─────────────────────────────────────────────── */}
       {kind === 'soft-key-mask' && (
         <PropertySection title="Soft Key Mask">
+          <VtColorField label="Background" value={selectedObject.backgroundColorIndex ?? 1} onChange={(backgroundColorIndex) => onPatch({ backgroundColorIndex })} />
           <SelectField label="Layout Preview" value={selectedObject.layoutPreview ?? 'vertical'} options={[{ value: 'vertical', label: 'Vertical' }, { value: 'horizontal', label: 'Horizontal' }]} onChange={(layoutPreview) => onPatch({ layoutPreview: layoutPreview as 'vertical' | 'horizontal' })} />
           <Field label="Key Count Preview" value={selectedObject.softKeyCountPreview ?? 6} type="number" onChange={(v) => onPatch({ softKeyCountPreview: Number(v) })} />
+          <div className="field-hint">Keys</div>
+          {selectedSoftKeyMaskKeys.length === 0 ? (
+            <div className="field-hint">No keys assigned.</div>
+          ) : selectedSoftKeyMaskKeys.map((key, index) => {
+            const next = [...(selectedObject.keys ?? [])];
+            const move = (delta: number) => {
+              const to = index + delta;
+              if (to < 0 || to >= next.length) return;
+              [next[index], next[to]] = [next[to], next[index]];
+              onPatch({ keys: next });
+            };
+            return (
+              <div key={key.id} className="designator-row">
+                <div className="designator-fields">
+                  <div className="field-hint">{index + 1}. {key.id} — {key.name} ({objectKindName(key.kind)})</div>
+                </div>
+                <div className="designator-actions">
+                  <button type="button" className="field-btn" onClick={() => move(-1)} disabled={index === 0}>↑</button>
+                  <button type="button" className="field-btn" onClick={() => move(1)} disabled={index === selectedSoftKeyMaskKeys.length - 1}>↓</button>
+                  <button type="button" className="designator-remove" onClick={() => onPatch({ keys: (selectedObject.keys ?? []).filter((_, i) => i !== index) })} title="Remove key">
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </PropertySection>
       )}
 
@@ -303,8 +338,15 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
       {kind === 'key' && (
         <PropertySection title="Key">
           <Field label="Label"      value={selectedObject.label ?? ''}      onChange={(label) => onPatch({ label })} />
-          <Field label="Key Code"   value={selectedObject.keyCode ?? 0}     type="number" onChange={(v) => onPatch({ keyCode: Number(v) })} />
+          <Field label="Key Code"   value={selectedObject.keyCode ?? 1}     type="number" onChange={(v) => onPatch({ keyCode: clamp(Math.round(Number(v) || 0), 1, 255) })} />
+          <VtColorField label="Background" value={selectedObject.backgroundColorIndex ?? 1} onChange={(backgroundColorIndex) => onPatch({ backgroundColorIndex })} />
           <Field label="Action"     value={selectedObject.actionName ?? ''}  onChange={(actionName) => onPatch({ actionName })} />
+          <div className="field-hint">Children</div>
+          {keyChildren.length === 0 ? (
+            <div className="field-hint">No child designator objects.</div>
+          ) : keyChildren.map((child) => (
+            <div key={child.id} className="field-hint">{child.id} — {objectKindName(child.kind)} at {child.x}, {child.y}</div>
+          ))}
         </PropertySection>
       )}
 
@@ -422,7 +464,7 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
       )}
 
       {/* ── Picture Graphic ───────────────────────────────────────────── */}
-      {kind === 'picture-graphic' && <PictureGraphicPanel object={selectedObject} onPatch={onPatch} />}
+      {kind === 'picture-graphic' && <PictureGraphicPanel object={selectedObject} objects={objects} onPatch={onPatch} />}
 
       {/* ── Font Attribute ────────────────────────────────────────────── */}
       {kind === 'font-attribute' && (
@@ -477,20 +519,22 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
 
 // ── Picture Graphic Panel ──────────────────────────────────────────────────
 
-function PictureGraphicPanel({ object, onPatch }: { object: EditorObject; onPatch: (changes: Partial<EditorObject>) => void }) {
+function PictureGraphicPanel({ object, objects, onPatch }: { object: EditorObject; objects: EditorObject[]; onPatch: (changes: Partial<EditorObject>) => void }) {
   const previewUrl = pictureGraphicToDataUrl(object);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const parent = object.parentId ? objects.find((candidate) => candidate.id === object.parentId) : undefined;
+  const isKeyIcon = parent?.kind === 'key';
 
   const format = asPictureGraphicFormat(object.graphicFormat);
   const options = clearUnsupportedPictureGraphicOptions(object.graphicOptions ?? 0);
   const transparent = (options & PICTURE_GRAPHIC_OPTION_TRANSPARENT) !== 0;
   const flashing = (options & PICTURE_GRAPHIC_OPTION_FLASHING) !== 0;
   const rle = (options & PICTURE_GRAPHIC_OPTION_RLE) !== 0;
-  const targetWidth = object.targetWidth ?? object.width ?? object.actualWidth ?? 64;
-  const actualWidth = object.actualWidth ?? object.width ?? 64;
-  const actualHeight = object.actualHeight ?? object.height ?? 64;
+  const targetWidth = object.targetWidth ?? object.width ?? object.actualWidth ?? (isKeyIcon ? 48 : 64);
+  const actualWidth = object.actualWidth ?? object.width ?? (isKeyIcon ? 48 : 64);
+  const actualHeight = object.actualHeight ?? object.height ?? (isKeyIcon ? 48 : 64);
   const targetHeight = derivedPictureGraphicHeight(targetWidth, actualWidth, actualHeight);
-  const expectedRawDataLength = expectedPictureGraphicRawDataLength(actualWidth, actualHeight, format);
+  const expectedRawDataLength = expectedPictureGraphicRawDataLength(isKeyIcon ? 48 : actualWidth, isKeyIcon ? 48 : actualHeight, format);
 
   function patchTargetWidth(nextTargetWidth: number) {
     const width = Math.max(1, Math.round(nextTargetWidth));
@@ -524,8 +568,10 @@ function PictureGraphicPanel({ object, onPatch }: { object: EditorObject; onPatc
       nextFormat,
       nextOptions,
       nextTransparencyColor,
+      isKeyIcon ? 48 : undefined,
+      isKeyIcon ? 48 : undefined,
     );
-    const nextTargetWidth = object.targetWidth ?? object.width ?? quantized.actualWidth;
+    const nextTargetWidth = isKeyIcon ? 48 : object.targetWidth ?? object.width ?? quantized.actualWidth;
     onPatch({
       ...quantized,
       graphicFormat: nextFormat,
@@ -534,14 +580,25 @@ function PictureGraphicPanel({ object, onPatch }: { object: EditorObject; onPatc
       targetWidth: nextTargetWidth,
       width: nextTargetWidth,
       height: derivedPictureGraphicHeight(nextTargetWidth, quantized.actualWidth, quantized.actualHeight),
+      x: isKeyIcon ? 6 : object.x,
+      y: isKeyIcon ? 6 : object.y,
     });
   }
 
   useEffect(() => {
     if (!object.sourceImageDataUrl) return;
-    if (object.rawData?.length === expectedRawDataLength) return;
-    void quantizePictureGraphicSource(object.sourceImageDataUrl, format, options, object.transparencyColor ?? 0).then((quantized) => {
-      const nextTargetWidth = object.targetWidth ?? object.width ?? quantized.actualWidth;
+    if (object.rawData?.length === expectedRawDataLength && (!isKeyIcon || (
+      object.actualWidth === 48 && object.actualHeight === 48 && object.targetWidth === 48 && object.x === 6 && object.y === 6
+    ))) return;
+    void quantizePictureGraphicSource(
+      object.sourceImageDataUrl,
+      format,
+      options,
+      object.transparencyColor ?? 0,
+      isKeyIcon ? 48 : undefined,
+      isKeyIcon ? 48 : undefined,
+    ).then((quantized) => {
+      const nextTargetWidth = isKeyIcon ? 48 : object.targetWidth ?? object.width ?? quantized.actualWidth;
       onPatch({
         ...quantized,
         graphicFormat: format,
@@ -549,6 +606,8 @@ function PictureGraphicPanel({ object, onPatch }: { object: EditorObject; onPatc
         targetWidth: nextTargetWidth,
         width: nextTargetWidth,
         height: derivedPictureGraphicHeight(nextTargetWidth, quantized.actualWidth, quantized.actualHeight),
+        x: isKeyIcon ? 6 : object.x,
+        y: isKeyIcon ? 6 : object.y,
       });
     });
   }, [
@@ -557,6 +616,11 @@ function PictureGraphicPanel({ object, onPatch }: { object: EditorObject; onPatc
     object.transparencyColor,
     object.targetWidth,
     object.width,
+    object.actualWidth,
+    object.actualHeight,
+    object.x,
+    object.y,
+    isKeyIcon,
     expectedRawDataLength,
     format,
     options,
@@ -569,13 +633,22 @@ function PictureGraphicPanel({ object, onPatch }: { object: EditorObject; onPatc
 
     try {
       const sourceImageDataUrl = await readFileAsDataUrl(file);
-      const quantized = await quantizePictureGraphicSource(sourceImageDataUrl, format, options, object.transparencyColor ?? 0);
-      const nextTargetWidth = object.targetWidth ?? object.width ?? quantized.actualWidth;
+      const quantized = await quantizePictureGraphicSource(
+        sourceImageDataUrl,
+        format,
+        options,
+        object.transparencyColor ?? 0,
+        isKeyIcon ? 48 : undefined,
+        isKeyIcon ? 48 : undefined,
+      );
+      const nextTargetWidth = isKeyIcon ? 48 : object.targetWidth ?? object.width ?? quantized.actualWidth;
       onPatch({
         ...quantized,
         targetWidth: nextTargetWidth,
         width: nextTargetWidth,
         height: derivedPictureGraphicHeight(nextTargetWidth, quantized.actualWidth, quantized.actualHeight),
+        x: isKeyIcon ? 6 : object.x,
+        y: isKeyIcon ? 6 : object.y,
         sourceImagePath: file.name,
         sourceImageDataUrl,
       });

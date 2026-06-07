@@ -30,6 +30,10 @@ const CONTAINER_CHILD_KINDS = new Set<ObjectKind>([
   'container', 'output-string', 'output-number', 'output-rectangle', 'picture-graphic', 'button',
 ]);
 
+const KEY_CHILD_KINDS = new Set<ObjectKind>([
+  'output-string', 'output-number', 'output-rectangle', 'picture-graphic', 'container',
+]);
+
 const OUTPUT_NUMBER_OPTION_MASK = OUTPUT_NUMBER_OPTION_TRANSPARENT
   | OUTPUT_NUMBER_OPTION_LEADING_ZEROS
   | OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK
@@ -101,6 +105,60 @@ export function validate(project: ProjectState): string[] {
         }
         if (!Number.isInteger(child.x) || child.x < -0x8000 || child.x > 0x7fff || !Number.isInteger(child.y) || child.y < -0x8000 || child.y > 0x7fff) {
           errors.push(`Container ${obj.id}: child "${childId}" coordinates must fit int16`);
+        }
+      }
+    }
+
+    if (obj.kind === 'soft-key-mask') {
+      const keys = obj.keys ?? [];
+      if (!Number.isInteger(obj.backgroundColorIndex ?? 1) || (obj.backgroundColorIndex ?? 1) < 0 || (obj.backgroundColorIndex ?? 1) > 255) {
+        errors.push(`Soft Key Mask ${obj.id}: backgroundColorIndex must be 0–255`);
+      }
+      if (keys.length > 0xff) {
+        errors.push(`Soft Key Mask ${obj.id}: key count must fit uint8`);
+      }
+      if ((obj.macros ?? []).length > 0xff) {
+        errors.push(`Soft Key Mask ${obj.id}: macro count must fit uint8`);
+      }
+      const seen = new Set<string>();
+      for (const keyId of keys) {
+        if (seen.has(keyId)) {
+          errors.push(`Soft Key Mask ${obj.id}: duplicate key reference "${keyId}"`);
+          continue;
+        }
+        seen.add(keyId);
+        const key = objectById.get(keyId);
+        if (!key || key.kind !== 'key') {
+          errors.push(`Soft Key Mask ${obj.id}: key "${keyId}" must reference an existing Key object`);
+        }
+      }
+    }
+
+    if (obj.kind === 'key') {
+      const children = obj.childObjectIds ?? [];
+      if (!Number.isInteger(obj.backgroundColorIndex ?? 1) || (obj.backgroundColorIndex ?? 1) < 0 || (obj.backgroundColorIndex ?? 1) > 255) {
+        errors.push(`Key ${obj.id}: backgroundColorIndex must be 0–255`);
+      }
+      if (!Number.isInteger(obj.keyCode ?? 1) || (obj.keyCode ?? 1) < 1 || (obj.keyCode ?? 1) > 255) {
+        errors.push(`Key ${obj.id}: keyCode must be 1–255`);
+      }
+      if (children.length > 0xff) {
+        errors.push(`Key ${obj.id}: child count must fit uint8`);
+      }
+      if ((obj.macros ?? []).length > 0xff) {
+        errors.push(`Key ${obj.id}: macro count must fit uint8`);
+      }
+      for (const childId of children) {
+        const child = objectById.get(childId);
+        if (!child || !KEY_CHILD_KINDS.has(child.kind)) {
+          errors.push(`Key ${obj.id}: child "${childId}" must be Output String/Number/Rectangle, Picture Graphic, or Container`);
+          continue;
+        }
+        if (child.parentId !== obj.id) {
+          errors.push(`Key ${obj.id}: child "${childId}" parentId must reference the Key`);
+        }
+        if (!Number.isInteger(child.x) || child.x < -0x8000 || child.x > 0x7fff || !Number.isInteger(child.y) || child.y < -0x8000 || child.y > 0x7fff) {
+          errors.push(`Key ${obj.id}: child "${childId}" coordinates must fit int16`);
         }
       }
     }

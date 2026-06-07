@@ -56,8 +56,9 @@ export function createEditorObject(
   const isKey       = kind === 'key';
   const isMask      = kind === 'data-mask';
   const isSKM       = kind === 'soft-key-mask';
+  const isKeyIcon   = kind === 'picture-graphic' && activeParent.kind === 'key';
 
-  // Objects with no spatial layout: reference-only and soft-key-mask
+  // Objects with no spatial layout: reference-only, soft-key-mask, and key
   const noLayout = isRef || isSKM || isKey;
 
   // Find shared attribute defaults
@@ -77,24 +78,24 @@ export function createEditorObject(
     zIndex: current.objects.length + 1,
 
     // Layout
-    x:      noLayout ? 0 : isMask  ? activeParent.x + 80 : activeParent.kind === 'button' || activeParent.kind === 'container' ? x : clamp(x, 0, activeParent.width  - 40),
-    y:      noLayout ? 0 : isMask  ? activeParent.y + 80 : activeParent.kind === 'button' || activeParent.kind === 'container' ? y : clamp(y, 0, activeParent.height - 30),
-    width:  noLayout ? 0 : isMask  ? 480
+    x:      noLayout ? 0 : isMask  ? activeParent.x + 80 : isKeyIcon ? 6 : activeParent.kind === 'button' || activeParent.kind === 'container' || activeParent.kind === 'key' ? x : clamp(x, 0, activeParent.width  - 40),
+    y:      noLayout ? 0 : isMask  ? activeParent.y + 80 : isKeyIcon ? 6 : activeParent.kind === 'button' || activeParent.kind === 'container' || activeParent.kind === 'key' ? y : clamp(y, 0, activeParent.height - 30),
+    width:  isKey ? 60 : noLayout ? 0 : isMask  ? 480
           : kind === 'output-string' || kind === 'output-number' ? 220
           : kind === 'container' ? 200
           : kind === 'button'  ? 120
-          : kind === 'picture-graphic' ? 64
+          : kind === 'picture-graphic' ? isKeyIcon ? 48 : 64
           : 130,
-    height: noLayout ? 0 : isMask  ? 480
+    height: isKey ? 60 : noLayout ? 0 : isMask  ? 480
           : kind === 'output-string' || kind === 'output-number' ? 42
           : kind === 'container' ? 200
           : kind === 'button'  ? 42
-          : kind === 'picture-graphic' ? 64
+          : kind === 'picture-graphic' ? isKeyIcon ? 48 : 64
           : 90,
 
     // Editor colors
     backgroundColor: isRef || isSKM || isKey ? 'transparent' : '#ffffff',
-    backgroundColorIndex: isRef || isSKM || isKey ? undefined : 1,
+    backgroundColorIndex: isRef ? undefined : 1,
     borderColor:     isRef ? 'transparent' : '#dfe6f0',
     borderColorIndex: kind === 'button' ? 0 : undefined,
 
@@ -119,7 +120,7 @@ export function createEditorObject(
     actionName: isKey ? '' : undefined,
 
     // ── Button ───────────────────────────────────────────────────────────
-    keyCode:       kind === 'button' || isKey ? 0 : undefined,
+    keyCode:       kind === 'button' ? 0 : isKey ? 1 : undefined,
     buttonOptions: kind === 'button' ? 0 : undefined,
 
     // ── Output String ────────────────────────────────────────────────────
@@ -146,9 +147,9 @@ export function createEditorObject(
     lineSuppression:  kind === 'output-rectangle' ? 0 : undefined,
 
     // ── Picture Graphic ──────────────────────────────────────────────────
-    targetWidth:      kind === 'picture-graphic' ? 64  : undefined,
-    actualWidth:      kind === 'picture-graphic' ? 64  : undefined,
-    actualHeight:     kind === 'picture-graphic' ? 64  : undefined,
+    targetWidth:      kind === 'picture-graphic' ? isKeyIcon ? 48 : 64  : undefined,
+    actualWidth:      kind === 'picture-graphic' ? isKeyIcon ? 48 : 64  : undefined,
+    actualHeight:     kind === 'picture-graphic' ? isKeyIcon ? 48 : 64  : undefined,
     graphicFormat:    kind === 'picture-graphic' ? 2   : undefined,
     graphicOptions:   kind === 'picture-graphic' ? 0   : undefined,
     transparencyColor: kind === 'picture-graphic' ? 0  : undefined,

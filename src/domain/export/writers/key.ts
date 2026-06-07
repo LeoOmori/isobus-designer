@@ -8,7 +8,7 @@ import type { WriteContext } from '../context';
  *   u16  objectId
  *   u8   type = 5
  *   u8   backgroundColor   (palette index; default 1=white)
- *   u8   keyCode           (obj.keyCode ?? 0)
+ *   u8   keyCode           (obj.keyCode ?? 1)
  *   u8   N                 (number of child object refs)
  *   u8   M = 0             (macro count, written BEFORE children)
  *   N × [ u16 childId, i16 x, i16 y ]
@@ -22,8 +22,8 @@ export function writeKey(obj: EditorObject, ctx: WriteContext): void {
 
   w.u16(ctx.idMap.get(obj.id)!);
   w.u8(5);
-  w.u8(obj.backgroundColorIndex ?? 1); // Keys default transparent in editor; use white (1) for spec
-  w.u8(obj.keyCode ?? 0);
+  w.u8(obj.backgroundColorIndex ?? 1); // spec-backed default is white (1)
+  w.u8(obj.keyCode ?? 1);
   w.u8(children.length);
   w.u8(0); // macro count = 0 for V1
 

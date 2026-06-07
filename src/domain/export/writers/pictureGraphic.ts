@@ -14,6 +14,6 @@ export function writePictureGraphic(obj: EditorObject, ctx: WriteContext): void 
   w.u8(obj.graphicOptions ?? 0);
   w.u8(obj.transparencyColor ?? 0);
   w.u32(data.length);
-  w.raw(data);
   w.u8(0);
+  w.raw(data);
 }

@@ -45,16 +45,26 @@ export function App() {
   // Convert migrated/stale editor source images into spec-compliant indexed rawData
   // even when the Picture Graphic property panel is not open.
   useEffect(() => {
+    const objectById = new Map(project.objects.map((object) => [object.id, object]));
     const pending = project.objects
       .filter((object) => {
         if (object.kind !== 'picture-graphic' || !object.sourceImageDataUrl) return false;
+        const parent = object.parentId ? objectById.get(object.parentId) : undefined;
+        const isKeyIcon = parent?.kind === 'key';
         const format = asPictureGraphicFormat(object.graphicFormat);
-        const expectedLength = expectedPictureGraphicRawDataLength(object.actualWidth ?? 0, object.actualHeight ?? 0, format);
-        return object.rawData?.length !== expectedLength;
+        const expectedWidth = isKeyIcon ? 48 : object.actualWidth ?? 0;
+        const expectedHeight = isKeyIcon ? 48 : object.actualHeight ?? 0;
+        const expectedLength = expectedPictureGraphicRawDataLength(expectedWidth, expectedHeight, format);
+        return object.rawData?.length !== expectedLength
+          || (isKeyIcon && (
+            object.actualWidth !== 48 || object.actualHeight !== 48 ||
+            object.targetWidth !== 48 || object.x !== 6 || object.y !== 6
+          ));
       })
       .map((object) => ({
         id: object.id,
         sourceImageDataUrl: object.sourceImageDataUrl!,
+        isKeyIcon: object.parentId ? objectById.get(object.parentId)?.kind === 'key' : false,
         format: asPictureGraphicFormat(object.graphicFormat),
         options: clearUnsupportedPictureGraphicOptions(object.graphicOptions ?? 0),
         transparencyColor: object.transparencyColor ?? 0,
@@ -65,7 +75,14 @@ export function App() {
     let cancelled = false;
     void Promise.all(pending.map(async (item) => ({
       ...item,
-      quantized: await quantizePictureGraphicSource(item.sourceImageDataUrl, item.format, item.options, item.transparencyColor),
+      quantized: await quantizePictureGraphicSource(
+        item.sourceImageDataUrl,
+        item.format,
+        item.options,
+        item.transparencyColor,
+        item.isKeyIcon ? 48 : undefined,
+        item.isKeyIcon ? 48 : undefined,
+      ),
     }))).then((results) => {
       if (cancelled) return;
       setProject((current) => ({
@@ -80,7 +97,7 @@ export function App() {
             (object.transparencyColor ?? 0) !== result.transparencyColor
           ) return object;
 
-          const targetWidth = object.targetWidth ?? object.width ?? result.quantized.actualWidth;
+          const targetWidth = result.isKeyIcon ? 48 : object.targetWidth ?? object.width ?? result.quantized.actualWidth;
           return {
             ...object,
             ...result.quantized,
@@ -89,6 +106,8 @@ export function App() {
             targetWidth,
             width: targetWidth,
             height: derivedPictureGraphicHeight(targetWidth, result.quantized.actualWidth, result.quantized.actualHeight),
+            x: result.isKeyIcon ? 6 : object.x,
+            y: result.isKeyIcon ? 6 : object.y,
           };
         }),
       }));
@@ -162,6 +181,10 @@ export function App() {
             // Add key to soft key mask keys array
             if (isKey && o.id === activeSKMId) {
               return { ...o, keys: [...(o.keys ?? []), next.id] };
+            }
+            // Link a newly created Soft Key Mask to the active Data Mask by default.
+            if (isSKM && o.kind === 'data-mask' && o.id === current.activeMaskId && !o.softKeyMaskId) {
+              return { ...o, softKeyMaskId: next.id };
             }
             return o;
           }),

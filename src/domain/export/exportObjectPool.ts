@@ -3,6 +3,7 @@ import { ByteWriter } from './byteWriter';
 import type { WriteContext } from './context';
 import { validateForExport } from './exportValidation';
 import { buildIdMap, resolveRef } from './idResolver';
+import { smokeValidateObjectPool } from './smokeValidateObjectPool';
 import { writeButton } from './writers/button';
 import { writeContainer } from './writers/container';
 import { writeDataMask } from './writers/dataMask';
@@ -118,5 +119,11 @@ export function exportObjectPool(project: ProjectState): ExportResult {
   // ── 4. Working Set last ──────────────────────────────────────────────────
   writeWorkingSet(project.workingSet, ctx);
 
-  return { bytes: w.result(), errors: [] };
+  const bytes = w.result();
+  const smoke = smokeValidateObjectPool(bytes);
+  if (!smoke.ok) {
+    return { bytes: new Uint8Array(0) as Uint8Array<ArrayBuffer>, errors: smoke.errors };
+  }
+
+  return { bytes, errors: [] };
 }
