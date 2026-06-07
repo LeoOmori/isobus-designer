@@ -17,7 +17,9 @@ export function ObjectTree({
 }) {
   const masks       = project.objects.filter((o) => o.kind === 'data-mask');
   const softKeyMasks = project.objects.filter((o) => o.kind === 'soft-key-mask');
-  const attributes  = getReferenceObjects(project);
+  const attributes  = getReferenceObjects(project).filter(
+    (o) => o.kind !== 'soft-key-mask' && o.kind !== 'key',
+  );
   const [expanded, setExpanded] = useState<Record<string, boolean>>({ WS_1: true });
 
   function isExpanded(id: string) { return expanded[id] ?? true; }

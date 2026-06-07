@@ -1,6 +1,7 @@
 import type { EditorObject, ProjectState, ReferenceKind, WorkingSet } from '../domain/types';
 import { PropertiesPanel, WorkingSetProperties } from '../properties/PropertiesPanel';
 import { ObjectTree } from './ObjectTree';
+import { ResizableSplit } from '../ui/primitives';
 
 export function RightSidebar({
   project, selectedId,
@@ -25,34 +26,36 @@ export function RightSidebar({
 
   return (
     <aside className="right-sidebar">
-      <ObjectTree
-        project={project}
-        selectedId={selectedId}
-        onSelect={onSelect}
-        onToggleVisible={onToggleVisible}
-        onToggleWorkingSetVisible={onToggleWorkingSetVisible}
-        onDelete={onDelete}
-      />
-      {selectedId === project.workingSet.id || !selectedObject
-        ? (
-          <WorkingSetProperties
-            workingSet={project.workingSet}
-            masks={masks}
-            objects={project.objects}
-            onPatch={onPatchWorkingSet}
-          />
-        ) : (
-          <PropertiesPanel
-            selectedObject={selectedObject}
-            masks={masks}
-            softKeyMasks={softKeyMasks}
-            objects={project.objects}
-            onPatch={onPatchSelected}
-            onDelete={() => onDelete(selectedObject.id)}
-            onLayer={onLayer}
-            onCreateAttributeReference={onCreateAttributeReference}
-          />
-        )}
+      <ResizableSplit defaultTopHeight={280} minTopHeight={100} minBottomHeight={100}>
+        <ObjectTree
+          project={project}
+          selectedId={selectedId}
+          onSelect={onSelect}
+          onToggleVisible={onToggleVisible}
+          onToggleWorkingSetVisible={onToggleWorkingSetVisible}
+          onDelete={onDelete}
+        />
+        {selectedId === project.workingSet.id || !selectedObject
+          ? (
+            <WorkingSetProperties
+              workingSet={project.workingSet}
+              masks={masks}
+              objects={project.objects}
+              onPatch={onPatchWorkingSet}
+            />
+          ) : (
+            <PropertiesPanel
+              selectedObject={selectedObject}
+              masks={masks}
+              softKeyMasks={softKeyMasks}
+              objects={project.objects}
+              onPatch={onPatchSelected}
+              onDelete={() => onDelete(selectedObject.id)}
+              onLayer={onLayer}
+              onCreateAttributeReference={onCreateAttributeReference}
+            />
+          )}
+      </ResizableSplit>
     </aside>
   );
 }

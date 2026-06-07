@@ -31,6 +31,7 @@ export function App() {
   const [tool, setTool] = useState<ToolMode>('select');
   const [viewport, setViewport] = useState<Viewport>({ x: 200, y: 100, zoom: 0.85 });
   const [exportErrors, setExportErrors] = useState<string[] | null>(null);
+  const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const errors = validate(project);
 
   const masks       = project.objects.filter((o) => o.kind === 'data-mask');
@@ -295,16 +296,11 @@ export function App() {
         onToolChange={setTool}
         zoom={viewport.zoom}
         onZoom={(zoom) => setViewport({ ...viewport, zoom: clamp(zoom, 0.25, 3) })}
-        onReset={() => { setProject(initialProject); setSelectedId(initialProject.workingSet.id); }}
-        onUndo={undo}
-        onRedo={redo}
-        canUndo={canUndo}
-        canRedo={canRedo}
-        onSave={() => window.localStorage.setItem(storageKey, JSON.stringify(project))}
-        onExport={() => navigator.clipboard?.writeText(JSON.stringify(project, null, 2))}
         onExportIop={handleExportIop}
+        sidebarsVisible={sidebarsVisible}
+        onToggleSidebars={() => setSidebarsVisible((v) => !v)}
       />
-      <div className="workspace">
+      <div className={`workspace ${sidebarsVisible ? '' : 'sidebars-hidden'}`}>
         <LeftSidebar
           tool={tool}
           onToolChange={(next) => next === 'data-mask' ? createObject('data-mask') : setTool(next)}

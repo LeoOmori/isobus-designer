@@ -18,7 +18,7 @@ import { OutputNumberContent } from '../objects/output-number/Render';
 import { outputRectangleStyle } from '../objects/output-rectangle/logic';
 import { OutputStringContent } from '../objects/output-string/Render';
 import { PictureGraphicContent } from '../objects/picture-graphic/Render';
-import { BottomControls } from './CanvasToolbar';
+
 
 /** Tools that create a canvas object on click. */
 const CANVAS_TOOLS = new Set<ToolMode>([
@@ -533,11 +533,6 @@ export function EditorCanvas({
           );
         })}
       </div>
-
-      <BottomControls
-        zoom={viewport.zoom}
-        onZoom={(zoom) => onViewportChange({ ...viewport, zoom: clamp(zoom, 0.25, 3) })}
-      />
     </main>
   );
 }
