@@ -1,12 +1,7 @@
-import type { ObjectKind, ProjectState } from './types';
+import type { ProjectState } from './types';
 import { extractedModules } from '../objects/extractedModules';
 import { workingSetModule } from '../objects/working-set/logic';
-
-const REFERENCE_ONLY_KINDS = new Set([
-  'line-attribute', 'fill-attribute', 'font-attribute',
-  'string-variable', 'number-variable',
-  'soft-key-mask', 'key',
-]);
+import { metaRegistry } from '../objects/metaRegistry';
 
 export function validate(project: ProjectState): string[] {
   const errors: string[] = [];
@@ -19,11 +14,11 @@ export function validate(project: ProjectState): string[] {
     ids.add(obj.id);
 
     // Canvas objects must have positive dimensions
-    if (!REFERENCE_ONLY_KINDS.has(obj.kind) && (obj.width <= 0 || obj.height <= 0)) {
+    if (metaRegistry[obj.kind].hasLayout && (obj.width <= 0 || obj.height <= 0)) {
       errors.push(`Invalid size: ${obj.id} (${obj.width}×${obj.height})`);
     }
 
-    if (!REFERENCE_ONLY_KINDS.has(obj.kind) && obj.kind !== 'data-mask') {
+    if (metaRegistry[obj.kind].hasLayout && obj.kind !== 'data-mask') {
       const childContainerIds = project.objects
         .filter((parent) => (parent.childObjectIds ?? []).includes(obj.id))
         .map((parent) => parent.id);
@@ -46,7 +41,7 @@ export function validate(project: ProjectState): string[] {
       }
     }
 
-    errors.push(...(extractedModules[obj.kind]?.validate?.(obj, project, { objectById }) ?? []));
+    errors.push(...(extractedModules[obj.kind].validate?.(obj, project, { objectById }) ?? []));
 
   }
 

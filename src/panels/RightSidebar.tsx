@@ -23,7 +23,6 @@ export function RightSidebar({
 }) {
   const selectedObject  = project.objects.find((o) => o.id === selectedId) ?? project.objects[0];
   const masks           = project.objects.filter((o) => o.kind === 'data-mask');
-  const softKeyMasks    = project.objects.filter((o) => o.kind === 'soft-key-mask');
 
   return (
     <aside className="right-sidebar">
@@ -47,8 +46,6 @@ export function RightSidebar({
           ) : (
             <PropertiesPanel
               selectedObject={selectedObject}
-              masks={masks}
-              softKeyMasks={softKeyMasks}
               objects={project.objects}
               onPatch={onPatchSelected}
               onDelete={() => onDelete(selectedObject.id)}

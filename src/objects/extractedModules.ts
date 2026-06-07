@@ -15,7 +15,7 @@ import { pictureGraphicModule } from './picture-graphic/logic';
 import { softKeyMaskModule } from './soft-key-mask/logic';
 import { stringVariableModule } from './string-variable/logic';
 
-export const extractedModules: Partial<Record<ObjectKind, ObjectModule>> = {
+export const extractedModules: Record<ObjectKind, ObjectModule> = {
   'font-attribute': fontAttributeModule,
   'line-attribute': lineAttributeModule,
   'fill-attribute': fillAttributeModule,
@@ -30,4 +30,4 @@ export const extractedModules: Partial<Record<ObjectKind, ObjectModule>> = {
   'key': keyModule,
   'data-mask': dataMaskModule,
   'soft-key-mask': softKeyMaskModule,
-};
+} satisfies Record<ObjectKind, ObjectModule>;

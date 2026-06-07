@@ -1,29 +1,15 @@
 import { Trash2 } from 'lucide-react';
-import { clamp } from '../domain/isobus';
 import { objectKindName } from '../domain/objectMeta';
 import type { EditorObject, ReferenceKind } from '../domain/types';
 import { Panel } from '../ui/primitives';
-import { OutputStringProperties } from '../objects/output-string/Properties';
-import { referencePropertyComponents } from '../objects/referencePropertyRegistry';
+import { metaRegistry } from '../objects/metaRegistry';
+import { objectPropertyComponents } from '../objects/objectPropertyRegistry';
 import { CheckboxField, Field, PropertySection } from './fields';
-
-// ── Helpers ───────────────────────────────────────────────────────────────
-
-const REFERENCE_ONLY = new Set<EditorObject['kind']>([
-  'line-attribute', 'fill-attribute', 'font-attribute', 'string-variable', 'number-variable',
-]);
-
-const NO_LAYOUT = new Set<EditorObject['kind']>([
-  'line-attribute', 'fill-attribute', 'font-attribute', 'string-variable', 'number-variable',
-  'soft-key-mask', 'key',
-]);
 
 // ── Main PropertiesPanel ──────────────────────────────────────────────────
 
-export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, onPatch, onDelete, onLayer, onCreateAttributeReference }: {
+export function PropertiesPanel({ selectedObject, objects, onPatch, onDelete, onLayer, onCreateAttributeReference }: {
   selectedObject: EditorObject;
-  masks: EditorObject[];
-  softKeyMasks: EditorObject[];
   objects: EditorObject[];
   onPatch: (changes: Partial<EditorObject>) => void;
   onDelete: () => void;
@@ -31,10 +17,9 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
   onCreateAttributeReference: (kind: ReferenceKind) => void;
 }) {
   const kind       = selectedObject.kind;
-  const isRefOnly  = REFERENCE_ONLY.has(kind);
-  const isNoLayout = NO_LAYOUT.has(kind);
+  const isNoLayout = !metaRegistry[kind].hasLayout;
 
-  const ReferenceProperties = referencePropertyComponents[kind];
+  const ObjectProperties = objectPropertyComponents[kind];
 
   return (
     <Panel title="Object Parameter Editor">
@@ -78,24 +63,12 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
         </PropertySection>
       )}
 
-      {/* ── Output String ─────────────────────────────────────────────── */}
-      {kind === 'output-string' && (
-        <OutputStringProperties
-          object={selectedObject}
-          objects={objects}
-          onPatch={onPatch}
-          onCreateAttributeReference={onCreateAttributeReference}
-        />
-      )}
-
-      {ReferenceProperties && (
-        <ReferenceProperties
-          object={selectedObject}
-          objects={objects}
-          onPatch={onPatch}
-          onCreateAttributeReference={onCreateAttributeReference}
-        />
-      )}
+      <ObjectProperties
+        object={selectedObject}
+        objects={objects}
+        onPatch={onPatch}
+        onCreateAttributeReference={onCreateAttributeReference}
+      />
 
       {/* ── Events & Macros (placeholder) ─────────────────────────────── */}
       <PropertySection title="Events & Macros" defaultOpen={false} />
