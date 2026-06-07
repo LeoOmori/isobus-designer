@@ -1,11 +1,14 @@
-import { Grid3X3, Hash, Image, KeyRound, Keyboard, LayoutPanelLeft, MousePointerClick, Square } from 'lucide-react';
+import { Grid3X3, KeyRound, Keyboard, LayoutPanelLeft, MousePointerClick } from 'lucide-react';
 import type { ObjectKind } from '../domain/types';
 import type { ObjectMeta } from './ObjectModule';
 import { fillAttributeMeta } from './fill-attribute/logic';
 import { fontAttributeMeta } from './font-attribute/logic';
 import { lineAttributeMeta } from './line-attribute/logic';
 import { numberVariableMeta } from './number-variable/logic';
+import { outputNumberMeta } from './output-number/logic';
+import { outputRectangleMeta } from './output-rectangle/logic';
 import { outputStringMeta } from './output-string/meta';
+import { pictureGraphicMeta } from './picture-graphic/logic';
 import { stringVariableMeta } from './string-variable/logic';
 
 export const metaRegistry = {
@@ -15,9 +18,9 @@ export const metaRegistry = {
   'key':              { name: 'Key',              Icon: KeyRound,          category: 'input',     isReference: false, hasLayout: false },
   'button':           { name: 'Button',           Icon: MousePointerClick, category: 'input',     isReference: false, hasLayout: true },
   'output-string':    outputStringMeta,
-  'output-number':    { name: 'Output Number',    Icon: Hash,              category: 'output',    isReference: false, hasLayout: true },
-  'output-rectangle': { name: 'Output Rectangle', Icon: Square,            category: 'output',    isReference: false, hasLayout: true },
-  'picture-graphic':  { name: 'Picture Graphic',  Icon: Image,             category: 'output',    isReference: false, hasLayout: true },
+  'output-number':    outputNumberMeta,
+  'output-rectangle': outputRectangleMeta,
+  'picture-graphic':  pictureGraphicMeta,
   'font-attribute':   fontAttributeMeta,
   'line-attribute':   lineAttributeMeta,
   'fill-attribute':   fillAttributeMeta,

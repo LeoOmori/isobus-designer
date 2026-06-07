@@ -4,6 +4,9 @@ import { FillAttributeProperties } from './fill-attribute';
 import { FontAttributeProperties } from './font-attribute';
 import { LineAttributeProperties } from './line-attribute';
 import { NumberVariableProperties } from './number-variable';
+import { OutputNumberProperties } from './output-number';
+import { OutputRectangleProperties } from './output-rectangle';
+import { PictureGraphicProperties } from './picture-graphic';
 import { StringVariableProperties } from './string-variable';
 
 export type ObjectPropertiesProps = {
@@ -19,4 +22,7 @@ export const referencePropertyComponents: Partial<Record<ObjectKind, ComponentTy
   'fill-attribute': FillAttributeProperties,
   'string-variable': StringVariableProperties,
   'number-variable': NumberVariableProperties,
+  'output-number': OutputNumberProperties,
+  'output-rectangle': OutputRectangleProperties,
+  'picture-graphic': PictureGraphicProperties,
 };

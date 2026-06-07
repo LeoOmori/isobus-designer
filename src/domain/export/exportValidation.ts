@@ -1,6 +1,6 @@
 import type { ProjectState } from '../types';
 import { validate } from '../validation';
-import { asPictureGraphicFormat, expectedPictureGraphicRawDataLength, PICTURE_GRAPHIC_OPTION_RLE } from '../vtPalette';
+import { asPictureGraphicFormat } from '../vtPalette';
 import { parseHexObjectId } from './idResolver';
 import { extractedModules } from '../../objects/extractedModules';
 
@@ -125,22 +125,10 @@ export function validateForExport(project: ProjectState): string[] {
   // ── Picture Graphic constraints ──────────────────────────────────────────
   for (const obj of objects) {
     if (obj.kind === 'picture-graphic') {
-      if ((obj.graphicOptions ?? 0) & PICTURE_GRAPHIC_OPTION_RLE) {
-        errors.push(`Export: Picture Graphic ${obj.id} has RLE compression enabled (not supported in V1 export)`);
-      }
       const format = asPictureGraphicFormat(obj.graphicFormat);
       const actualWidth = obj.actualWidth ?? 0;
       const actualHeight = obj.actualHeight ?? 0;
       const targetWidth = obj.targetWidth ?? 0;
-      const expectedLength = expectedPictureGraphicRawDataLength(actualWidth, actualHeight, format);
-      if (expectedLength === 0) {
-        errors.push(`Export: Picture Graphic ${obj.id} has no image data (actualWidth or actualHeight is zero)`);
-      } else if (!obj.rawData || obj.rawData.length !== expectedLength) {
-        errors.push(
-          `Export: Picture Graphic ${obj.id} rawData length ${obj.rawData?.length ?? 0} ` +
-          `does not match expected ${expectedLength} bytes for ${actualWidth}×${actualHeight} format ${format}`,
-        );
-      }
       if (keyIconPictureIds.has(obj.id)) {
         if ((obj.graphicOptions ?? 0) & 0b010) {
           errors.push(`Export: Picture Graphic ${obj.id} has flashing enabled; key icons must not flash for IOP compatibility`);

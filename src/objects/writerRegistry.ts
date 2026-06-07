@@ -3,10 +3,10 @@ import { writeButton } from '../domain/export/writers/button';
 import { writeContainer } from '../domain/export/writers/container';
 import { writeDataMask } from '../domain/export/writers/dataMask';
 import { writeKey } from '../domain/export/writers/key';
-import { writeOutputNumber } from '../domain/export/writers/outputNumber';
-import { writeOutputRectangle } from '../domain/export/writers/outputRectangle';
+import { outputNumberModule } from './output-number/logic';
+import { outputRectangleModule } from './output-rectangle/logic';
 import { outputStringModule } from './output-string/module';
-import { writePictureGraphic } from '../domain/export/writers/pictureGraphic';
+import { pictureGraphicModule } from './picture-graphic/logic';
 import { writeSoftKeyMask } from '../domain/export/writers/softKeyMask';
 import type { ObjectModule } from './ObjectModule';
 import { fillAttributeModule } from './fill-attribute/logic';
@@ -21,10 +21,10 @@ export const writerModules = {
   'fill-attribute':    fillAttributeModule,
   'number-variable':   numberVariableModule,
   'string-variable':   stringVariableModule,
-  'picture-graphic':   { exportOrder: 5,  writer: writePictureGraphic },
+  'picture-graphic':   pictureGraphicModule,
   'output-string':     outputStringModule,
-  'output-number':     { exportOrder: 7,  writer: writeOutputNumber },
-  'output-rectangle':  { exportOrder: 8,  writer: writeOutputRectangle },
+  'output-number':     outputNumberModule,
+  'output-rectangle':  outputRectangleModule,
   'container':         { exportOrder: 9,  writer: writeContainer },
   'button':            { exportOrder: 10, writer: writeButton },
   'key':               { exportOrder: 11, writer: writeKey },

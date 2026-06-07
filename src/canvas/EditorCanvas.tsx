@@ -8,20 +8,17 @@ import {
   BUTTON_OPTION_TRANSPARENT_BACKGROUND,
   OUTPUT_NUMBER_OPTION_TRANSPARENT,
   OUTPUT_STRING_OPTION_AUTO_WRAP, OUTPUT_STRING_OPTION_TRANSPARENT, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN,
-  RECTANGLE_LINE_SUPPRESSION_BOTTOM, RECTANGLE_LINE_SUPPRESSION_LEFT,
-  RECTANGLE_LINE_SUPPRESSION_RIGHT, RECTANGLE_LINE_SUPPRESSION_TOP,
-  clamp, fillTypeToBackground, formatOutputNumber,
-  horizontalJustificationToFlex, lineArtToCss, snap,
+  clamp,
+  horizontalJustificationToFlex, snap,
   verticalJustificationToFlex, vtColor,
 } from '../domain/isobus';
 import { getActiveMask, getCanvasChildren, getSoftKeyMaskKeys } from '../domain/selectors';
 import type { DragState, EditorObject, ObjectKind, ProjectState, ToolMode, Viewport } from '../domain/types';
-import {
-  PICTURE_GRAPHIC_OPTION_FLASHING,
-  derivedPictureGraphicHeight,
-  pictureGraphicToDataUrl,
-} from '../domain/vtPalette';
+import { derivedPictureGraphicHeight } from '../domain/vtPalette';
+import { OutputNumberContent } from '../objects/output-number/Render';
+import { outputRectangleStyle } from '../objects/output-rectangle/logic';
 import { OutputStringContent } from '../objects/output-string/Render';
+import { PictureGraphicContent } from '../objects/picture-graphic/Render';
 import { BottomControls, CanvasToolbar } from './CanvasToolbar';
 
 /** Tools that create a canvas object on click. */
@@ -314,28 +311,17 @@ export function EditorCanvas({
     let boxSizing: 'border-box' | undefined;
 
     if (object.kind === 'output-rectangle') {
-      const lineWidth = line?.lineWidth ?? 1;
-      const suppression = object.lineSuppression ?? 0;
-      const pattern = fill?.fillType === 3 && fill.fillPattern
-        ? project.objects.find((candidate) => candidate.kind === 'picture-graphic' && (candidate.id === fill.fillPattern || candidate.objectId === fill.fillPattern))
-        : undefined;
-      const patternUrl = pattern ? pictureGraphicToDataUrl(pattern) : null;
-
-      borderColor = vtColor(line?.lineColor ?? 0);
-      borderStyle = lineArtToCss(line?.lineArt);
-      borderTopWidth = (suppression & RECTANGLE_LINE_SUPPRESSION_TOP) !== 0 ? 0 : lineWidth;
-      borderRightWidth = (suppression & RECTANGLE_LINE_SUPPRESSION_RIGHT) !== 0 ? 0 : lineWidth;
-      borderBottomWidth = (suppression & RECTANGLE_LINE_SUPPRESSION_BOTTOM) !== 0 ? 0 : lineWidth;
-      borderLeftWidth = (suppression & RECTANGLE_LINE_SUPPRESSION_LEFT) !== 0 ? 0 : lineWidth;
-      boxSizing = 'border-box';
-
-      if (!fill) background = 'transparent';
-      else if (fill.fillType === 1) background = vtColor(line?.lineColor ?? 0);
-      else if (fill.fillType === 3 && patternUrl) {
-        background = 'transparent';
-        backgroundImage = `url(${patternUrl})`;
-        backgroundRepeat = 'repeat';
-      } else background = fillTypeToBackground(fill.fillType, vtColor(fill.fillColor ?? 15));
+      const style = outputRectangleStyle(object, line, fill, project.objects);
+      borderColor = style.borderColor as string | undefined;
+      borderStyle = style.borderStyle as string | undefined;
+      borderTopWidth = style.borderTopWidth as number | undefined;
+      borderRightWidth = style.borderRightWidth as number | undefined;
+      borderBottomWidth = style.borderBottomWidth as number | undefined;
+      borderLeftWidth = style.borderLeftWidth as number | undefined;
+      boxSizing = style.boxSizing as 'border-box' | undefined;
+      background = style.background as string | undefined;
+      backgroundImage = style.backgroundImage as string | undefined;
+      backgroundRepeat = style.backgroundRepeat as string | undefined;
     } else if (object.kind === 'button') {
       borderColor = buttonNoBorder || buttonSuppressBorder ? 'transparent' : vtColor(object.borderColorIndex ?? 0);
       borderWidth = buttonNoBorder ? 0 : BUTTON_FACE_INSET;
@@ -368,9 +354,6 @@ export function EditorCanvas({
       object.kind === 'output-string' ? (font?.fontHeight ?? font?.fontSize ?? object.fontSize)
       : object.kind === 'output-number' ? (font?.fontHeight ?? font?.fontSize ?? 16)
       : object.fontSize;
-    const outputNumberCharWidth = object.kind === 'output-number'
-      ? Math.max(1, Math.floor(Math.max(1, object.width - 8) / (font?.fontWidth ?? font?.fontHeight ?? font?.fontSize ?? 16)))
-      : 0;
     const outputStringAutoWrap = object.kind === 'output-string' && ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_AUTO_WRAP) !== 0;
     const outputStringWrapOnHyphen = object.kind === 'output-string' && ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) !== 0;
 
@@ -430,26 +413,12 @@ export function EditorCanvas({
 
         {/* Output Number */}
         {object.kind === 'output-number' && (
-          <span className="inline-text-editor">
-            {formatOutputNumber(
-              numVar?.value ?? object.value ?? 0,
-              object.offset ?? 0, object.scale ?? 1,
-              object.numberOfDecimals ?? 0, object.numberFormat ?? 0,
-              object.outputOptions ?? 0, outputNumberCharWidth,
-            )}
-          </span>
+          <OutputNumberContent object={object} font={font} numberVariable={numVar} />
         )}
 
         {/* Picture Graphic */}
         {object.kind === 'picture-graphic' && (
-          (() => {
-            const imgUrl = pictureGraphicToDataUrl(object);
-            const targetWidth = object.targetWidth ?? object.width;
-            const targetHeight = derivedPictureGraphicHeight(targetWidth, object.actualWidth ?? targetWidth, object.actualHeight ?? object.height);
-            return imgUrl
-              ? <img src={imgUrl} alt={object.name} draggable={false} onDragStart={(e) => e.preventDefault()} className={(object.graphicOptions ?? 0) & PICTURE_GRAPHIC_OPTION_FLASHING ? 'picture-graphic-flashing' : undefined} style={{ width: targetWidth, height: targetHeight, objectFit: 'fill', userSelect: 'none', imageRendering: 'pixelated' }} />
-              : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9ca3af', fontSize: 11 }}>🖼 {object.name}</div>;
-          })()
+          <PictureGraphicContent object={object} />
         )}
 
         {/* Button children render inside the Button Face. */}

@@ -1,5 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { Archive, Trash2, Upload, X } from 'lucide-react';
+import { Archive, Trash2, X } from 'lucide-react';
 import {
   BUTTON_OPTION_DISABLED,
   BUTTON_OPTION_LATCHABLE,
@@ -7,67 +6,16 @@ import {
   BUTTON_OPTION_NO_BORDER,
   BUTTON_OPTION_SUPPRESS_BORDER,
   BUTTON_OPTION_TRANSPARENT_BACKGROUND,
-  OUTPUT_NUMBER_OPTION_LEADING_ZEROS,
-  OUTPUT_NUMBER_OPTION_TRANSPARENT,
-  OUTPUT_NUMBER_OPTION_TRUNCATE,
-  OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK,
-  RECTANGLE_LINE_SUPPRESSION_BOTTOM,
-  RECTANGLE_LINE_SUPPRESSION_LEFT,
-  RECTANGLE_LINE_SUPPRESSION_RIGHT,
-  RECTANGLE_LINE_SUPPRESSION_TOP,
-  VT_H_JUSTIFY_OPTIONS,
-  VT_NUMBER_FORMAT_OPTIONS,
-  VT_V_JUSTIFY_OPTIONS,
-  asHorizontalJustification,
-  asVerticalJustification,
   clamp,
-  formatOutputNumber,
 } from '../domain/isobus';
 import { objectKindName } from '../domain/objectMeta';
 import type { EditorObject, ReferenceKind, WorkingSet, WorkingSetDesignator } from '../domain/types';
-import {
-  PICTURE_GRAPHIC_FORMAT_OPTIONS,
-  PICTURE_GRAPHIC_OPTION_FLASHING,
-  PICTURE_GRAPHIC_OPTION_RLE,
-  PICTURE_GRAPHIC_OPTION_TRANSPARENT,
-  asPictureGraphicFormat,
-  clearUnsupportedPictureGraphicOptions,
-  derivedPictureGraphicHeight,
-  expectedPictureGraphicRawDataLength,
-  pictureGraphicToDataUrl,
-  pictureFormatMaxIndex,
-  quantizePictureGraphicSource,
-} from '../domain/vtPalette';
 import { Panel } from '../ui/primitives';
 import { OutputStringProperties } from '../objects/output-string/Properties';
 import { referencePropertyComponents } from '../objects/referencePropertyRegistry';
 import { CheckboxField, Field, PropertySection, SelectField, VtColorField } from './fields';
 
 // ── Helpers ───────────────────────────────────────────────────────────────
-
-function referenceOptions(objects: EditorObject[], kind: EditorObject['kind'], createLabel: string, createValue: string) {
-  return [
-    { value: '', label: 'None' },
-    ...objects.filter((o) => o.kind === kind).map((o) => ({ value: o.id, label: `${o.id} — ${o.name}` })),
-    { value: createValue, label: createLabel },
-  ];
-}
-
-function numberVariableReferenceOptions(objects: EditorObject[]) {
-  return [
-    { value: '__null', label: 'NULL — use local value' },
-    ...objects.filter((o) => o.kind === 'number-variable').map((o) => ({ value: o.id, label: `${o.id} — ${o.name}` })),
-    { value: '__create_number-variable', label: '+ Create Number Variable' },
-  ];
-}
-
-function nullableFillAttributeOptions(objects: EditorObject[]) {
-  return [
-    { value: '__null', label: 'NULL — no fill' },
-    ...objects.filter((o) => o.kind === 'fill-attribute').map((o) => ({ value: o.id, label: `${o.id} — ${o.name}` })),
-    { value: '__create_fill-attribute', label: '+ Create Fill Attribute' },
-  ];
-}
 
 function patchBit(current: number | undefined, bit: number, enabled: boolean) {
   return enabled ? (current ?? 0) | bit : (current ?? 0) & ~bit;
@@ -188,25 +136,12 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
   const maskOptions    = [{ value: '', label: 'None' }, ...masks.filter((m) => m.id !== selectedObject.id).map((m) => ({ value: m.id, label: `${m.id} — ${m.name}` }))];
   const skmOptions     = [{ value: '', label: 'None' }, ...softKeyMasks.map((s) => ({ value: s.id, label: `${s.id} — ${s.name}` }))];
 
-  const lineAttrOpts   = referenceOptions(objects, 'line-attribute',   '+ Create Line Attribute',   '__create_line-attribute');
-  const fontAttrOpts   = referenceOptions(objects, 'font-attribute',   '+ Create Font Attribute',   '__create_font-attribute');
-  const outputNumberVariableOpts = numberVariableReferenceOptions(objects);
-  const nullableFillAttrOpts = nullableFillAttributeOptions(objects);
   const buttonChildren = kind === 'button'
     ? objects.filter((object) => (selectedObject.childObjectIds ?? []).includes(object.id))
     : [];
   const containerChildren = kind === 'container'
     ? objects.filter((object) => (selectedObject.childObjectIds ?? []).includes(object.id))
     : [];
-  const selectedNumberVariableReference = selectedObject.variableReference !== undefined
-    ? selectedObject.variableReference
-    : selectedObject.numberVariableId || null;
-  const selectedNumberVariable = selectedNumberVariableReference
-    ? objects.find((object) => object.id === selectedNumberVariableReference && object.kind === 'number-variable')
-    : undefined;
-  const selectedOutputNumberFont = kind === 'output-number'
-    ? objects.find((object) => object.id === selectedObject.fontAttributeId && object.kind === 'font-attribute')
-    : undefined;
   const selectedSoftKeyMaskKeys = kind === 'soft-key-mask'
     ? (selectedObject.keys ?? [])
         .map((id) => objects.find((object) => object.id === id && object.kind === 'key'))
@@ -215,26 +150,7 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
   const keyChildren = kind === 'key'
     ? objects.filter((object) => (selectedObject.childObjectIds ?? []).includes(object.id))
     : [];
-  const outputNumberPreviewWidth = kind === 'output-number'
-    ? Math.max(1, Math.floor(Math.max(1, selectedObject.width - 8) / (selectedOutputNumberFont?.fontWidth ?? selectedOutputNumberFont?.fontHeight ?? selectedOutputNumberFont?.fontSize ?? 16)))
-    : 0;
-  const outputNumberPreview = kind === 'output-number'
-    ? formatOutputNumber(
-      selectedNumberVariable?.value ?? selectedObject.value ?? 0,
-      selectedObject.offset ?? 0,
-      selectedObject.scale ?? 1,
-      selectedObject.numberOfDecimals ?? 0,
-      selectedObject.numberFormat ?? 0,
-      selectedObject.outputOptions ?? 0,
-      outputNumberPreviewWidth,
-    )
-    : '';
   const ReferenceProperties = referencePropertyComponents[kind];
-
-  function handleRefSelect(value: string, createPrefix: string, refKind: ReferenceKind, patchFn: (id: string) => Partial<EditorObject>) {
-    if (value.startsWith('__create_')) return onCreateAttributeReference(refKind);
-    onPatch(patchFn(value));
-  }
 
   return (
     <Panel title="Object Parameter Editor">
@@ -394,53 +310,6 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
         />
       )}
 
-      {/* ── Output Number ─────────────────────────────────────────────── */}
-      {kind === 'output-number' && (
-        <>
-          <PropertySection title="Number">
-            <Field label="Value (Raw)"   value={selectedObject.value ?? 0}            type="number" onChange={(v) => onPatch({ value: clamp(Math.round(Number(v) || 0), 0, 0xffffffff) })} />
-            <Field label="Offset"          value={selectedObject.offset ?? 0}            type="number" onChange={(v) => onPatch({ offset: Number(v) })} />
-            <Field label="Scale"           value={selectedObject.scale ?? 1}             type="number" onChange={(v) => onPatch({ scale: Number(v) })} />
-            <Field label="Decimal Places"  value={selectedObject.numberOfDecimals ?? 0}  type="number" onChange={(v) => onPatch({ numberOfDecimals: clamp(Math.round(Number(v) || 0), 0, 7) })} />
-            <SelectField label="Format" value={String(selectedObject.numberFormat ?? 0)} options={VT_NUMBER_FORMAT_OPTIONS.map((o) => ({ value: String(o.value), label: o.label }))} onChange={(v) => onPatch({ numberFormat: Number(v) })} />
-            <VtColorField label="Background" value={selectedObject.backgroundColorIndex ?? 1} onChange={(backgroundColorIndex) => onPatch({ backgroundColorIndex })} />
-            <SelectField label="Horizontal" value={String(selectedObject.horizontalJustification ?? 0)} options={VT_H_JUSTIFY_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))} onChange={(v) => onPatch({ horizontalJustification: asHorizontalJustification(Number(v)) })} />
-            <SelectField label="Vertical" value={String(selectedObject.verticalJustification ?? 0)} options={VT_V_JUSTIFY_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))} onChange={(v) => onPatch({ verticalJustification: asVerticalJustification(Number(v)) })} />
-            <div className="field-hint">Preview: {outputNumberPreview || 'blank'}</div>
-          </PropertySection>
-          <PropertySection title="Options">
-            <CheckboxField label="Transparent Background" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_NUMBER_OPTION_TRANSPARENT) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_NUMBER_OPTION_TRANSPARENT, v) })} />
-            <CheckboxField label="Leading Zeros" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_NUMBER_OPTION_LEADING_ZEROS) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_NUMBER_OPTION_LEADING_ZEROS, v) })} />
-            <CheckboxField label="Zero as Blank" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK, v) })} />
-            <CheckboxField label="Truncate" checked={((selectedObject.outputOptions ?? 0) & OUTPUT_NUMBER_OPTION_TRUNCATE) !== 0} onChange={(v) => onPatch({ outputOptions: patchBit(selectedObject.outputOptions, OUTPUT_NUMBER_OPTION_TRUNCATE, v) })} />
-          </PropertySection>
-          <PropertySection title="References">
-            <SelectField label="Font Attribute"    value={selectedObject.fontAttributeId ?? ''}   options={fontAttrOpts} onChange={(v) => handleRefSelect(v, '__create_font-attribute', 'font-attribute', (id) => ({ fontAttributeId: id }))} />
-            <SelectField label="Variable Reference"   value={selectedNumberVariableReference ?? '__null'}  options={outputNumberVariableOpts}   onChange={(v) => handleRefSelect(v, '__create_number-variable', 'number-variable', (id) => ({ variableReference: id === '__null' ? null : id, numberVariableId: undefined }))} />
-          </PropertySection>
-        </>
-      )}
-
-      {/* ── Output Rectangle ──────────────────────────────────────────── */}
-      {kind === 'output-rectangle' && (
-        <>
-          <PropertySection title="Appearance">
-            <SelectField label="Line Attribute" value={selectedObject.lineAttributeId ?? ''} options={lineAttrOpts} onChange={(v) => handleRefSelect(v, '__create_line-attribute', 'line-attribute', (id) => ({ lineAttributeId: id }))} />
-            <SelectField label="Fill Attribute" value={selectedObject.fillAttributeId ?? '__null'} options={nullableFillAttrOpts} onChange={(v) => handleRefSelect(v, '__create_fill-attribute', 'fill-attribute', (id) => ({ fillAttributeId: id === '__null' ? null : id }))} />
-          </PropertySection>
-          <PropertySection title="Line Suppression">
-            <CheckboxField label="Top" checked={((selectedObject.lineSuppression ?? 0) & RECTANGLE_LINE_SUPPRESSION_TOP) !== 0} onChange={(v) => onPatch({ lineSuppression: patchBit(selectedObject.lineSuppression, RECTANGLE_LINE_SUPPRESSION_TOP, v) })} />
-            <CheckboxField label="Right" checked={((selectedObject.lineSuppression ?? 0) & RECTANGLE_LINE_SUPPRESSION_RIGHT) !== 0} onChange={(v) => onPatch({ lineSuppression: patchBit(selectedObject.lineSuppression, RECTANGLE_LINE_SUPPRESSION_RIGHT, v) })} />
-            <CheckboxField label="Bottom" checked={((selectedObject.lineSuppression ?? 0) & RECTANGLE_LINE_SUPPRESSION_BOTTOM) !== 0} onChange={(v) => onPatch({ lineSuppression: patchBit(selectedObject.lineSuppression, RECTANGLE_LINE_SUPPRESSION_BOTTOM, v) })} />
-            <CheckboxField label="Left" checked={((selectedObject.lineSuppression ?? 0) & RECTANGLE_LINE_SUPPRESSION_LEFT) !== 0} onChange={(v) => onPatch({ lineSuppression: patchBit(selectedObject.lineSuppression, RECTANGLE_LINE_SUPPRESSION_LEFT, v) })} />
-            <CheckboxField label="Suppress all" checked={(selectedObject.lineSuppression ?? 0) === 0b1111} onChange={(v) => onPatch({ lineSuppression: v ? 0b1111 : 0 })} />
-          </PropertySection>
-        </>
-      )}
-
-      {/* ── Picture Graphic ───────────────────────────────────────────── */}
-      {kind === 'picture-graphic' && <PictureGraphicPanel object={selectedObject} objects={objects} onPatch={onPatch} />}
-
       {ReferenceProperties && (
         <ReferenceProperties
           object={selectedObject}
@@ -454,220 +323,4 @@ export function PropertiesPanel({ selectedObject, masks, softKeyMasks, objects, 
       <PropertySection title="Events & Macros" defaultOpen={false} />
     </Panel>
   );
-}
-
-// ── Picture Graphic Panel ──────────────────────────────────────────────────
-
-function PictureGraphicPanel({ object, objects, onPatch }: { object: EditorObject; objects: EditorObject[]; onPatch: (changes: Partial<EditorObject>) => void }) {
-  const previewUrl = pictureGraphicToDataUrl(object);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const parent = object.parentId ? objects.find((candidate) => candidate.id === object.parentId) : undefined;
-  const isKeyIcon = parent?.kind === 'key';
-
-  const format = asPictureGraphicFormat(object.graphicFormat);
-  const options = clearUnsupportedPictureGraphicOptions(object.graphicOptions ?? 0);
-  const transparent = (options & PICTURE_GRAPHIC_OPTION_TRANSPARENT) !== 0;
-  const flashing = (options & PICTURE_GRAPHIC_OPTION_FLASHING) !== 0;
-  const rle = (options & PICTURE_GRAPHIC_OPTION_RLE) !== 0;
-  const targetWidth = object.targetWidth ?? object.width ?? object.actualWidth ?? (isKeyIcon ? 48 : 64);
-  const actualWidth = object.actualWidth ?? object.width ?? (isKeyIcon ? 48 : 64);
-  const actualHeight = object.actualHeight ?? object.height ?? (isKeyIcon ? 48 : 64);
-  const targetHeight = derivedPictureGraphicHeight(targetWidth, actualWidth, actualHeight);
-  const expectedRawDataLength = expectedPictureGraphicRawDataLength(isKeyIcon ? 48 : actualWidth, isKeyIcon ? 48 : actualHeight, format);
-
-  function patchTargetWidth(nextTargetWidth: number) {
-    const width = Math.max(1, Math.round(nextTargetWidth));
-    onPatch({
-      targetWidth: width,
-      width,
-      height: derivedPictureGraphicHeight(width, actualWidth, actualHeight),
-    });
-  }
-
-  function patchOption(bit: number, enabled: boolean) {
-    const nextOptions = enabled ? options | bit : options & ~bit;
-    onPatch({ graphicOptions: nextOptions });
-    if (bit === PICTURE_GRAPHIC_OPTION_TRANSPARENT && object.sourceImageDataUrl) {
-      void requantizeFromSource(format, nextOptions, object.transparencyColor ?? 0);
-    }
-  }
-
-  async function requantizeFromSource(
-    nextFormat = format,
-    nextOptions = options,
-    nextTransparencyColor = object.transparencyColor ?? 0,
-  ) {
-    if (!object.sourceImageDataUrl) {
-      onPatch({ graphicFormat: nextFormat, graphicOptions: nextOptions, transparencyColor: nextTransparencyColor, rawData: [] });
-      return;
-    }
-
-    const quantized = await quantizePictureGraphicSource(
-      object.sourceImageDataUrl,
-      nextFormat,
-      nextOptions,
-      nextTransparencyColor,
-      isKeyIcon ? 48 : undefined,
-      isKeyIcon ? 48 : undefined,
-    );
-    const nextTargetWidth = isKeyIcon ? 48 : object.targetWidth ?? object.width ?? quantized.actualWidth;
-    onPatch({
-      ...quantized,
-      graphicFormat: nextFormat,
-      graphicOptions: nextOptions,
-      transparencyColor: nextTransparencyColor,
-      targetWidth: nextTargetWidth,
-      width: nextTargetWidth,
-      height: derivedPictureGraphicHeight(nextTargetWidth, quantized.actualWidth, quantized.actualHeight),
-      x: isKeyIcon ? 6 : object.x,
-      y: isKeyIcon ? 6 : object.y,
-    });
-  }
-
-  useEffect(() => {
-    if (!object.sourceImageDataUrl) return;
-    if (object.rawData?.length === expectedRawDataLength && (!isKeyIcon || (
-      object.actualWidth === 48 && object.actualHeight === 48 && object.targetWidth === 48 && object.x === 6 && object.y === 6
-    ))) return;
-    void quantizePictureGraphicSource(
-      object.sourceImageDataUrl,
-      format,
-      options,
-      object.transparencyColor ?? 0,
-      isKeyIcon ? 48 : undefined,
-      isKeyIcon ? 48 : undefined,
-    ).then((quantized) => {
-      const nextTargetWidth = isKeyIcon ? 48 : object.targetWidth ?? object.width ?? quantized.actualWidth;
-      onPatch({
-        ...quantized,
-        graphicFormat: format,
-        graphicOptions: options,
-        targetWidth: nextTargetWidth,
-        width: nextTargetWidth,
-        height: derivedPictureGraphicHeight(nextTargetWidth, quantized.actualWidth, quantized.actualHeight),
-        x: isKeyIcon ? 6 : object.x,
-        y: isKeyIcon ? 6 : object.y,
-      });
-    });
-  }, [
-    object.sourceImageDataUrl,
-    object.rawData?.length,
-    object.transparencyColor,
-    object.targetWidth,
-    object.width,
-    object.actualWidth,
-    object.actualHeight,
-    object.x,
-    object.y,
-    isKeyIcon,
-    expectedRawDataLength,
-    format,
-    options,
-    onPatch,
-  ]);
-
-  async function handleFileSelected(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const sourceImageDataUrl = await readFileAsDataUrl(file);
-      const quantized = await quantizePictureGraphicSource(
-        sourceImageDataUrl,
-        format,
-        options,
-        object.transparencyColor ?? 0,
-        isKeyIcon ? 48 : undefined,
-        isKeyIcon ? 48 : undefined,
-      );
-      const nextTargetWidth = isKeyIcon ? 48 : object.targetWidth ?? object.width ?? quantized.actualWidth;
-      onPatch({
-        ...quantized,
-        targetWidth: nextTargetWidth,
-        width: nextTargetWidth,
-        height: derivedPictureGraphicHeight(nextTargetWidth, quantized.actualWidth, quantized.actualHeight),
-        x: isKeyIcon ? 6 : object.x,
-        y: isKeyIcon ? 6 : object.y,
-        sourceImagePath: file.name,
-        sourceImageDataUrl,
-      });
-    } finally {
-      // Reset input so re-uploading the same file triggers onChange again
-      event.target.value = '';
-    }
-  }
-
-  return (
-    <PropertySection title="Picture Graphic">
-      {/* Dimensions */}
-      <Field label="Target Width" value={targetWidth} type="number" onChange={(v) => patchTargetWidth(Number(v))} />
-      <Field label="Derived Height" value={targetHeight} disabled onChange={() => undefined} />
-      <div className="field-row">
-        <Field label="Actual W" value={actualWidth} disabled onChange={() => undefined} />
-        <Field label="Actual H" value={actualHeight} disabled onChange={() => undefined} />
-      </div>
-      <SelectField
-        label="Format"
-        value={String(format)}
-        options={PICTURE_GRAPHIC_FORMAT_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))}
-        onChange={(value) => void requantizeFromSource(asPictureGraphicFormat(Number(value)))}
-      />
-      <CheckboxField label="Transparent" checked={transparent} onChange={(checked) => patchOption(PICTURE_GRAPHIC_OPTION_TRANSPARENT, checked)} />
-      <CheckboxField label="Flashing" checked={flashing} onChange={(checked) => patchOption(PICTURE_GRAPHIC_OPTION_FLASHING, checked)} />
-      <CheckboxField label="RLE compressed (V1 unavailable)" checked={rle} disabled onChange={() => undefined} />
-      <VtColorField
-        label="Transparency Color"
-        value={Math.min(pictureFormatMaxIndex(format), object.transparencyColor ?? 0)}
-        onChange={(value) => void requantizeFromSource(format, options, Math.min(pictureFormatMaxIndex(format), value))}
-      />
-
-      {/* Upload */}
-      <label className="field">
-        <span>Image</span>
-        <div className="field-input">
-          <button
-            type="button"
-            className="pic-upload-button"
-            onClick={() => fileInputRef.current?.click()}
-            title="Upload image — will be converted to ISO VT palette-indexed bitmap bytes"
-          >
-            <Upload size={14} />
-            <span>{object.sourceImagePath ? 'Replace' : 'Upload'} Image</span>
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
-            style={{ display: 'none' }}
-            onChange={handleFileSelected}
-          />
-        </div>
-      </label>
-
-      {/* Source info */}
-      {object.sourceImagePath && (
-        <Field label="Source" value={object.sourceImagePath} disabled onChange={() => undefined} />
-      )}
-
-      {/* Bitmap preview */}
-      <div className="pic-preview-wrap">
-        {previewUrl
-          ? <img src={previewUrl} alt={object.name} className="pic-preview-img" />
-          : <div className="pic-preview-empty">No image uploaded</div>
-        }
-        {previewUrl && (
-          <div className="pic-preview-size">{actualWidth} × {actualHeight} px source → {targetWidth} × {targetHeight} px target</div>
-        )}
-      </div>
-    </PropertySection>
-  );
-}
-
-function readFileAsDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
 }

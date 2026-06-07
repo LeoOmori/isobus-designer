@@ -2,17 +2,7 @@ import type { ObjectKind, ProjectState } from './types';
 import {
   BUTTON_OPTION_LATCHABLE,
   BUTTON_OPTION_LATCHED,
-  OUTPUT_NUMBER_OPTION_LEADING_ZEROS,
-  OUTPUT_NUMBER_OPTION_TRANSPARENT,
-  OUTPUT_NUMBER_OPTION_TRUNCATE,
-  OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK,
 } from './isobus';
-import {
-  PICTURE_GRAPHIC_OPTION_RLE,
-  asPictureGraphicFormat,
-  expectedPictureGraphicRawDataLength,
-  pictureFormatMaxIndex,
-} from './vtPalette';
 import { extractedModules } from '../objects/extractedModules';
 
 const REFERENCE_ONLY_KINDS = new Set([
@@ -32,11 +22,6 @@ const CONTAINER_CHILD_KINDS = new Set<ObjectKind>([
 const KEY_CHILD_KINDS = new Set<ObjectKind>([
   'output-string', 'output-number', 'output-rectangle', 'picture-graphic', 'container',
 ]);
-
-const OUTPUT_NUMBER_OPTION_MASK = OUTPUT_NUMBER_OPTION_TRANSPARENT
-  | OUTPUT_NUMBER_OPTION_LEADING_ZEROS
-  | OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK
-  | OUTPUT_NUMBER_OPTION_TRUNCATE;
 
 export function validate(project: ProjectState): string[] {
   const errors: string[] = [];
@@ -164,58 +149,6 @@ export function validate(project: ProjectState): string[] {
       }
     }
 
-    if (obj.kind === 'output-number') {
-      const options = obj.outputOptions ?? 0;
-      const variableReference = obj.variableReference !== undefined ? obj.variableReference : obj.numberVariableId || null;
-      const variable = variableReference ? objectById.get(variableReference) : undefined;
-      const decimals = obj.numberOfDecimals ?? 0;
-      const format = obj.numberFormat ?? 0;
-      const value = obj.value ?? 0;
-      const offset = obj.offset ?? 0;
-      const scale = obj.scale ?? 1;
-
-      if (!obj.fontAttributeId) {
-        errors.push(`Output Number ${obj.id}: fontAttributeId is required`);
-      } else if (objectById.get(obj.fontAttributeId)?.kind !== 'font-attribute') {
-        errors.push(`Output Number ${obj.id}: unknown fontAttributeId "${obj.fontAttributeId}"`);
-      }
-      if (!Number.isInteger(obj.width) || obj.width <= 0 || obj.width > 0xffff || !Number.isInteger(obj.height) || obj.height <= 0 || obj.height > 0xffff) {
-        errors.push(`Output Number ${obj.id}: width/height must fit uint16`);
-      }
-      if (!Number.isInteger(obj.backgroundColorIndex ?? 0) || (obj.backgroundColorIndex ?? 0) < 0 || (obj.backgroundColorIndex ?? 0) > 255) {
-        errors.push(`Output Number ${obj.id}: backgroundColorIndex must be 0–255`);
-      }
-      if (!Number.isInteger(options) || options < 0 || options > 0xff) {
-        errors.push(`Output Number ${obj.id}: outputOptions must be 0–255`);
-      } else if (options & ~OUTPUT_NUMBER_OPTION_MASK) {
-        errors.push(`Output Number ${obj.id}: outputOptions contains unknown bits`);
-      }
-      if (variableReference && variable?.kind !== 'number-variable') {
-        errors.push(`Output Number ${obj.id}: unknown variableReference "${variableReference}"`);
-      }
-      if (!Number.isInteger(value) || value < 0 || value > 0xffffffff) {
-        errors.push(`Output Number ${obj.id}: value must fit uint32`);
-      }
-      if (!Number.isInteger(offset) || offset < -0x80000000 || offset > 0x7fffffff) {
-        errors.push(`Output Number ${obj.id}: offset must fit int32`);
-      }
-      if (!Number.isFinite(scale)) {
-        errors.push(`Output Number ${obj.id}: scale must be a finite number`);
-      }
-      if (!Number.isInteger(decimals) || decimals < 0 || decimals > 7) {
-        errors.push(`Output Number ${obj.id}: numberOfDecimals must be 0–7`);
-      }
-      if (format !== 0 && format !== 1) {
-        errors.push(`Output Number ${obj.id}: numberFormat must be 0 (fixed decimal) or 1 (exponential)`);
-      }
-      if (![0, 1, 2].includes(obj.horizontalJustification ?? -1)) {
-        errors.push(`Output Number ${obj.id}: invalid horizontal justification`);
-      }
-      if (![0, 1, 2].includes(obj.verticalJustification ?? -1)) {
-        errors.push(`Output Number ${obj.id}: invalid vertical justification`);
-      }
-    }
-
     if (obj.kind === 'button') {
       const keyCode = obj.keyCode ?? 0;
       const options = obj.buttonOptions ?? 0;
@@ -255,54 +188,6 @@ export function validate(project: ProjectState): string[] {
         if (!Number.isInteger(child.x) || child.x < -0x8000 || child.x > 0x7fff || !Number.isInteger(child.y) || child.y < -0x8000 || child.y > 0x7fff) {
           errors.push(`Button ${obj.id}: child "${childId}" coordinates must fit int16`);
         }
-      }
-    }
-
-    // Output Rectangle must reference Line and Fill Attributes
-    if (obj.kind === 'output-rectangle') {
-      if (!obj.lineAttributeId) {
-        errors.push(`Output Rectangle ${obj.id}: lineAttributeId is required`);
-      } else if (objectById.get(obj.lineAttributeId)?.kind !== 'line-attribute') {
-        errors.push(`Output Rectangle ${obj.id}: unknown lineAttributeId "${obj.lineAttributeId}"`);
-      }
-      if (obj.fillAttributeId && objectById.get(obj.fillAttributeId)?.kind !== 'fill-attribute') {
-        errors.push(`Output Rectangle ${obj.id}: unknown fillAttributeId "${obj.fillAttributeId}"`);
-      }
-      const lineSuppression = obj.lineSuppression ?? 0;
-      if (!Number.isInteger(lineSuppression) || lineSuppression < 0 || lineSuppression > 0x0f) {
-        errors.push(`Output Rectangle ${obj.id}: lineSuppression must be a 4-bit value`);
-      }
-      if (!Number.isInteger(obj.width) || obj.width <= 0 || obj.width > 0xffff || !Number.isInteger(obj.height) || obj.height <= 0 || obj.height > 0xffff) {
-        errors.push(`Output Rectangle ${obj.id}: width/height must fit uint16`);
-      }
-    }
-
-    if (obj.kind === 'picture-graphic') {
-      const actualWidth = obj.actualWidth ?? 0;
-      const actualHeight = obj.actualHeight ?? 0;
-      const format = asPictureGraphicFormat(obj.graphicFormat);
-      const expectedLength = expectedPictureGraphicRawDataLength(actualWidth, actualHeight, format);
-
-      if (actualWidth <= 0 || actualHeight <= 0) {
-        errors.push(`Picture Graphic ${obj.id}: actualWidth and actualHeight must be positive`);
-      }
-      if ((obj.targetWidth ?? obj.width) <= 0) {
-        errors.push(`Picture Graphic ${obj.id}: target width must be positive`);
-      }
-      if (obj.rawData?.length && obj.rawData.length !== expectedLength) {
-        errors.push(`Picture Graphic ${obj.id}: rawData length ${obj.rawData.length} does not match ${expectedLength} bytes for ${actualWidth}×${actualHeight} format ${format}`);
-      }
-      if ((obj.graphicOptions ?? 0) & PICTURE_GRAPHIC_OPTION_RLE) {
-        errors.push(`Picture Graphic ${obj.id}: RLE compression is not supported in this editor version`);
-      }
-      if ((obj.graphicOptions ?? 0) & ~0b111) {
-        errors.push(`Picture Graphic ${obj.id}: graphicOptions contains unknown bits`);
-      }
-      if ((obj.transparencyColor ?? 0) > pictureFormatMaxIndex(format)) {
-        errors.push(`Picture Graphic ${obj.id}: transparencyColor must fit format ${format}`);
-      }
-      if (obj.rawData?.some((byte) => !Number.isInteger(byte) || byte < 0 || byte > 255)) {
-        errors.push(`Picture Graphic ${obj.id}: rawData must contain byte values only`);
       }
     }
 
