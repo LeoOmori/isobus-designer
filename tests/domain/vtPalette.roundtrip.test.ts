@@ -5,7 +5,7 @@ import {
   packPictureGraphicImageData,
   unpackPictureGraphicRawData,
   type PictureGraphicFormat,
-} from './vtPalette';
+} from '../../src/domain/vtPalette';
 
 class TestImageData {
   data: Uint8ClampedArray;

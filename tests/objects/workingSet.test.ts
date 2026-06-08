@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { ByteWriter } from '../domain/export/byteWriter';
-import type { WriteContext } from '../domain/export/context';
-import type { EditorObject, ProjectState, WorkingSet } from '../domain/types';
-import { validate, validateExport, workingSetModule } from './working-set/logic';
+import { ByteWriter } from '../../src/domain/export/byteWriter';
+import type { WriteContext } from '../../src/domain/export/context';
+import type { EditorObject, ProjectState, WorkingSet } from '../../src/domain/types';
+import { validate, validateExport, workingSetModule } from '../../src/objects/working-set/logic';
 
 const dataMask = object({ id: 'DM_1', kind: 'data-mask', objectId: '0x0201' });
 const designator = object({ id: 'STR_1', kind: 'output-string', objectId: '0x0202' });

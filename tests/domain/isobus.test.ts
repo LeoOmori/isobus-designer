@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { OUTPUT_NUMBER_OPTION_LEADING_ZEROS, OUTPUT_NUMBER_OPTION_TRUNCATE, OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK, formatOutputNumber } from './isobus';
+import { OUTPUT_NUMBER_OPTION_LEADING_ZEROS, OUTPUT_NUMBER_OPTION_TRUNCATE, OUTPUT_NUMBER_OPTION_ZERO_AS_BLANK, formatOutputNumber } from '../../src/domain/isobus';
 
 describe('formatOutputNumber', () => {
   it('formats fixed decimal output', () => {

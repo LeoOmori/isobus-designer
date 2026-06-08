@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { VT_PALETTE_HEX, asPictureGraphicFormat, clampPaletteIndex, expectedPictureGraphicRawDataLength, pictureFormatMaxIndex } from './vtPalette';
+import { VT_PALETTE_HEX, asPictureGraphicFormat, clampPaletteIndex, expectedPictureGraphicRawDataLength, pictureFormatMaxIndex } from '../../src/domain/vtPalette';
 
 describe('vtPalette helpers', () => {
   it('exposes the expected palette and format bounds', () => {

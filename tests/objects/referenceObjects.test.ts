@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { ByteWriter } from '../domain/export/byteWriter';
-import type { WriteContext } from '../domain/export/context';
-import type { EditorObject, ProjectState } from '../domain/types';
-import { fillAttributeModule, validateFillAttribute } from './fill-attribute/logic';
-import { fontAttributeModule, validateFontAttributeForExport } from './font-attribute/logic';
-import { lineAttributeModule } from './line-attribute/logic';
-import { numberVariableModule } from './number-variable/logic';
-import { stringVariableModule, validateStringVariableForExport } from './string-variable/logic';
+import { ByteWriter } from '../../src/domain/export/byteWriter';
+import type { WriteContext } from '../../src/domain/export/context';
+import type { EditorObject, ProjectState } from '../../src/domain/types';
+import { fillAttributeModule, validateFillAttribute } from '../../src/objects/fill-attribute/logic';
+import { fontAttributeModule, validateFontAttributeForExport } from '../../src/objects/font-attribute/logic';
+import { lineAttributeModule } from '../../src/objects/line-attribute/logic';
+import { numberVariableModule } from '../../src/objects/number-variable/logic';
+import { stringVariableModule, validateStringVariableForExport } from '../../src/objects/string-variable/logic';
 
 const current = {
   workingSet: { id: 'WS_1' },

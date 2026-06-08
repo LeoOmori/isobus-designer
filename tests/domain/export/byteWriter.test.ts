@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ByteWriter } from './byteWriter';
+import { ByteWriter } from '../../../src/domain/export/byteWriter';
 
 describe('ByteWriter', () => {
   it('writes primitive values in little-endian order', () => {

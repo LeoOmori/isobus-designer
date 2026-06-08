@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { OUTPUT_STRING_OPTION_AUTO_WRAP, OUTPUT_STRING_OPTION_TRANSPARENT, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN } from '../domain/isobus';
-import type { EditorObject, ProjectState } from '../domain/types';
-import { canvasObjectFrameStyle, canvasObjectRenderers, isCanvasObjectRenderable, visibleChildObjects } from './canvasRenderRegistry';
+import { OUTPUT_STRING_OPTION_AUTO_WRAP, OUTPUT_STRING_OPTION_TRANSPARENT, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN } from '../../src/domain/isobus';
+import type { EditorObject, ProjectState } from '../../src/domain/types';
+import { canvasObjectFrameStyle, canvasObjectRenderers, isCanvasObjectRenderable, visibleChildObjects } from '../../src/objects/canvasRenderRegistry';
 
 describe('canvas render registry', () => {
   it('covers all renderable canvas object kinds', () => {

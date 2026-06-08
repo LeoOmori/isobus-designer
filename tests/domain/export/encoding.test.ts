@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { encodeLatin1, encodeLatin1Padded, fontSizeEnum, isLatin1, parseLineArt } from './encoding';
+import { encodeLatin1, encodeLatin1Padded, fontSizeEnum, isLatin1, parseLineArt } from '../../../src/domain/export/encoding';
 
 describe('encoding helpers', () => {
   it('checks latin1 strings', () => {

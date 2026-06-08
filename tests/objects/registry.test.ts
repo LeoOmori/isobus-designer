@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import type { ObjectKind } from '../domain/types';
-import { canvasObjectRenderers } from './canvasRenderRegistry';
-import { extractedModules } from './extractedModules';
-import { metaRegistry } from './metaRegistry';
-import { objectPropertyComponents } from './objectPropertyRegistry';
-import { writerModules } from './writerRegistry';
+import type { ObjectKind } from '../../src/domain/types';
+import { canvasObjectRenderers } from '../../src/objects/canvasRenderRegistry';
+import { extractedModules } from '../../src/objects/extractedModules';
+import { metaRegistry } from '../../src/objects/metaRegistry';
+import { objectPropertyComponents } from '../../src/objects/objectPropertyRegistry';
+import { writerModules } from '../../src/objects/writerRegistry';
 
 const kinds: ObjectKind[] = [
   'data-mask', 'container', 'soft-key-mask', 'key', 'button', 'output-string', 'output-number',

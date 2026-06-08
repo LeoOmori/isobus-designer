@@ -16,7 +16,10 @@
 - Project state lives in `src/state/useProjectState.ts`, persists to localStorage under `isobus-iop-editor-project`, and migrates stale saved objects on load.
 - Core domain shape is `src/domain/types.ts`; ISO/VT constants and helpers are in `src/domain/isobus.ts` and `src/domain/vtPalette.ts`.
 - Binary `.iop` export starts at `src/domain/export/exportObjectPool.ts`; writer dispatch now goes through `src/objects/writerRegistry.ts`, while legacy per-object writers still live under `src/domain/export/writers/` until each kind is migrated.
-- Object-specific architecture is being moved toward `src/objects/<kind>/`; `output-string` is the reference full vertical slice, and reference-only kinds (`font/line/fill-attribute`, `string/number-variable`) now have object modules, properties, and tests under `src/objects/`.
+- Object-specific architecture lives under `src/objects/<kind>/`; all current `ObjectKind`s plus the special Working Set now have object modules, properties/render helpers, or tests under `src/objects/`.
+- `src/domain/objectFactory.ts` delegates default object creation to `extractedModules[kind].createDefault`; keep new object defaults in their `src/objects/<kind>/` module.
+- Object property panels are dispatched through `src/objects/objectPropertyRegistry.tsx`; `referencePropertyRegistry.tsx` is only a compatibility re-export.
+- Canvas object frame/content rendering is dispatched through `src/objects/canvasRenderRegistry.tsx`; keep object-specific render content and frame style decisions in object modules/registry instead of branching in `EditorCanvas.tsx`.
 
 ## Object model gotchas
 - Editor IDs like `DM_1` are distinct from ISO `objectId` hex strings; `objectFactory.toObjectId()` allocates from `0x0200 + nextNumber`, while export maps Working Set to `0x0000`.

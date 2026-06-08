@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ByteWriter } from '../domain/export/byteWriter';
-import type { WriteContext } from '../domain/export/context';
-import type { EditorObject, ProjectState } from '../domain/types';
-import { outputNumberModule, validateOutputNumber } from './output-number/logic';
-import { outputRectangleModule, outputRectangleStyle, validateOutputRectangle } from './output-rectangle/logic';
-import { pictureGraphicModule, migratePictureGraphic, validatePictureGraphic, validatePictureGraphicForExport } from './picture-graphic/logic';
+import { ByteWriter } from '../../src/domain/export/byteWriter';
+import type { WriteContext } from '../../src/domain/export/context';
+import type { EditorObject, ProjectState } from '../../src/domain/types';
+import { outputNumberModule, validateOutputNumber } from '../../src/objects/output-number/logic';
+import { outputRectangleModule, outputRectangleStyle, validateOutputRectangle } from '../../src/objects/output-rectangle/logic';
+import { pictureGraphicModule, migratePictureGraphic, validatePictureGraphic, validatePictureGraphicForExport } from '../../src/objects/picture-graphic/logic';
 
 const font = refObject({ id: 'FONT_1', objectId: '0x0202', kind: 'font-attribute', fontWidth: 16, fontHeight: 24 });
 const line = refObject({ id: 'LA_1', objectId: '0x0203', kind: 'line-attribute', lineColor: 2, lineWidth: 3, lineArt: '0xF0F0' });

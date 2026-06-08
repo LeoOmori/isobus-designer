@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { ByteWriter } from '../domain/export/byteWriter';
-import type { WriteContext } from '../domain/export/context';
-import type { EditorObject, ProjectState } from '../domain/types';
-import { buttonFrameStyle, buttonModule, validateButton } from './button/logic';
-import { containerFrameStyle, containerModule, validateContainer } from './container/logic';
-import { keyModule, validateKey, validateKeyForExport } from './key/logic';
+import { ByteWriter } from '../../src/domain/export/byteWriter';
+import type { WriteContext } from '../../src/domain/export/context';
+import type { EditorObject, ProjectState } from '../../src/domain/types';
+import { buttonFrameStyle, buttonModule, validateButton } from '../../src/objects/button/logic';
+import { containerFrameStyle, containerModule, validateContainer } from '../../src/objects/container/logic';
+import { keyModule, validateKey, validateKeyForExport } from '../../src/objects/key/logic';
 
 const mask = object({ id: 'DM_1', kind: 'data-mask', x: 0, y: 0, width: 480, height: 480 });
 const child = object({ id: 'STR_1', kind: 'output-string', parentId: 'CT_1', x: 10, y: 20 });

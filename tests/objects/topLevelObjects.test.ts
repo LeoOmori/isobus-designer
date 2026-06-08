@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { ByteWriter } from '../domain/export/byteWriter';
-import type { WriteContext } from '../domain/export/context';
-import type { EditorObject, ProjectState } from '../domain/types';
-import { dataMaskFrameStyle, dataMaskModule, validateDataMask } from './data-mask/logic';
-import { SOFT_KEY_SLOT_SIZE, softKeyMaskFrameStyle, softKeyMaskModule, softKeySlotStyle, validateSoftKeyMask, validateSoftKeyMaskForExport } from './soft-key-mask/logic';
+import { ByteWriter } from '../../src/domain/export/byteWriter';
+import type { WriteContext } from '../../src/domain/export/context';
+import type { EditorObject, ProjectState } from '../../src/domain/types';
+import { dataMaskFrameStyle, dataMaskModule, validateDataMask } from '../../src/objects/data-mask/logic';
+import { SOFT_KEY_SLOT_SIZE, softKeyMaskFrameStyle, softKeyMaskModule, softKeySlotStyle, validateSoftKeyMask, validateSoftKeyMaskForExport } from '../../src/objects/soft-key-mask/logic';
 
 const mask = object({ id: 'DM_1', kind: 'data-mask', x: 10, y: 20, width: 480, height: 480, backgroundColor: '#ffffff', zIndex: 3 });
 const skm = object({ id: 'SKM_1', kind: 'soft-key-mask', backgroundColorIndex: 1, keys: ['KEY_1'] });

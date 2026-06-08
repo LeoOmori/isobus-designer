@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { NULL_OBJECT_ID, buildIdMap, parseHexObjectId, resolveRef } from './idResolver';
+import { NULL_OBJECT_ID, buildIdMap, parseHexObjectId, resolveRef } from '../../../src/domain/export/idResolver';
 
 describe('idResolver', () => {
   it('parses and resolves ids', () => {

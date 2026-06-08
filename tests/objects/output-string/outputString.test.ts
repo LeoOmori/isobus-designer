@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { ByteWriter } from '../../domain/export/byteWriter';
-import type { WriteContext } from '../../domain/export/context';
-import type { EditorObject, ProjectState } from '../../domain/types';
-import { exportObjectPool } from '../../domain/export/exportObjectPool';
-import { createDefaultOutputString, migrateOutputString } from './defaults';
-import { outputStringModule } from './module';
-import { validateOutputString } from './validate';
-import { validateOutputStringForExport } from './validateExport';
+import { ByteWriter } from '../../../src/domain/export/byteWriter';
+import type { WriteContext } from '../../../src/domain/export/context';
+import type { EditorObject, ProjectState } from '../../../src/domain/types';
+import { exportObjectPool } from '../../../src/domain/export/exportObjectPool';
+import { createDefaultOutputString, migrateOutputString } from '../../../src/objects/output-string/defaults';
+import { outputStringModule } from '../../../src/objects/output-string/module';
+import { validateOutputString } from '../../../src/objects/output-string/validate';
+import { validateOutputStringForExport } from '../../../src/objects/output-string/validateExport';
 
 const font = {
   id: 'FONT_1', objectId: '0x0201', name: 'Font 1', kind: 'font-attribute', visible: true,
