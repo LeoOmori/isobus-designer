@@ -679,6 +679,17 @@ button.list-row {
 
 .tree-row.selected .tree-select svg { color: var(--accent); }
 
+.tree-alert-icon {
+  display: inline-grid;
+  place-items: center;
+  color: var(--danger);
+  flex-shrink: 0;
+}
+
+.tree-alert-icon svg {
+  color: var(--danger);
+}
+
 .tree-chevron {
   width: 14px;
   height: 18px;

@@ -5,12 +5,13 @@ import { ObjectTree } from './ObjectTree';
 import { ResizableSplit } from '../ui/primitives';
 
 export function RightSidebar({
-  project, selectedId,
+  project, validationErrors, selectedId,
   onSelect, onPatchSelected, onPatchWorkingSet,
   onToggleVisible, onToggleWorkingSetVisible,
   onDelete, onClone, onLayer, onMoveLayer, onCreateAttributeReference,
 }: {
   project: ProjectState;
+  validationErrors: string[];
   selectedId: string;
   onSelect: (id: string) => void;
   onPatchSelected: (changes: Partial<EditorObject>) => void;
@@ -31,6 +32,7 @@ export function RightSidebar({
       <ResizableSplit defaultTopHeight={280} minTopHeight={100} minBottomHeight={100}>
         <ObjectTree
           project={project}
+          validationErrors={validationErrors}
           selectedId={selectedId}
           onSelect={onSelect}
           onToggleVisible={onToggleVisible}

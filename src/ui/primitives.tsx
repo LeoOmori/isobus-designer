@@ -1,4 +1,4 @@
-import { Search, X } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 
 export function SearchBox({ placeholder }: { placeholder: string }) {
@@ -12,7 +12,7 @@ export function SectionHeader({ title }: { title: string }) {
 export function Panel({ title, children, className }: { title: string; children: ReactNode; className?: string }) {
   return (
     <section className={`panel${className ? ` ${className}` : ''}`}>
-      <div className="panel-header"><strong>{title}</strong><X size={16} /></div>
+      <div className="panel-header"><strong>{title}</strong></div>
       <div className="panel-body">{children}</div>
     </section>
   );

@@ -472,6 +472,7 @@ export function App() {
         />
         <RightSidebar
           project={project}
+          validationErrors={errors}
           selectedId={selectedId}
           onSelect={selectSingle}
           onPatchSelected={(changes) => patchObject(selectedId, changes)}

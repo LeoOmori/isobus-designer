@@ -1,4 +1,4 @@
-import { Archive, ArrowDown, ArrowUp, ChevronDown, ChevronRight, Copy, Eye, EyeOff, Grid3X3, Keyboard, MoreVertical, Trash2, Zap } from 'lucide-react';
+import { AlertTriangle, Archive, ArrowDown, ArrowUp, ChevronDown, ChevronRight, Copy, Eye, EyeOff, Grid3X3, Keyboard, MoreVertical, Trash2, Zap } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { KindIcon } from '../domain/objectMeta';
 import { getMaskChildren, getObjectChildren, getReferenceObjects, getSoftKeyMaskKeys } from '../domain/selectors';
@@ -6,9 +6,10 @@ import type { EditorObject, ProjectState } from '../domain/types';
 import { Panel, SearchBox } from '../ui/primitives';
 
 export function ObjectTree({
-  project, selectedId, onSelect, onToggleVisible, onToggleWorkingSetVisible, onDelete, onClone, onMoveLayer,
+  project, validationErrors, selectedId, onSelect, onToggleVisible, onToggleWorkingSetVisible, onDelete, onClone, onMoveLayer,
 }: {
   project: ProjectState;
+  validationErrors: string[];
   selectedId: string;
   onSelect: (id: string) => void;
   onToggleVisible: (id: string) => void;
@@ -24,6 +25,10 @@ export function ObjectTree({
   );
   const [expanded, setExpanded] = useState<Record<string, boolean>>({ WS_1: true });
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+  const validationByObjectId = new Map(project.objects.map((object) => [
+    object.id,
+    validationErrors.filter((error) => error.includes(object.id)),
+  ]));
 
   function isExpanded(id: string) { return expanded[id] ?? true; }
   function toggle(id: string) { setExpanded((s) => ({ ...s, [id]: !isExpanded(id) })); }
@@ -52,6 +57,12 @@ export function ObjectTree({
     );
   }
 
+  function renderInvalidIcon(id: string) {
+    const errors = validationByObjectId.get(id) ?? [];
+    if (!errors.length) return null;
+    return <span className="tree-alert-icon" title={errors.join('\n')}><AlertTriangle size={14} /></span>;
+  }
+
   function renderCanvasObjectRow(object: EditorObject, depth = 0, includeSelf = true): ReactNode {
     const children = getObjectChildren(project, object.id);
     const hasChildren = children.length > 0;
@@ -72,7 +83,7 @@ export function ObjectTree({
             </button>
           ) : <span />}
           <button className="tree-select" onClick={() => onSelect(object.id)}>
-            <KindIcon kind={object.kind} /><span>{object.name}</span>
+            <KindIcon kind={object.kind} />{renderInvalidIcon(object.id)}<span>{object.name}</span>
           </button>
           {renderLayerButtons(object.id)}
           <button onClick={() => onToggleVisible(object.id)}>{object.visible ? <Eye size={14} /> : <EyeOff size={14} />}</button>
@@ -112,7 +123,7 @@ export function ObjectTree({
                     {isExpanded(mask.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </button>
                   <button className="tree-select" onClick={() => onSelect(mask.id)}>
-                    <KindIcon kind="data-mask" size={15} /><span>{mask.name}</span>
+                    <KindIcon kind="data-mask" size={15} />{renderInvalidIcon(mask.id)}<span>{mask.name}</span>
                   </button>
                   {renderLayerButtons(mask.id)}
                   <button onClick={() => onToggleVisible(mask.id)}>{mask.visible ? <Eye size={14} /> : <EyeOff size={14} />}</button>
@@ -130,7 +141,7 @@ export function ObjectTree({
                     {isExpanded(skm.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </button>
                   <button className="tree-select" onClick={() => onSelect(skm.id)}>
-                    <Keyboard size={15} /><span>{skm.name}</span>
+                    <Keyboard size={15} />{renderInvalidIcon(skm.id)}<span>{skm.name}</span>
                   </button>
                   <button onClick={() => onToggleVisible(skm.id)}>{skm.visible ? <Eye size={14} /> : <EyeOff size={14} />}</button>
                   {renderActionMenu(skm.id)}
@@ -139,7 +150,7 @@ export function ObjectTree({
                   <div key={key.id}>
                     <div className={`tree-row child ${selectedId === key.id ? 'selected' : ''}`}>
                       <button className="tree-select" onClick={() => onSelect(key.id)}>
-                        <KindIcon kind={key.kind} /><span>{key.name}</span>
+                        <KindIcon kind={key.kind} />{renderInvalidIcon(key.id)}<span>{key.name}</span>
                       </button>
                       <span />
                       {renderActionMenu(key.id)}
@@ -165,7 +176,7 @@ export function ObjectTree({
                 {isExpanded('ATTRIBUTES') && attributes.map((attr) => (
                   <div key={attr.id} className={`tree-row child ${selectedId === attr.id ? 'selected' : ''}`}>
                     <button className="tree-select" onClick={() => onSelect(attr.id)}>
-                      <KindIcon kind={attr.kind} /><span>{attr.name}</span>
+                      <KindIcon kind={attr.kind} />{renderInvalidIcon(attr.id)}<span>{attr.name}</span>
                     </button>
                     <span />
                     {renderActionMenu(attr.id)}
