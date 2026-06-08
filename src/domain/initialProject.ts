@@ -12,6 +12,7 @@ export const initialProject: ProjectState = {
     backgroundColor: '#f8fafc',
     selectable: true,
     visible: true,
+    vtVersion: 3,
     designatorObjects: [],
   },
   activeMaskId: '',

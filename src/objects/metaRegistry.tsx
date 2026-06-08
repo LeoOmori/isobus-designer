@@ -5,6 +5,7 @@ import { containerMeta } from './container/logic';
 import { dataMaskMeta } from './data-mask/logic';
 import { fillAttributeMeta } from './fill-attribute/logic';
 import { fontAttributeMeta } from './font-attribute/logic';
+import { inputBooleanMeta } from './input-boolean/logic';
 import { keyMeta } from './key/logic';
 import { lineAttributeMeta } from './line-attribute/logic';
 import { numberVariableMeta } from './number-variable/logic';
@@ -21,6 +22,7 @@ export const metaRegistry = {
   'soft-key-mask':    softKeyMaskMeta,
   'key':              keyMeta,
   'button':           buttonMeta,
+  'input-boolean':    inputBooleanMeta,
   'output-string':    outputStringMeta,
   'output-number':    outputNumberMeta,
   'output-rectangle': outputRectangleMeta,

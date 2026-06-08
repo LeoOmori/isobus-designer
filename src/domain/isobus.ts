@@ -23,6 +23,7 @@ export const VT_OBJECT_TYPES: Record<ObjectKind, number> = {
   'soft-key-mask':   4,
   'key':             5,
   'button':          6,
+  'input-boolean':   7,
   'output-string':  11,
   'output-number':  12,
   'output-rectangle': 14,

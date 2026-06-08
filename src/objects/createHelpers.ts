@@ -7,6 +7,7 @@ const KIND_PREFIX: Record<ObjectKind, string> = {
   'soft-key-mask':    'SKM',
   'key':              'KEY',
   'button':           'BTN',
+  'input-boolean':    'IB',
   'output-string':    'STR',
   'output-number':    'NUM',
   'output-rectangle': 'RECT',

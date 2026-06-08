@@ -2,6 +2,7 @@ import type { ObjectKind } from '../domain/types';
 import { buttonModule } from './button/logic';
 import { containerModule } from './container/logic';
 import { dataMaskModule } from './data-mask/logic';
+import { inputBooleanModule } from './input-boolean/logic';
 import { outputNumberModule } from './output-number/logic';
 import { outputRectangleModule } from './output-rectangle/logic';
 import { outputStringModule } from './output-string/module';
@@ -27,6 +28,7 @@ export const writerModules = {
   'output-rectangle':  outputRectangleModule,
   'container':         containerModule,
   'button':            buttonModule,
+  'input-boolean':     inputBooleanModule,
   'key':               keyModule,
   'soft-key-mask':     softKeyMaskModule,
   'data-mask':         dataMaskModule,

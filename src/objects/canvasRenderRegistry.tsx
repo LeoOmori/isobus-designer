@@ -11,6 +11,7 @@ import {
 import type { EditorObject, ObjectKind, ProjectState } from '../domain/types';
 import { ButtonContent, buttonFrameStyle } from './button';
 import { ContainerContent, containerFrameStyle } from './container';
+import { InputBooleanContent } from './input-boolean';
 import { KeyContent } from './key';
 import { OutputNumberContent } from './output-number';
 import { outputRectangleStyle } from './output-rectangle/logic';
@@ -89,6 +90,18 @@ export const canvasObjectRenderers: Partial<Record<ObjectKind, CanvasObjectRende
   'picture-graphic': {
     frameStyle: () => defaultFrameStyle(),
     renderContent: (object) => <PictureGraphicContent object={object} />,
+  },
+  'input-boolean': {
+    frameStyle: (object) => ({
+      borderColor: object.borderColor,
+      borderWidth: 1,
+      borderStyle: 'solid',
+      background: vtColor(object.backgroundColorIndex ?? 1),
+    }),
+    renderContent: (object, context) => {
+      const fontAttr = context.objectById.get(object.fontAttributeId ?? '');
+      return <InputBooleanContent object={object} fontAttr={fontAttr} />;
+    },
   },
 };
 

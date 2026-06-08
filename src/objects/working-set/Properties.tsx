@@ -54,7 +54,6 @@ export function WorkingSetProperties({ workingSet, masks, objects, onPatch }: {
         <Field label="Language" value={workingSet.language} onChange={(language) => onPatch({ language })} />
         <Field label="Description" value={workingSet.description ?? ''} onChange={(description) => onPatch({ description })} />
         <SelectField label="Active Data Mask" value={workingSet.activeDataMaskId} options={maskOptions} onChange={(activeDataMaskId) => onPatch({ activeDataMaskId })} />
-        <Field label="Background" value={workingSet.backgroundColor} type="color" onChange={(backgroundColor) => onPatch({ backgroundColor })} />
         <CheckboxField label="Selectable" checked={workingSet.selectable ?? true} onChange={(selectable) => onPatch({ selectable })} />
       </PropertySection>
       <PropertySection title="Designator Objects" defaultOpen={false}>

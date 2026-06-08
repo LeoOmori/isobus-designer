@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   AlignCenter, Circle, ClipboardList, Copy, Eye, Folder,
   Grid3X3, Hash, Image, KeyRound, Keyboard, LayoutPanelLeft,
-  MoreVertical, MousePointerClick, PenLine, Plus, Square, Trash2, Type, Zap,
+  MoreVertical, MousePointerClick, PenLine, Plus, Square, ToggleLeft, Trash2, Type, Zap,
 } from 'lucide-react';
 import type { EditorObject, ObjectKind, ReferenceKind, ToolMode } from '../domain/types';
 import { PaletteCard, Panel, ResizableSplit, SearchBox, SectionHeader } from '../ui/primitives';
@@ -79,8 +79,9 @@ export function LeftSidebar({
           ])}
 
           {section('INPUTS', [
-            sc('Button', <PaletteCard label="Button" icon={<MousePointerClick size={24} />} selected={tool === 'button'} onClick={() => onToolChange('button')} />),
-            sc('Key',    <PaletteCard label="Key"    icon={<KeyRound size={24} />}          onClick={() => onCreateObject('key')} />),
+            sc('Button',        <PaletteCard label="Button"        icon={<MousePointerClick size={24} />} selected={tool === 'button'}        onClick={() => onToolChange('button')} />),
+            sc('Input Boolean', <PaletteCard label="Input Boolean" icon={<ToggleLeft size={24} />}        selected={tool === 'input-boolean'} onClick={() => onToolChange('input-boolean')} />),
+            sc('Key',           <PaletteCard label="Key"           icon={<KeyRound size={24} />}          onClick={() => onCreateObject('key')} />),
           ])}
 
           {section('ATTRIBUTES', [

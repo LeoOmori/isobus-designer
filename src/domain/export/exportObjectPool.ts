@@ -61,6 +61,7 @@ export function exportObjectPool(project: ProjectState): ExportResult {
     resolve: (id) => resolveRef(id, idMap),
     objectById,
     project,
+    vtVersion: project.workingSet.vtVersion ?? 3,
   };
 
   // ── 3. Serialize all objects in dependency order ─────────────────────────

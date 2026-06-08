@@ -16,4 +16,6 @@ export type WriteContext = {
   objectById: Map<string, EditorObject>;
   /** Full project state (for Working Set writer and cross-object lookups). */
   project: ProjectState;
+  /** VT version target: 3 omits VT4+-only fields like Enabled on Input Boolean. */
+  vtVersion: 3 | 4;
 };

@@ -9,6 +9,7 @@ export type ObjectKind =
   | 'soft-key-mask'
   | 'key'
   | 'button'
+  | 'input-boolean'
   | 'output-string'
   | 'output-number'
   | 'output-rectangle'
@@ -27,6 +28,7 @@ export type ToolMode =
   | 'output-string'
   | 'output-rectangle'
   | 'button'
+  | 'input-boolean'
   | 'output-number'
   | 'picture-graphic';
 
@@ -86,6 +88,9 @@ export type EditorObject = {
   // ── Button (objectType 6) ────────────────────────────────────────────
   keyCode?: number;             // uint8
   buttonOptions?: number;       // uint8 bitfield (see BUTTON_OPTION_* constants)
+
+  // ── Input Boolean (objectType 7) ─────────────────────────────────────
+  inputEnabled?: boolean;        // 0=disabled, 1=enabled
 
   // ── Output String (objectType 11) ────────────────────────────────────
   text?: string;
@@ -179,6 +184,8 @@ export type WorkingSet = {
   visible: boolean;
   /** Objects used as Working Set identifier/designator in the VT Soft Key area. */
   designatorObjects: WorkingSetDesignator[];
+  /** VT version target for export: 3 omits the Enabled byte on Input Boolean, 4 includes it. */
+  vtVersion: 3 | 4;
 };
 
 export type ProjectState = {

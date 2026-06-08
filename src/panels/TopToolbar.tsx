@@ -1,9 +1,9 @@
-import { Crosshair, Download, Eye, EyeOff, Grid3X3, Hand, Hash, Image, Minus, MousePointer2, MousePointerClick, Plus, Redo2, Square, Type, Undo2 } from 'lucide-react';
+import { Crosshair, Download, Eye, EyeOff, Grid3X3, Hand, Hash, Image, Minus, MousePointer2, MousePointerClick, Plus, Redo2, Square, ToggleLeft, Type, Undo2 } from 'lucide-react';
 import type { ToolMode } from '../domain/types';
 import { ToolButton } from '../ui/primitives';
 import logoSrc from '../assets/logo.png';
 
-export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, sidebarsVisible, onToggleSidebars, onUndo, onRedo, canUndo, canRedo }: {
+export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, sidebarsVisible, onToggleSidebars, onUndo, onRedo, canUndo, canRedo, vtVersion, onVtVersionChange }: {
   tool: ToolMode;
   onToolChange: (tool: ToolMode) => void;
   zoom: number;
@@ -15,6 +15,8 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, side
   onRedo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  vtVersion: 3 | 4;
+  onVtVersionChange: (v: 3 | 4) => void;
 }) {
   return (
     <header className="topbar">
@@ -33,6 +35,7 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, side
         <ToolButton active={tool === 'output-string'}    onClick={() => onToolChange('output-string')}    title="Output String">   <Type size={20} /></ToolButton>
         <ToolButton active={tool === 'output-number'}    onClick={() => onToolChange('output-number')}    title="Output Number">   <Hash size={20} /></ToolButton>
         <ToolButton active={tool === 'button'}           onClick={() => onToolChange('button')}           title="Button">          <MousePointerClick size={20} /></ToolButton>
+        <ToolButton active={tool === 'input-boolean'}    onClick={() => onToolChange('input-boolean')}    title="Input Boolean">   <ToggleLeft size={20} /></ToolButton>
         <ToolButton active={tool === 'picture-graphic'}  onClick={() => onToolChange('picture-graphic')}  title="Picture Graphic"> <Image size={20} /></ToolButton>
         <span className="divider" />
         <button type="button" className="zoom-btn" onClick={() => onZoom(zoom - 0.1)}><Minus size={17} /></button>
@@ -41,6 +44,13 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, side
         <button type="button" className="zoom-btn" onClick={() => onZoom(1)}><Crosshair size={17} /></button>
       </div>
       <div className="top-actions">
+        <label className="vt-version-select" title="VT version target for export">
+          <span className="vt-version-label">VT</span>
+          <select value={String(vtVersion)} onChange={(e) => onVtVersionChange(Number(e.target.value) as 3 | 4)}>
+            <option value="3">v3</option>
+            <option value="4">v4</option>
+          </select>
+        </label>
         <button type="button" className="export export-iop" onClick={onExportIop}><Download size={18} />Export IOP</button>
       </div>
     </header>
