@@ -30,56 +30,74 @@ export function LeftSidebar({
   onCreateAttribute: (kind: ReferenceKind) => void;
 }) {
   const [tab, setTab] = useState<'data-masks' | 'soft-key-masks'>('data-masks');
+  const [objectSearch, setObjectSearch] = useState('');
+  const [dataMaskSearch, setDataMaskSearch] = useState('');
+  const [skmSearch, setSkmSearch] = useState('');
+
+  const q = objectSearch.toLowerCase();
+
+  function section(title: string, cards: { label: string; card: React.ReactNode }[]) {
+    const filtered = q ? cards.filter((c) => c.label.toLowerCase().includes(q)) : cards;
+    if (filtered.length === 0) return null;
+    return (
+      <>
+        <SectionHeader title={title} />
+        <div className="palette-grid">{filtered.map((c) => c.card)}</div>
+      </>
+    );
+  }
+
+  const sc = (label: string, card: React.ReactNode) => ({ label, card });
+
+  const filteredMasks   = q ? masks  .filter((m) => m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q)) : masks;
+  const filteredSKMs    = q ? softKeyMasks.filter((m) => m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q)) : softKeyMasks;
+
+  const filteredDMasks  = dataMaskSearch ? masks  .filter((m) => m.name.toLowerCase().includes(dataMaskSearch.toLowerCase()) || m.id.toLowerCase().includes(dataMaskSearch.toLowerCase())) : masks;
+  const filteredDSKMs   = skmSearch      ? softKeyMasks.filter((m) => m.name.toLowerCase().includes(skmSearch.toLowerCase()) || m.id.toLowerCase().includes(skmSearch.toLowerCase())) : softKeyMasks;
 
   return (
     <aside className="left-sidebar">
       <ResizableSplit defaultTopHeight={320} minTopHeight={120} minBottomHeight={100}>
         {/* ── Object Picker ──────────────────────────────────────────────── */}
         <Panel title="Object Picker">
-          <div className="panel-toolbar"><SearchBox placeholder="Search objects..." /><Zap size={16} /></div>
+          <div className="panel-toolbar"><SearchBox value={objectSearch} onChange={setObjectSearch} placeholder="Search objects..." /><Zap size={16} /></div>
 
-          <SectionHeader title="SCREENS" />
-          <div className="palette-grid supported">
-            <PaletteCard label="Data Mask"     icon={<LayoutPanelLeft size={24} />} selected={tool === 'data-mask'}     onClick={() => onToolChange('data-mask')} />
-            <PaletteCard label="Soft Key Mask" icon={<Keyboard size={24} />}        onClick={() => onCreateObject('soft-key-mask')} />
-          </div>
+          {section('SCREENS', [
+            sc('Data Mask',     <PaletteCard label="Data Mask"     icon={<LayoutPanelLeft size={24} />} selected={tool === 'data-mask'}     onClick={() => onToolChange('data-mask')} />),
+            sc('Soft Key Mask', <PaletteCard label="Soft Key Mask" icon={<Keyboard size={24} />}        onClick={() => onCreateObject('soft-key-mask')} />),
+          ])}
 
-          <SectionHeader title="GROUPS" />
-          <div className="palette-grid supported">
-            <PaletteCard label="Container" icon={<Grid3X3 size={24} />} selected={tool === 'container'} onClick={() => onToolChange('container')} />
-          </div>
+          {section('GROUPS', [
+            sc('Container', <PaletteCard label="Container" icon={<Grid3X3 size={24} />} selected={tool === 'container'} onClick={() => onToolChange('container')} />),
+          ])}
 
-          <SectionHeader title="OUTPUTS" />
-          <div className="palette-grid supported">
-            <PaletteCard label="Output String"    icon={<Type size={24} />}                selected={tool === 'output-string'}    onClick={() => onToolChange('output-string')} />
-            <PaletteCard label="Output Number"    icon={<Hash size={24} />}                selected={tool === 'output-number'}    onClick={() => onToolChange('output-number')} />
-            <PaletteCard label="Rectangle"        icon={<Square size={24} />}              selected={tool === 'output-rectangle'} onClick={() => onToolChange('output-rectangle')} />
-            <PaletteCard label="Picture Graphic"  icon={<Image size={24} />}               selected={tool === 'picture-graphic'}  onClick={() => onToolChange('picture-graphic')} />
-          </div>
+          {section('OUTPUTS', [
+            sc('Output String',   <PaletteCard label="Output String"   icon={<Type size={24} />}     selected={tool === 'output-string'}    onClick={() => onToolChange('output-string')} />),
+            sc('Output Number',   <PaletteCard label="Output Number"   icon={<Hash size={24} />}     selected={tool === 'output-number'}    onClick={() => onToolChange('output-number')} />),
+            sc('Rectangle',       <PaletteCard label="Rectangle"       icon={<Square size={24} />}   selected={tool === 'output-rectangle'} onClick={() => onToolChange('output-rectangle')} />),
+            sc('Picture Graphic', <PaletteCard label="Picture Graphic" icon={<Image size={24} />}    selected={tool === 'picture-graphic'}  onClick={() => onToolChange('picture-graphic')} />),
+          ])}
 
-          <SectionHeader title="INPUTS" />
-          <div className="palette-grid supported">
-            <PaletteCard label="Button"   icon={<MousePointerClick size={24} />} selected={tool === 'button'} onClick={() => onToolChange('button')} />
-            <PaletteCard label="Key"      icon={<KeyRound size={24} />}          onClick={() => onCreateObject('key')} />
-          </div>
+          {section('INPUTS', [
+            sc('Button', <PaletteCard label="Button" icon={<MousePointerClick size={24} />} selected={tool === 'button'} onClick={() => onToolChange('button')} />),
+            sc('Key',    <PaletteCard label="Key"    icon={<KeyRound size={24} />}          onClick={() => onCreateObject('key')} />),
+          ])}
 
-          <SectionHeader title="ATTRIBUTES" />
-          <div className="palette-grid supported">
-            <PaletteCard label="Line Attr"   icon={<PenLine size={24} />}       onClick={() => onCreateAttribute('line-attribute')} />
-            <PaletteCard label="Fill Attr"   icon={<Grid3X3 size={24} />}       onClick={() => onCreateAttribute('fill-attribute')} />
-            <PaletteCard label="Font Attr"   icon={<Type size={24} />}          onClick={() => onCreateAttribute('font-attribute')} />
-            <PaletteCard label="String Var"  icon={<ClipboardList size={24} />} onClick={() => onCreateAttribute('string-variable')} />
-            <PaletteCard label="Number Var"  icon={<Hash size={24} />}          onClick={() => onCreateAttribute('number-variable')} />
-          </div>
+          {section('ATTRIBUTES', [
+            sc('Line Attr',   <PaletteCard label="Line Attr"   icon={<PenLine size={24} />}       onClick={() => onCreateAttribute('line-attribute')} />),
+            sc('Fill Attr',   <PaletteCard label="Fill Attr"   icon={<Grid3X3 size={24} />}       onClick={() => onCreateAttribute('fill-attribute')} />),
+            sc('Font Attr',   <PaletteCard label="Font Attr"   icon={<Type size={24} />}          onClick={() => onCreateAttribute('font-attribute')} />),
+            sc('String Var',  <PaletteCard label="String Var"  icon={<ClipboardList size={24} />} onClick={() => onCreateAttribute('string-variable')} />),
+            sc('Number Var',  <PaletteCard label="Number Var"  icon={<Hash size={24} />}          onClick={() => onCreateAttribute('number-variable')} />),
+          ])}
 
-          <SectionHeader title="PLANNED" />
-          <div className="palette-grid">
-            <PaletteCard label="Meter"      disabled icon={<AlignCenter size={24} />} />
-            <PaletteCard label="Bar Graph"  disabled icon={<AlignCenter size={24} />} />
-            <PaletteCard label="Ellipse"    disabled icon={<Circle size={24} />} />
-            <PaletteCard label="Input Num"  disabled icon={<Hash size={24} />} />
-            <PaletteCard label="Input List" disabled icon={<ClipboardList size={24} />} />
-          </div>
+          {section('PLANNED', [
+            sc('Meter',      <PaletteCard label="Meter"      disabled icon={<AlignCenter size={24} />} />),
+            sc('Bar Graph',  <PaletteCard label="Bar Graph"  disabled icon={<AlignCenter size={24} />} />),
+            sc('Ellipse',    <PaletteCard label="Ellipse"    disabled icon={<Circle size={24} />} />),
+            sc('Input Num',  <PaletteCard label="Input Num"  disabled icon={<Hash size={24} />} />),
+            sc('Input List', <PaletteCard label="Input List" disabled icon={<ClipboardList size={24} />} />),
+          ])}
         </Panel>
 
         {/* ── Masks (Data + Soft Key) ──────────────────────────────────────── */}
@@ -91,9 +109,9 @@ export function LeftSidebar({
 
           {tab === 'data-masks' && (
             <>
-              <SearchBox placeholder="Search data masks..." />
+              <SearchBox value={dataMaskSearch} onChange={setDataMaskSearch} placeholder="Search data masks..." />
               <div className="list">
-                {masks.map((mask) => (
+                {filteredDMasks.map((mask) => (
                   <button
                     key={mask.id}
                     className={`list-row ${mask.id === activeMaskId ? 'selected' : ''}`}
@@ -118,9 +136,9 @@ export function LeftSidebar({
 
           {tab === 'soft-key-masks' && (
             <>
-              <SearchBox placeholder="Search soft key masks..." />
+              <SearchBox value={skmSearch} onChange={setSkmSearch} placeholder="Search soft key masks..." />
               <div className="list">
-                {softKeyMasks.map((skm) => (
+                {filteredDSKMs.map((skm) => (
                   <button
                     key={skm.id}
                     className={`list-row ${skm.id === activeSoftKeyMaskId ? 'selected' : ''}`}

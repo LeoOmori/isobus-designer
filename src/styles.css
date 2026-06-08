@@ -91,7 +91,7 @@ button:focus-visible {
   display: grid;
   grid-template-columns: 240px 1fr auto;
   align-items: center;
-  padding: 0 12px;
+  padding: 0 24px;
   background: #181c26;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   color: #e2e8f0;
@@ -109,13 +109,14 @@ button:focus-visible {
 }
 
 .app-logo {
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  color: white;
-  border-radius: 5px;
-  background: var(--accent-strong);
+  display: flex;
+  align-items: center;
+  height: 40px;
+}
+
+.app-logo img {
+  height: 100%;
+  width: auto;
 }
 
 .canvas-tools {
@@ -458,6 +459,21 @@ button:focus-visible {
 /* Prevent search box from stretching vertically inside a panel body */
 .panel-body > .search-box {
   flex: 0 0 auto;
+}
+
+.search-box input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  color: var(--text);
+  font-size: inherit;
+  font-family: inherit;
+  min-width: 0;
+}
+
+.search-box input::placeholder {
+  color: var(--text-muted);
 }
 
 /* ──────────────────────────────────────────────────────────────────────

@@ -1,6 +1,7 @@
-import { Box, Crosshair, Download, Eye, EyeOff, Grid3X3, Hand, Hash, Image, Minus, MousePointer2, MousePointerClick, Plus, Redo2, Square, Type, Undo2 } from 'lucide-react';
+import { Crosshair, Download, Eye, EyeOff, Grid3X3, Hand, Hash, Image, Minus, MousePointer2, MousePointerClick, Plus, Redo2, Square, Type, Undo2 } from 'lucide-react';
 import type { ToolMode } from '../domain/types';
 import { ToolButton } from '../ui/primitives';
+import logoSrc from '../assets/logo.png';
 
 export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, sidebarsVisible, onToggleSidebars, onUndo, onRedo, canUndo, canRedo }: {
   tool: ToolMode;
@@ -17,7 +18,7 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, side
 }) {
   return (
     <header className="topbar">
-      <div className="brand"><div className="app-logo"><Box size={20} /></div><span>ISOBUS IOP Editor</span></div>
+      <div className="brand"><div className="app-logo"><img src={logoSrc} alt="ISOBUS IOP Editor" /></div></div>
       <div className="canvas-tools">
         <button type="button" className="panels-toggle" onClick={onToggleSidebars} title={sidebarsVisible ? 'Hide panels' : 'Show panels'}>{sidebarsVisible ? <Eye size={18} /> : <EyeOff size={18} />}</button>
         <span className="divider" />

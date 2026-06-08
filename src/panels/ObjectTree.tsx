@@ -25,13 +25,41 @@ export function ObjectTree({
   );
   const [expanded, setExpanded] = useState<Record<string, boolean>>({ WS_1: true });
   const [actionMenuId, setActionMenuId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const validationByObjectId = new Map(project.objects.map((object) => [
     object.id,
     validationErrors.filter((error) => error.includes(object.id)),
   ]));
 
+  const q = search.toLowerCase();
+
+  function matchesSearch(obj: { name: string; id: string; kind: string }): boolean {
+    if (!q) return true;
+    return obj.name.toLowerCase().includes(q) ||
+           obj.id.toLowerCase().includes(q) ||
+           obj.kind.toLowerCase().includes(q);
+  }
+
+  function anyChildMatches(obj: EditorObject): boolean {
+    return getObjectChildren(project, obj.id).some((child) =>
+      matchesSearch(child) || anyChildMatches(child),
+    );
+  }
+
+  function visibleInTree(obj: EditorObject): boolean {
+    if (!q) return true;
+    if (matchesSearch(obj)) return true;
+    return anyChildMatches(obj);
+  }
+
   function isExpanded(id: string) { return expanded[id] ?? true; }
   function toggle(id: string) { setExpanded((s) => ({ ...s, [id]: !isExpanded(id) })); }
+
+  // Auto-expand parents when searching
+  function showExpanded(id: string): boolean {
+    if (!q) return isExpanded(id);
+    return true; // expand everything when searching
+  }
 
   function renderLayerButtons(id: string) {
     return (
@@ -64,11 +92,13 @@ export function ObjectTree({
   }
 
   function renderCanvasObjectRow(object: EditorObject, depth = 0, includeSelf = true): ReactNode {
-    const children = getObjectChildren(project, object.id);
+    if (!visibleInTree(object)) return null;
+
+    const children = getObjectChildren(project, object.id).filter(visibleInTree);
     const hasChildren = children.length > 0;
 
     if (!includeSelf) {
-      return <>{hasChildren && isExpanded(object.id) && children.map((child) => renderCanvasObjectRow(child, depth + 1))}</>;
+      return <>{hasChildren && showExpanded(object.id) && children.map((child) => renderCanvasObjectRow(child, depth + 1))}</>;
     }
 
     return (
@@ -79,7 +109,7 @@ export function ObjectTree({
         >
           {hasChildren ? (
             <button className="tree-chevron" onClick={() => toggle(object.id)}>
-              {isExpanded(object.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              {showExpanded(object.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
             </button>
           ) : <span />}
           <button className="tree-select" onClick={() => onSelect(object.id)}>
@@ -89,14 +119,14 @@ export function ObjectTree({
           <button onClick={() => onToggleVisible(object.id)}>{object.visible ? <Eye size={14} /> : <EyeOff size={14} />}</button>
           {renderActionMenu(object.id)}
         </div>
-        {hasChildren && isExpanded(object.id) && children.map((child) => renderCanvasObjectRow(child, depth + 1))}
+        {hasChildren && showExpanded(object.id) && children.map((child) => renderCanvasObjectRow(child, depth + 1))}
       </div>
     );
   }
 
   return (
     <Panel title="Tree Object Menu">
-      <div className="panel-toolbar"><SearchBox placeholder="Search objects..." /><Zap size={16} /></div>
+      <div className="panel-toolbar"><SearchBox value={search} onChange={setSearch} placeholder="Search objects..." /><Zap size={16} /></div>
       <div className="tree">
 
         {/* ── Working Set root ── */}
@@ -113,10 +143,10 @@ export function ObjectTree({
           <span />
         </div>
 
-        {isExpanded(project.workingSet.id) && (
+        {showExpanded(project.workingSet.id) && (
           <>
             {/* ── Data Masks ── */}
-            {masks.map((mask) => (
+            {masks.filter(visibleInTree).map((mask) => (
               <div key={mask.id}>
                 <div className={`tree-row mask ${selectedId === mask.id ? 'selected' : ''}`} style={{ gridTemplateColumns: '16px 1fr 16px 16px 16px 16px' }}>
                   <button className="tree-chevron" onClick={() => toggle(mask.id)}>
@@ -129,12 +159,12 @@ export function ObjectTree({
                   <button onClick={() => onToggleVisible(mask.id)}>{mask.visible ? <Eye size={14} /> : <EyeOff size={14} />}</button>
                   {renderActionMenu(mask.id)}
                 </div>
-                {isExpanded(mask.id) && getMaskChildren(project, mask.id).map((child) => renderCanvasObjectRow(child))}
+                {showExpanded(mask.id) && getMaskChildren(project, mask.id).filter(visibleInTree).map((child) => renderCanvasObjectRow(child))}
               </div>
             ))}
 
             {/* ── Soft Key Masks ── */}
-            {softKeyMasks.map((skm) => (
+            {softKeyMasks.filter(visibleInTree).map((skm) => (
               <div key={skm.id}>
                 <div className={`tree-row mask ${selectedId === skm.id ? 'selected' : ''}`}>
                   <button className="tree-chevron" onClick={() => toggle(skm.id)}>
@@ -146,7 +176,7 @@ export function ObjectTree({
                   <button onClick={() => onToggleVisible(skm.id)}>{skm.visible ? <Eye size={14} /> : <EyeOff size={14} />}</button>
                   {renderActionMenu(skm.id)}
                 </div>
-                {isExpanded(skm.id) && getSoftKeyMaskKeys(project, skm.id).map((key) => (
+                {showExpanded(skm.id) && getSoftKeyMaskKeys(project, skm.id).filter(visibleInTree).map((key) => (
                   <div key={key.id}>
                     <div className={`tree-row child ${selectedId === key.id ? 'selected' : ''}`}>
                       <button className="tree-select" onClick={() => onSelect(key.id)}>
@@ -173,7 +203,7 @@ export function ObjectTree({
                   </button>
                   <span /><span />
                 </div>
-                {isExpanded('ATTRIBUTES') && attributes.map((attr) => (
+                {showExpanded('ATTRIBUTES') && attributes.filter(visibleInTree).map((attr) => (
                   <div key={attr.id} className={`tree-row child ${selectedId === attr.id ? 'selected' : ''}`}>
                     <button className="tree-select" onClick={() => onSelect(attr.id)}>
                       <KindIcon kind={attr.kind} />{renderInvalidIcon(attr.id)}<span>{attr.name}</span>
