@@ -8,7 +8,7 @@ export function RightSidebar({
   project, selectedId,
   onSelect, onPatchSelected, onPatchWorkingSet,
   onToggleVisible, onToggleWorkingSetVisible,
-  onDelete, onLayer, onCreateAttributeReference,
+  onDelete, onClone, onLayer, onMoveLayer, onCreateAttributeReference,
 }: {
   project: ProjectState;
   selectedId: string;
@@ -18,7 +18,9 @@ export function RightSidebar({
   onToggleVisible: (id: string) => void;
   onToggleWorkingSetVisible: () => void;
   onDelete: (id: string) => void;
+  onClone: (id: string) => void;
   onLayer: (action: 'front' | 'back' | 'forward' | 'backward') => void;
+  onMoveLayer: (id: string, direction: 'up' | 'down') => void;
   onCreateAttributeReference: (kind: ReferenceKind) => void;
 }) {
   const selectedObject  = project.objects.find((o) => o.id === selectedId) ?? project.objects[0];
@@ -34,6 +36,8 @@ export function RightSidebar({
           onToggleVisible={onToggleVisible}
           onToggleWorkingSetVisible={onToggleWorkingSetVisible}
           onDelete={onDelete}
+          onClone={onClone}
+          onMoveLayer={onMoveLayer}
         />
         {selectedId === project.workingSet.id || !selectedObject
           ? (

@@ -1,4 +1,4 @@
-import { Archive, ChevronDown, ChevronRight, Eye, EyeOff, Grid3X3, Keyboard, MoreVertical, Trash2, Zap } from 'lucide-react';
+import { Archive, ArrowDown, ArrowUp, ChevronDown, ChevronRight, Copy, Eye, EyeOff, Grid3X3, Keyboard, MoreVertical, Trash2, Zap } from 'lucide-react';
 import { type ReactNode, useState } from 'react';
 import { KindIcon } from '../domain/objectMeta';
 import { getMaskChildren, getObjectChildren, getReferenceObjects, getSoftKeyMaskKeys } from '../domain/selectors';
@@ -6,7 +6,7 @@ import type { EditorObject, ProjectState } from '../domain/types';
 import { Panel, SearchBox } from '../ui/primitives';
 
 export function ObjectTree({
-  project, selectedId, onSelect, onToggleVisible, onToggleWorkingSetVisible, onDelete,
+  project, selectedId, onSelect, onToggleVisible, onToggleWorkingSetVisible, onDelete, onClone, onMoveLayer,
 }: {
   project: ProjectState;
   selectedId: string;
@@ -14,6 +14,8 @@ export function ObjectTree({
   onToggleVisible: (id: string) => void;
   onToggleWorkingSetVisible: () => void;
   onDelete: (id: string) => void;
+  onClone: (id: string) => void;
+  onMoveLayer: (id: string, direction: 'up' | 'down') => void;
 }) {
   const masks       = project.objects.filter((o) => o.kind === 'data-mask');
   const softKeyMasks = project.objects.filter((o) => o.kind === 'soft-key-mask');
@@ -21,9 +23,34 @@ export function ObjectTree({
     (o) => o.kind !== 'soft-key-mask' && o.kind !== 'key',
   );
   const [expanded, setExpanded] = useState<Record<string, boolean>>({ WS_1: true });
+  const [actionMenuId, setActionMenuId] = useState<string | null>(null);
 
   function isExpanded(id: string) { return expanded[id] ?? true; }
   function toggle(id: string) { setExpanded((s) => ({ ...s, [id]: !isExpanded(id) })); }
+
+  function renderLayerButtons(id: string) {
+    return (
+      <>
+        <button type="button" onClick={() => onMoveLayer(id, 'down')} title="Move up"><ArrowUp size={14} /></button>
+        <button type="button" onClick={() => onMoveLayer(id, 'up')} title="Move down"><ArrowDown size={14} /></button>
+      </>
+    );
+  }
+
+  function renderActionMenu(id: string) {
+    const open = actionMenuId === id;
+    return (
+      <div className="tree-action-menu-wrap">
+        <button type="button" onClick={() => setActionMenuId(open ? null : id)} title="Object actions"><MoreVertical size={14} /></button>
+        {open && (
+          <div className="tree-action-menu">
+            <button type="button" onClick={() => { onClone(id); setActionMenuId(null); }}><Copy size={14} />Clone</button>
+            <button type="button" onClick={() => { onDelete(id); setActionMenuId(null); }}><Trash2 size={14} />Delete</button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   function renderCanvasObjectRow(object: EditorObject, depth = 0, includeSelf = true): ReactNode {
     const children = getObjectChildren(project, object.id);
@@ -37,7 +64,7 @@ export function ObjectTree({
       <div key={object.id}>
         <div
           className={`tree-row child ${selectedId === object.id ? 'selected' : ''}`}
-          style={{ gridTemplateColumns: '18px 1fr 17px 16px', paddingLeft: 40 + depth * 18 }}
+          style={{ gridTemplateColumns: '18px 1fr 16px 16px 17px 16px', paddingLeft: 40 + depth * 18 }}
         >
           {hasChildren ? (
             <button className="tree-chevron" onClick={() => toggle(object.id)}>
@@ -47,8 +74,9 @@ export function ObjectTree({
           <button className="tree-select" onClick={() => onSelect(object.id)}>
             <KindIcon kind={object.kind} /><span>{object.name}</span>
           </button>
+          {renderLayerButtons(object.id)}
           <button onClick={() => onToggleVisible(object.id)}>{object.visible ? <Eye size={14} /> : <EyeOff size={14} />}</button>
-          <button onClick={() => onDelete(object.id)}><Trash2 size={14} /></button>
+          {renderActionMenu(object.id)}
         </div>
         {hasChildren && isExpanded(object.id) && children.map((child) => renderCanvasObjectRow(child, depth + 1))}
       </div>
@@ -79,15 +107,16 @@ export function ObjectTree({
             {/* ── Data Masks ── */}
             {masks.map((mask) => (
               <div key={mask.id}>
-                <div className={`tree-row mask ${selectedId === mask.id ? 'selected' : ''}`}>
+                <div className={`tree-row mask ${selectedId === mask.id ? 'selected' : ''}`} style={{ gridTemplateColumns: '16px 1fr 16px 16px 16px 16px' }}>
                   <button className="tree-chevron" onClick={() => toggle(mask.id)}>
                     {isExpanded(mask.id) ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                   </button>
                   <button className="tree-select" onClick={() => onSelect(mask.id)}>
                     <KindIcon kind="data-mask" size={15} /><span>{mask.name}</span>
                   </button>
+                  {renderLayerButtons(mask.id)}
                   <button onClick={() => onToggleVisible(mask.id)}>{mask.visible ? <Eye size={14} /> : <EyeOff size={14} />}</button>
-                  <button onClick={() => onDelete(mask.id)}><MoreVertical size={14} /></button>
+                  {renderActionMenu(mask.id)}
                 </div>
                 {isExpanded(mask.id) && getMaskChildren(project, mask.id).map((child) => renderCanvasObjectRow(child))}
               </div>
@@ -104,7 +133,7 @@ export function ObjectTree({
                     <Keyboard size={15} /><span>{skm.name}</span>
                   </button>
                   <button onClick={() => onToggleVisible(skm.id)}>{skm.visible ? <Eye size={14} /> : <EyeOff size={14} />}</button>
-                  <button onClick={() => onDelete(skm.id)}><MoreVertical size={14} /></button>
+                  {renderActionMenu(skm.id)}
                 </div>
                 {isExpanded(skm.id) && getSoftKeyMaskKeys(project, skm.id).map((key) => (
                   <div key={key.id}>
@@ -113,7 +142,7 @@ export function ObjectTree({
                         <KindIcon kind={key.kind} /><span>{key.name}</span>
                       </button>
                       <span />
-                      <button onClick={() => onDelete(key.id)}><Trash2 size={14} /></button>
+                      {renderActionMenu(key.id)}
                     </div>
                     {renderCanvasObjectRow(key, 1, false)}
                   </div>
@@ -139,7 +168,7 @@ export function ObjectTree({
                       <KindIcon kind={attr.kind} /><span>{attr.name}</span>
                     </button>
                     <span />
-                    <button onClick={() => onDelete(attr.id)}><Trash2 size={14} /></button>
+                    {renderActionMenu(attr.id)}
                   </div>
                 ))}
               </div>

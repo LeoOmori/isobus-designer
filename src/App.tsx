@@ -269,15 +269,90 @@ export function App() {
     });
   }
 
+  function cloneObject(id: string) {
+    const source = project.objects.find((object) => object.id === id);
+    if (!source) return;
+
+    commit((current) => {
+      const sourceInCurrent = current.objects.find((object) => object.id === id);
+      if (!sourceInCurrent) return current;
+
+      const base = createEditorObject(sourceInCurrent.kind, current, sourceInCurrent.x + 10, sourceInCurrent.y + 10, sourceInCurrent.parentId ?? current.activeMaskId);
+      const clone: EditorObject = {
+        ...sourceInCurrent,
+        id: base.id,
+        objectId: base.objectId,
+        name: `${sourceInCurrent.name} Copy`,
+        x: sourceInCurrent.x + (sourceInCurrent.kind === 'data-mask' || sourceInCurrent.kind === 'soft-key-mask' ? 0 : 10),
+        y: sourceInCurrent.y + (sourceInCurrent.kind === 'data-mask' || sourceInCurrent.kind === 'soft-key-mask' ? 0 : 10),
+        zIndex: current.objects.length + 1,
+        childObjectIds: sourceInCurrent.childObjectIds ? [] : undefined,
+        keys: sourceInCurrent.keys ? [] : undefined,
+      };
+
+      setSelectedId(clone.id);
+
+      return {
+        ...current,
+        nextNumber: current.nextNumber + 1,
+        objects: [
+          ...current.objects.map((object) => {
+            if (sourceInCurrent.parentId && object.id === sourceInCurrent.parentId) {
+              return { ...object, childObjectIds: [...(object.childObjectIds ?? []), clone.id] };
+            }
+            if (sourceInCurrent.kind === 'key' && object.kind === 'soft-key-mask' && (object.keys ?? []).includes(sourceInCurrent.id)) {
+              const keys = object.keys ?? [];
+              const sourceIndex = keys.indexOf(sourceInCurrent.id);
+              return { ...object, keys: [...keys.slice(0, sourceIndex + 1), clone.id, ...keys.slice(sourceIndex + 1)] };
+            }
+            return object;
+          }),
+          clone,
+        ],
+      };
+    });
+  }
+
   // ── Layering ──────────────────────────────────────────────────────────
-  function layer(action: 'front' | 'back' | 'forward' | 'backward') {
-    const selected = project.objects.find((o) => o.id === selectedId);
-    if (!selected || selected.kind === 'data-mask') return;
+  function getLayerSiblings(current: typeof project, selected: EditorObject) {
+    if (selected.kind === 'data-mask') return current.objects.filter((object) => object.kind === 'data-mask');
+
     const parent = selected.parentId
-      ? project.objects.find((o) => o.id === selected.parentId)
-      : project.objects.find((o) => o.id === project.activeMaskId);
-    const siblingIds = parent?.kind === 'soft-key-mask' ? parent.keys ?? [] : parent?.childObjectIds ?? [];
-    const siblings = project.objects.filter((o) => siblingIds.includes(o.id));
+      ? current.objects.find((object) => object.id === selected.parentId)
+      : current.objects.find((object) => object.id === current.activeMaskId);
+    const siblingIds = parent?.childObjectIds ?? [];
+    return current.objects.filter((object) => siblingIds.includes(object.id));
+  }
+
+  function moveLayerById(id: string, direction: 'up' | 'down') {
+    commit((current) => {
+      const selected = current.objects.find((object) => object.id === id);
+      if (!selected) return current;
+      const siblings = getLayerSiblings(current, selected).sort((a, b) => a.zIndex - b.zIndex);
+      const index = siblings.findIndex((object) => object.id === id);
+      const swapWith = direction === 'up' ? siblings[index + 1] : siblings[index - 1];
+      if (!swapWith) return current;
+
+      return {
+        ...current,
+        objects: current.objects.map((object) => {
+          if (object.id === selected.id) return { ...object, zIndex: swapWith.zIndex };
+          if (object.id === swapWith.id) return { ...object, zIndex: selected.zIndex };
+          return object;
+        }),
+      };
+    });
+  }
+
+  function layer(action: 'front' | 'back' | 'forward' | 'backward') {
+    if (action === 'forward' || action === 'backward') {
+      moveLayerById(selectedId, action === 'forward' ? 'up' : 'down');
+      return;
+    }
+
+    const selected = project.objects.find((o) => o.id === selectedId);
+    if (!selected) return;
+    const siblings = getLayerSiblings(project, selected);
     if (!siblings.length) return;
     const max = Math.max(...siblings.map((o) => o.zIndex));
     const min = Math.min(...siblings.map((o) => o.zIndex));
@@ -361,7 +436,9 @@ export function App() {
           onToggleVisible={(id) => patchObject(id, { visible: !project.objects.find((o) => o.id === id)?.visible })}
           onToggleWorkingSetVisible={() => commit((current) => ({ ...current, workingSet: { ...current.workingSet, visible: !current.workingSet.visible } }))}
           onDelete={deleteObject}
+          onClone={cloneObject}
           onLayer={layer}
+          onMoveLayer={moveLayerById}
           onCreateAttributeReference={createAttributeReference}
         />
       </div>

@@ -634,6 +634,7 @@ button.list-row {
 }
 
 .tree-row {
+  position: relative;
   grid-template-columns: 14px 14px 1fr 16px 16px;
   gap: 4px;
   padding: 0 8px 0 10px;
@@ -696,6 +697,41 @@ button.list-row {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tree-action-menu-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+
+.tree-action-menu {
+  position: absolute;
+  right: 0;
+  top: 20px;
+  z-index: 30;
+  min-width: 104px;
+  padding: 4px;
+  border: 1px solid var(--border-strong);
+  border-radius: 5px;
+  background: var(--bg-elevated);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.16);
+}
+
+.tree-action-menu button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 7px;
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 11px;
+  text-align: left;
+}
+
+.tree-action-menu button:hover {
+  background: var(--hover-bg);
 }
 
 /* ──────────────────────────────────────────────────────────────────────

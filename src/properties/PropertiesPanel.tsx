@@ -27,8 +27,8 @@ export function PropertiesPanel({ selectedObject, objects, onPatch, onDelete, on
       <div className="properties-title">
         <strong>{objectKindName(kind)}: {selectedObject.id}</strong>
         <span>
-          <button type="button" onClick={() => onLayer('forward')}>↑</button>
-          <button type="button" onClick={() => onLayer('backward')}>↓</button>
+          <button type="button" onClick={() => onLayer('backward')}>↑</button>
+          <button type="button" onClick={() => onLayer('forward')}>↓</button>
           <button type="button" onClick={onDelete}><Trash2 size={16} /></button>
         </span>
       </div>
