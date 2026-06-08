@@ -1,3 +1,4 @@
+import { AlignCenter, AlignLeft, AlignRight, AlignVerticalJustifyCenter, AlignVerticalJustifyEnd, AlignVerticalJustifyStart, EyeOff, Minus, WrapText } from 'lucide-react';
 import {
   OUTPUT_STRING_OPTION_AUTO_WRAP,
   OUTPUT_STRING_OPTION_TRANSPARENT,
@@ -8,7 +9,7 @@ import {
   asVerticalJustification,
 } from '../../domain/isobus';
 import type { EditorObject, ReferenceKind } from '../../domain/types';
-import { CheckboxField, Field, PropertySection, SelectField, VtColorField } from '../../properties/fields';
+import { Field, IconCheckboxField, IconToggleField, PropertySection, SelectField, VtColorField } from '../../properties/fields';
 
 export function OutputStringProperties({
   object,
@@ -23,21 +24,25 @@ export function OutputStringProperties({
 }) {
   const fontAttrOpts = referenceOptions(objects, 'font-attribute', '+ Create Font Attribute', '__create_font-attribute');
   const variableOpts = variableReferenceOptions(objects);
+  const textValue = object.text ?? '';
+  const outputOptions = object.outputOptions ?? 0;
 
   return (
     <>
       <PropertySection title="Text">
-        <Field label="Value" value={object.text ?? ''} onChange={(text) => onPatch({ text })} />
+        <Field label="Value" value={textValue} onChange={(text) => onPatch({ text })} />
         <Field label="Length (bytes)" value={object.length ?? 32} type="number" onChange={(length) => onPatch({ length: Number(length) })} />
-        <div className="field-hint">{utf8ByteLength(object.text ?? '')} / {object.length ?? 32} bytes before padding</div>
+        <div className="field-hint">{utf8ByteLength(textValue)} / {object.length ?? 32} bytes before padding</div>
         <VtColorField label="Background" value={object.backgroundColorIndex ?? 1} onChange={(backgroundColorIndex) => onPatch({ backgroundColorIndex })} />
-        <SelectField label="Horizontal" value={String(object.horizontalJustification ?? 0)} options={VT_H_JUSTIFY_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))} onChange={(value) => onPatch({ horizontalJustification: asHorizontalJustification(Number(value)) })} />
-        <SelectField label="Vertical" value={String(object.verticalJustification ?? 0)} options={VT_V_JUSTIFY_OPTIONS.map((option) => ({ value: String(option.value), label: option.label }))} onChange={(value) => onPatch({ verticalJustification: asVerticalJustification(Number(value)) })} />
+        <IconToggleField label="Horizontal" value={String(object.horizontalJustification ?? 0)} options={VT_H_JUSTIFY_OPTIONS.map((option, index) => ({ value: String(option.value), label: option.label, icon: index === 1 ? <AlignCenter size={15} /> : index === 2 ? <AlignRight size={15} /> : <AlignLeft size={15} /> }))} onChange={(value) => onPatch({ horizontalJustification: asHorizontalJustification(Number(value)) })} />
+        <IconToggleField label="Vertical" value={String(object.verticalJustification ?? 0)} options={VT_V_JUSTIFY_OPTIONS.map((option, index) => ({ value: String(option.value), label: option.label, icon: index === 1 ? <AlignVerticalJustifyCenter size={15} /> : index === 2 ? <AlignVerticalJustifyEnd size={15} /> : <AlignVerticalJustifyStart size={15} /> }))} onChange={(value) => onPatch({ verticalJustification: asVerticalJustification(Number(value)) })} />
       </PropertySection>
       <PropertySection title="Options">
-        <CheckboxField label="Transparent Background" checked={((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_TRANSPARENT) !== 0} onChange={(value) => onPatch({ outputOptions: patchBit(object.outputOptions, OUTPUT_STRING_OPTION_TRANSPARENT, value) })} />
-        <CheckboxField label="Auto Wrap" checked={((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_AUTO_WRAP) !== 0} onChange={(value) => onPatch({ outputOptions: patchBit(object.outputOptions, OUTPUT_STRING_OPTION_AUTO_WRAP, value) & (value ? 0xff : ~OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) })} />
-        <CheckboxField label="Wrap on Hyphen" checked={((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) !== 0} disabled={((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_AUTO_WRAP) === 0} onChange={(value) => onPatch({ outputOptions: patchBit(object.outputOptions, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN, value) })} />
+        <div className="option-chip-grid">
+          <IconCheckboxField label="Transparent" icon={<EyeOff size={14} />} checked={(outputOptions & OUTPUT_STRING_OPTION_TRANSPARENT) !== 0} onChange={(value) => onPatch({ outputOptions: patchBit(outputOptions, OUTPUT_STRING_OPTION_TRANSPARENT, value) })} />
+          <IconCheckboxField label="Auto wrap" icon={<WrapText size={14} />} checked={(outputOptions & OUTPUT_STRING_OPTION_AUTO_WRAP) !== 0} onChange={(value) => onPatch({ outputOptions: patchBit(outputOptions, OUTPUT_STRING_OPTION_AUTO_WRAP, value) & (value ? 0xff : ~OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) })} />
+          <IconCheckboxField label="Hyphen" icon={<Minus size={14} />} checked={(outputOptions & OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) !== 0} disabled={(outputOptions & OUTPUT_STRING_OPTION_AUTO_WRAP) === 0} onChange={(value) => onPatch({ outputOptions: patchBit(outputOptions, OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN, value) })} />
+        </div>
       </PropertySection>
       <PropertySection title="References">
         <SelectField label="Font Attribute" value={object.fontAttributeId ?? ''} options={fontAttrOpts} onChange={(value) => handleRefSelect(value, 'font-attribute', (id) => ({ fontAttributeId: id }), onPatch, onCreateAttributeReference)} />

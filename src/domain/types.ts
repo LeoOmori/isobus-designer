@@ -192,5 +192,5 @@ export type Viewport = { x: number; y: number; zoom: number };
 
 export type DragState =
   | { type: 'pan'; startX: number; startY: number; startView: Viewport }
-  | { type: 'move'; objectId: string; startX: number; startY: number; startObject: EditorObject }
+  | { type: 'move'; objectId: string; startX: number; startY: number; startObject: EditorObject; startObjects?: EditorObject[] }
   | { type: 'resize'; objectId: string; startX: number; startY: number; startObject: EditorObject };

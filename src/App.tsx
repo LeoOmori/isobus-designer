@@ -27,7 +27,9 @@ const CANVAS_KINDS = new Set<ObjectKind>([
 
 export function App() {
   const { project, setProject, commit, undo, redo, canUndo, canRedo } = useProjectState();
-  const [selectedId, setSelectedId] = useState(project.activeMaskId || project.workingSet.id);
+  const initialSelectedId = project.activeMaskId || project.workingSet.id;
+  const [selectedId, setSelectedId] = useState(initialSelectedId);
+  const [selectedIds, setSelectedIds] = useState<string[]>([initialSelectedId]);
   const [tool, setTool] = useState<ToolMode>('select');
   const [viewport, setViewport] = useState<Viewport>({ x: 200, y: 100, zoom: 0.85 });
   const [exportErrors, setExportErrors] = useState<string[] | null>(null);
@@ -37,9 +39,34 @@ export function App() {
   const masks       = project.objects.filter((o) => o.kind === 'data-mask');
   const softKeyMasks = project.objects.filter((o) => o.kind === 'soft-key-mask');
 
+  function selectSingle(id: string) {
+    setSelectedId(id);
+    setSelectedIds([id]);
+  }
+
+  function selectFromCanvas(id: string, additive = false) {
+    if (!additive) return selectSingle(id);
+
+    setSelectedIds((current) => {
+      if (current.includes(id)) {
+        const next = current.filter((selected) => selected !== id);
+        const fallback = project.activeMaskId || project.workingSet.id;
+        setSelectedId(next[0] ?? fallback);
+        return next.length ? next : [fallback];
+      }
+      setSelectedId(id);
+      return [...current, id];
+    });
+  }
+
   useEffect(() => {
     const selectedExists = selectedId === project.workingSet.id || project.objects.some((object) => object.id === selectedId);
-    if (!selectedExists) setSelectedId(project.activeMaskId || project.workingSet.id);
+    if (!selectedExists) {
+      const fallback = project.activeMaskId || project.workingSet.id;
+      setSelectedId(fallback);
+      setSelectedIds([fallback]);
+    }
+    else setSelectedIds((current) => current.filter((id) => id === project.workingSet.id || project.objects.some((object) => object.id === id)));
   }, [project, selectedId]);
 
   // ── Persistence ───────────────────────────────────────────────────────
@@ -147,6 +174,20 @@ export function App() {
     }));
   }
 
+  function patchObjects(updates: { id: string; changes: Partial<EditorObject> }[]) {
+    if (!updates.length) return;
+    commit((current) => {
+      const updateById = new Map(updates.map((update) => [update.id, update.changes]));
+      return {
+        ...current,
+        objects: current.objects.map((object) => {
+          const changes = updateById.get(object.id);
+          return changes ? { ...object, ...changes } : object;
+        }),
+      };
+    });
+  }
+
   function patchWorkingSet(changes: Partial<WorkingSet>) {
     commit((current) => {
       const activeDataMaskId = changes.activeDataMaskId ?? current.workingSet.activeDataMaskId;
@@ -156,7 +197,7 @@ export function App() {
         workingSet: { ...current.workingSet, ...changes },
       };
     });
-    if (changes.activeDataMaskId) setSelectedId(changes.activeDataMaskId);
+    if (changes.activeDataMaskId) selectSingle(changes.activeDataMaskId);
   }
 
   // ── Object creation ───────────────────────────────────────────────────
@@ -172,7 +213,7 @@ export function App() {
       const activeSKMId  = current.workingSet.activeSoftKeyMaskId;
       const next        = createEditorObject(kind, current, x, y, targetParentId);
 
-      setSelectedId(next.id);
+      selectSingle(next.id);
 
       return {
         ...current,
@@ -264,7 +305,7 @@ export function App() {
         ? objects.find((o) => o.kind === 'data-mask')?.id ?? ''
         : current.activeMaskId;
 
-      setSelectedId(activeMaskId || current.workingSet.id);
+      selectSingle(activeMaskId || current.workingSet.id);
       return { ...current, activeMaskId, workingSet: { ...current.workingSet, activeDataMaskId: activeMaskId }, objects };
     });
   }
@@ -290,7 +331,7 @@ export function App() {
         keys: sourceInCurrent.keys ? [] : undefined,
       };
 
-      setSelectedId(clone.id);
+      selectSingle(clone.id);
 
       return {
         ...current,
@@ -397,7 +438,7 @@ export function App() {
           activeMaskId={project.activeMaskId}
           onMaskSelect={(id) => {
             commit((current) => ({ ...current, activeMaskId: id, workingSet: { ...current.workingSet, activeDataMaskId: id } }));
-            setSelectedId(id);
+            selectSingle(id);
           }}
           onAddMask={() => createObject('data-mask')}
           onDuplicateMask={() => createObject('data-mask')}
@@ -406,7 +447,7 @@ export function App() {
           activeSoftKeyMaskId={project.workingSet.activeSoftKeyMaskId}
           onSoftKeyMaskSelect={(id) => {
             commit((current) => ({ ...current, workingSet: { ...current.workingSet, activeSoftKeyMaskId: id } }));
-            setSelectedId(id);
+            selectSingle(id);
           }}
           onAddSoftKeyMask={() => createObject('soft-key-mask')}
           onDeleteSoftKeyMask={() => {
@@ -419,18 +460,20 @@ export function App() {
         <EditorCanvas
           project={project}
           selectedId={selectedId}
+          selectedIds={selectedIds}
           viewport={viewport}
           tool={tool}
-          onSelect={setSelectedId}
+          onSelect={selectFromCanvas}
           onViewportChange={setViewport}
           onToolChange={setTool}
           onCreateObject={createObject}
           onUpdateObject={patchObject}
+          onUpdateObjects={patchObjects}
         />
         <RightSidebar
           project={project}
           selectedId={selectedId}
-          onSelect={setSelectedId}
+          onSelect={selectSingle}
           onPatchSelected={(changes) => patchObject(selectedId, changes)}
           onPatchWorkingSet={patchWorkingSet}
           onToggleVisible={(id) => patchObject(id, { visible: !project.objects.find((o) => o.id === id)?.visible })}

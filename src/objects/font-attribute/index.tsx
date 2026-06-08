@@ -1,9 +1,9 @@
 import { Type } from 'lucide-react';
-import { vtFontCells, fontCellValue } from '../../domain/isobus';
+import { vtColor, vtFontCells, fontCellValue } from '../../domain/isobus';
 import type { EditorObject, ProjectState } from '../../domain/types';
 import { fontSizeEnum } from '../../domain/export/encoding';
 import { writeFontAttributes } from '../../domain/export/writers/fontAttributes';
-import { FontStyleField, PropertySection, SelectField, VtColorField } from '../../properties/fields';
+import { FontStyleField, IconToggleField, PropertySection, SelectField, VtColorField } from '../../properties/fields';
 import { createReferenceBase } from '../createHelpers';
 import type { CreateObjectContext, ObjectLookup, ObjectMeta, ObjectModule } from '../ObjectModule';
 
@@ -33,10 +33,26 @@ export function validateFontAttributeForExport(obj: EditorObject, _project: Proj
 }
 
 export function FontAttributeProperties({ object, onPatch }: { object: EditorObject; onPatch: (changes: Partial<EditorObject>) => void }) {
+  const fontStyle = object.fontStyle ?? 0;
+  const fontHeight = object.fontHeight ?? object.fontSize ?? 24;
+
   return (
     <PropertySection title="Font">
+      <div
+        className="wysiwyg-preview font-preview"
+        style={{
+          color: vtColor(object.fontColor ?? 0),
+          fontFamily: object.proportional === false ? 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' : undefined,
+          fontSize: Math.min(36, fontHeight),
+          fontWeight: fontStyle & 1 ? 700 : undefined,
+          fontStyle: fontStyle & 2 ? 'italic' : undefined,
+          textDecoration: fontStyle & 4 ? 'underline' : undefined,
+        }}
+      >
+        Aa 123
+      </div>
       <VtColorField label="Font Color" value={object.fontColor ?? 0} onChange={(fontColor) => onPatch({ fontColor })} />
-      <SelectField label="Font Type" value={object.proportional === false ? 'monospace' : 'proportional'} options={[{ value: 'proportional', label: 'Proportional' }, { value: 'monospace', label: 'Monospace' }]} onChange={(value) => onPatch({ proportional: value === 'proportional' })} />
+      <IconToggleField label="Font Type" value={object.proportional === false ? 'monospace' : 'proportional'} options={[{ value: 'proportional', label: 'Proportional', icon: <span className="font-type-icon">Aa</span> }, { value: 'monospace', label: 'Monospace', icon: <span className="font-type-icon mono">Aa</span> }]} onChange={(value) => onPatch({ proportional: value === 'proportional' })} />
       <SelectField label="Font Size" value={fontCellValue(object)} options={vtFontCells.map((cell) => ({ value: cell.value, label: cell.label }))} onChange={(value) => { const cell = vtFontCells.find((item) => item.value === value) ?? vtFontCells[5]; onPatch({ fontWidth: cell.width, fontHeight: cell.height, fontSize: cell.height }); }} />
       <FontStyleField value={object.fontStyle ?? 0} onChange={(fontStyle) => onPatch({ fontStyle })} />
     </PropertySection>

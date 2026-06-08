@@ -32,25 +32,27 @@ const KEY_CHILD_TOOLS = new Set<ToolMode>([
 ]);
 
 export function EditorCanvas({
-  project, selectedId, viewport, tool,
-  onSelect, onViewportChange, onToolChange, onCreateObject, onUpdateObject,
+  project, selectedId, selectedIds, viewport, tool,
+  onSelect, onViewportChange, onToolChange, onCreateObject, onUpdateObject, onUpdateObjects,
 }: {
   project: ProjectState;
   selectedId: string;
+  selectedIds: string[];
   viewport: Viewport;
   tool: ToolMode;
-  onSelect: (id: string) => void;
+  onSelect: (id: string, additive?: boolean) => void;
   onViewportChange: (viewport: Viewport) => void;
   onToolChange: (tool: ToolMode) => void;
   onCreateObject: (kind: ObjectKind, x: number, y: number, parentMaskId?: string) => void;
   onUpdateObject: (id: string, changes: Partial<EditorObject>) => void;
+  onUpdateObjects: (updates: { id: string; changes: Partial<EditorObject> }[]) => void;
 }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const dragRef  = useRef<DragState | null>(null);
-  const dragPreviewRef = useRef<{ objectId: string; changes: Partial<EditorObject> } | null>(null);
+  const dragPreviewRef = useRef<Record<string, Partial<EditorObject>>>({});
   const lastObjectClickRef = useRef<{ id: string; time: number } | null>(null);
   const [editingTextObjectId, setEditingTextObjectId] = useState<string | null>(null);
-  const [dragPreview, setDragPreview] = useState<{ objectId: string; changes: Partial<EditorObject> } | null>(null);
+  const [dragPreview, setDragPreview] = useState<Record<string, Partial<EditorObject>>>({});
 
   const activeMask = getActiveMask(project);
   const masks      = project.objects.filter((o) => o.kind === 'data-mask' && o.visible);
@@ -179,9 +181,12 @@ export function EditorCanvas({
       createOnMask(event.clientX, event.clientY, mask);
       return;
     }
-    onSelect(mask.id);
+    const additiveSelection = event.shiftKey || event.metaKey || event.ctrlKey;
+    const wasSelected = selectedIds.includes(mask.id);
+    onSelect(mask.id, additiveSelection);
+    if (additiveSelection) return;
     if (tool !== 'select' || mask.locked) return;
-    dragRef.current = { type: 'move', objectId: mask.id, startX: event.clientX, startY: event.clientY, startObject: mask };
+    dragRef.current = { type: 'move', objectId: mask.id, startX: event.clientX, startY: event.clientY, startObject: mask, startObjects: wasSelected ? selectedMovableObjects(mask) : [mask] };
     stageRef.current?.setPointerCapture(event.pointerId);
   }
 
@@ -197,25 +202,27 @@ export function EditorCanvas({
     const dy = (event.clientY - drag.startY) / viewport.zoom;
     if (drag.startObject.locked) return;
     if (drag.type === 'move') {
-      updateDragPreview({ objectId: drag.objectId, changes: { x: snap(drag.startObject.x + dx), y: snap(drag.startObject.y + dy) } });
+      updateDragPreview(Object.fromEntries(
+        (drag.startObjects ?? [drag.startObject]).map((object) => [object.id, { x: snap(object.x + dx), y: snap(object.y + dy) }]),
+      ));
     } else {
       if (drag.startObject.kind === 'picture-graphic') {
         const width = Math.max(20, snap(drag.startObject.width + dx));
-        updateDragPreview({ objectId: drag.objectId, changes: {
+        updateDragPreview({ [drag.objectId]: {
           targetWidth: width,
           width,
           height: derivedPictureGraphicHeight(width, drag.startObject.actualWidth ?? width, drag.startObject.actualHeight ?? drag.startObject.height),
         } });
         return;
       }
-      updateDragPreview({ objectId: drag.objectId, changes: {
+      updateDragPreview({ [drag.objectId]: {
         width:  Math.max(20, snap(drag.startObject.width  + dx)),
         height: Math.max(16, snap(drag.startObject.height + dy)),
       } });
     }
   }
 
-  function updateDragPreview(next: { objectId: string; changes: Partial<EditorObject> }) {
+  function updateDragPreview(next: Record<string, Partial<EditorObject>>) {
     dragPreviewRef.current = next;
     setDragPreview(next);
   }
@@ -223,12 +230,20 @@ export function EditorCanvas({
   function handlePointerUp() {
     const drag = dragRef.current;
     const preview = dragPreviewRef.current;
-    if (drag && drag.type !== 'pan' && preview?.objectId === drag.objectId && hasObjectChanges(drag.startObject, preview.changes)) {
-      onUpdateObject(drag.objectId, preview.changes);
+    if (drag && drag.type !== 'pan') {
+      const startById = new Map((drag.type === 'move' ? drag.startObjects ?? [drag.startObject] : [drag.startObject]).map((object) => [object.id, object]));
+      const updates = Object.entries(preview)
+        .filter(([id, changes]) => {
+          const startObject = startById.get(id);
+          return startObject && hasObjectChanges(startObject, changes);
+        })
+        .map(([id, changes]) => ({ id, changes }));
+      if (updates.length === 1) onUpdateObject(updates[0].id, updates[0].changes);
+      else if (updates.length > 1) onUpdateObjects(updates);
     }
     dragRef.current = null;
-    dragPreviewRef.current = null;
-    setDragPreview(null);
+    dragPreviewRef.current = {};
+    setDragPreview({});
   }
 
   function hasObjectChanges(object: EditorObject, changes: Partial<EditorObject>) {
@@ -250,7 +265,11 @@ export function EditorCanvas({
       return;
     }
     event.stopPropagation();
-    onSelect(object.id);
+    const additiveSelection = event.shiftKey || event.metaKey || event.ctrlKey;
+    const wasSelected = selectedIds.includes(object.id);
+    onSelect(object.id, additiveSelection);
+
+    if (additiveSelection) return;
 
     const now = window.performance.now();
     const lastClick = lastObjectClickRef.current;
@@ -261,16 +280,16 @@ export function EditorCanvas({
 
     if (isDoubleClick) {
       dragRef.current = null;
-      dragPreviewRef.current = null;
-      setDragPreview(null);
+      dragPreviewRef.current = {};
+      setDragPreview({});
       setEditingTextObjectId(object.id);
       return;
     }
 
     if (editingTextObjectId === object.id || object.locked) return;
-    dragPreviewRef.current = null;
-    setDragPreview(null);
-    dragRef.current = { type: 'move', objectId: object.id, startX: event.clientX, startY: event.clientY, startObject: object };
+    dragPreviewRef.current = {};
+    setDragPreview({});
+    dragRef.current = { type: 'move', objectId: object.id, startX: event.clientX, startY: event.clientY, startObject: object, startObjects: wasSelected ? selectedMovableObjects(object) : [object] };
     stageRef.current?.setPointerCapture(event.pointerId);
   }
 
@@ -278,15 +297,15 @@ export function EditorCanvas({
     event.stopPropagation();
     onSelect(object.id);
     if (object.locked) return;
-    dragPreviewRef.current = null;
-    setDragPreview(null);
+    dragPreviewRef.current = {};
+    setDragPreview({});
     dragRef.current = { type: 'resize', objectId: object.id, startX: event.clientX, startY: event.clientY, startObject: object };
     stageRef.current?.setPointerCapture(event.pointerId);
   }
 
   /** True when an object or any of its descendants is the current selection. */
   function isSelectedOrDescendant(object: EditorObject): boolean {
-    if (selectedId === object.id) return true;
+    if (selectedIds.includes(object.id)) return true;
     if (!object.childObjectIds) return false;
     return object.childObjectIds.some((childId) => {
       const child = objectById.get(childId);
@@ -294,12 +313,30 @@ export function EditorCanvas({
     });
   }
 
+  function selectedMovableObjects(clickedObject: EditorObject) {
+    const selected = selectedIds
+      .map((id) => objectById.get(id))
+      .filter((object): object is EditorObject => object !== undefined && !object.locked);
+    const selectedSet = new Set(selected.map((object) => object.id));
+    const topLevelSelected = selected.filter((object) => !hasSelectedAncestor(object, selectedSet));
+    return topLevelSelected.length ? topLevelSelected : [clickedObject];
+  }
+
+  function hasSelectedAncestor(object: EditorObject, selectedSet: Set<string>) {
+    let parentId = object.parentId;
+    while (parentId) {
+      if (selectedSet.has(parentId)) return true;
+      parentId = objectById.get(parentId)?.parentId;
+    }
+    return false;
+  }
+
   // ── Canvas object renderer ────────────────────────────────────────────
   function renderObject(object: EditorObject) {
     if (!isCanvasObjectRenderable(object)) return null;
 
-    const renderedObject = dragPreview?.objectId === object.id ? { ...object, ...dragPreview.changes } : object;
-    const selected = selectedId === renderedObject.id;
+    const renderedObject = dragPreview[object.id] ? { ...object, ...dragPreview[object.id] } : object;
+    const selected = selectedIds.includes(renderedObject.id);
     const context = {
       project,
       objectById,
@@ -349,6 +386,7 @@ export function EditorCanvas({
     >
       <div className="world" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})` }}>
         {project.workingSet.visible && masks.map((mask) => {
+          const renderedMask = dragPreview[mask.id] ? { ...mask, ...dragPreview[mask.id] } : mask;
           const children = getCanvasChildren(project, mask.id);
 
           // Resolve Soft Key Mask for this Data Mask (if assigned)
@@ -358,28 +396,28 @@ export function EditorCanvas({
           const skmKeys = skm ? getSoftKeyMaskKeys(project, skm.id) : [];
 
           return (
-            <Fragment key={mask.id}>
+            <Fragment key={renderedMask.id}>
               {/* ── Data Mask ─────────────────────────────────────────── */}
               <div
-                className={`vt-card interactive ${selectedId === mask.id ? 'selected-object' : ''}`}
-                style={dataMaskFrameStyle(mask)}
-                onPointerDown={(e) => handleMaskPointerDown(e, mask)}
+                className={`vt-card interactive ${selectedIds.includes(renderedMask.id) ? 'selected-object' : ''}`}
+                style={dataMaskFrameStyle(renderedMask)}
+                onPointerDown={(e) => handleMaskPointerDown(e, renderedMask)}
               >
-                <div className="mask-label">{mask.id}</div>
+                <div className="mask-label">{renderedMask.id}</div>
                 {children.map(renderObject)}
               </div>
 
               {/* ── Soft Key Mask strip ───────────────────────────────── */}
               {skm && (
                 <div
-                  className={`vt-soft-key-mask ${selectedId === skm.id ? 'selected-object' : ''}`}
-                  style={softKeyMaskFrameStyle(mask, skm)}
-                  onPointerDown={(e) => { e.stopPropagation(); onSelect(skm.id); }}
+                  className={`vt-soft-key-mask ${selectedIds.includes(skm.id) ? 'selected-object' : ''}`}
+                  style={softKeyMaskFrameStyle(renderedMask, skm)}
+                  onPointerDown={(e) => { e.stopPropagation(); onSelect(skm.id, e.shiftKey || e.metaKey || e.ctrlKey); }}
                 >
                   <div className="mask-label">{skm.id}</div>
                   {Array.from({ length: skm.softKeyCountPreview ?? SOFT_KEY_SLOTS }, (_, i) => {
                     const key = skmKeys[i];
-                    const keySelected = key && selectedId === key.id;
+                    const keySelected = key && selectedIds.includes(key.id);
                     const col = Math.floor(i / SOFT_KEY_ROWS);
                     const row = i % SOFT_KEY_ROWS;
                     return (
@@ -390,10 +428,10 @@ export function EditorCanvas({
                         onPointerDown={(e) => {
                           e.stopPropagation();
                           if (KEY_CHILD_TOOLS.has(tool) && key) {
-                            createOnKeySlot(e.clientX, e.clientY, key, mask.x + mask.width + SOFT_KEY_GAP + col * SOFT_KEY_WIDTH, mask.y + row * SOFT_KEY_SLOT_SIZE);
+                            createOnKeySlot(e.clientX, e.clientY, key, renderedMask.x + renderedMask.width + SOFT_KEY_GAP + col * SOFT_KEY_WIDTH, renderedMask.y + row * SOFT_KEY_SLOT_SIZE);
                             return;
                           }
-                          onSelect(key?.id ?? skm.id);
+                          onSelect(key?.id ?? skm.id, e.shiftKey || e.metaKey || e.ctrlKey);
                         }}
                       >
                         {key

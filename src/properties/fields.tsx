@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Lock } from 'lucide-react';
+import { Bold, ChevronDown, ChevronRight, Italic, Lock, Type, Underline } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { nearestVtColorIndex, vtColor } from '../domain/isobus';
@@ -8,7 +8,36 @@ export function Field({ label, value, onChange, type = 'text', disabled }: { lab
 }
 
 export function CheckboxField({ label, checked, onChange, disabled }: { label: string; checked: boolean; onChange: (checked: boolean) => void; disabled?: boolean }) {
-  return <label className="field"><span>{label}</span><div className="field-input editable"><input disabled={disabled} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /></div></label>;
+  return <label className="field checkbox-field"><span>{label}</span><div className="field-input editable checkbox-input"><input disabled={disabled} type="checkbox" checked={checked} onChange={(event) => onChange(event.target.checked)} /></div></label>;
+}
+
+export function IconToggleField<T extends string | number>({ label, value, options, onChange }: { label: string; value: T; options: { value: T; label: string; icon: ReactNode }[]; onChange: (value: T) => void }) {
+  return (
+    <div className="field wysiwyg-field">
+      <span>{label}</span>
+      <div className="icon-toggle-group">
+        {options.map((option) => (
+          <button
+            key={String(option.value)}
+            type="button"
+            className={value === option.value ? 'active' : ''}
+            onClick={() => onChange(option.value)}
+            title={option.label}
+          >
+            {option.icon}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function IconCheckboxField({ label, checked, onChange, icon, title = label, disabled }: { label: string; checked: boolean; onChange: (checked: boolean) => void; icon: ReactNode; title?: string; disabled?: boolean }) {
+  return (
+    <button type="button" className={`option-chip ${checked ? 'active' : ''}`} disabled={disabled} onClick={() => onChange(!checked)} title={title}>
+      {icon}<span>{label}</span>
+    </button>
+  );
 }
 
 export function VtColorField({ label, value, onChange }: { label: string; value: number; onChange: (value: number) => void }) {
@@ -29,13 +58,13 @@ export function FontStyleField({ value, onChange }: { value: number; onChange: (
   }
 
   return (
-    <div className="field font-style-field">
+    <div className="field font-style-field wysiwyg-field">
       <span>Font Style</span>
-      <div className="font-style-options">
-        <label><input type="checkbox" checked={value === 0} onChange={(event) => onChange(event.target.checked ? 0 : value)} />Normal</label>
-        <label><input type="checkbox" checked={Boolean(value & 1)} onChange={(event) => toggle(1, event.target.checked)} />Bold</label>
-        <label><input type="checkbox" checked={Boolean(value & 2)} onChange={(event) => toggle(2, event.target.checked)} />Italic</label>
-        <label><input type="checkbox" checked={Boolean(value & 4)} onChange={(event) => toggle(4, event.target.checked)} />Underline</label>
+      <div className="icon-toggle-group font-style-options">
+        <button type="button" className={value === 0 ? 'active' : ''} onClick={() => onChange(0)} title="Normal"><Type size={15} /></button>
+        <button type="button" className={value & 1 ? 'active' : ''} onClick={() => toggle(1, !(value & 1))} title="Bold"><Bold size={15} /></button>
+        <button type="button" className={value & 2 ? 'active' : ''} onClick={() => toggle(2, !(value & 2))} title="Italic"><Italic size={15} /></button>
+        <button type="button" className={value & 4 ? 'active' : ''} onClick={() => toggle(4, !(value & 4))} title="Underline"><Underline size={15} /></button>
       </div>
     </div>
   );
