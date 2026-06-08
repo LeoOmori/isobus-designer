@@ -48,6 +48,7 @@ export function EditorCanvas({
   const stageRef = useRef<HTMLDivElement>(null);
   const dragRef  = useRef<DragState | null>(null);
   const dragPreviewRef = useRef<{ objectId: string; changes: Partial<EditorObject> } | null>(null);
+  const lastObjectClickRef = useRef<{ id: string; time: number } | null>(null);
   const [editingTextObjectId, setEditingTextObjectId] = useState<string | null>(null);
   const [dragPreview, setDragPreview] = useState<{ objectId: string; changes: Partial<EditorObject> } | null>(null);
 
@@ -250,6 +251,22 @@ export function EditorCanvas({
     }
     event.stopPropagation();
     onSelect(object.id);
+
+    const now = window.performance.now();
+    const lastClick = lastObjectClickRef.current;
+    const isDoubleClick = object.kind === 'output-string'
+      && lastClick?.id === object.id
+      && now - lastClick.time <= 450;
+    lastObjectClickRef.current = { id: object.id, time: now };
+
+    if (isDoubleClick) {
+      dragRef.current = null;
+      dragPreviewRef.current = null;
+      setDragPreview(null);
+      setEditingTextObjectId(object.id);
+      return;
+    }
+
     if (editingTextObjectId === object.id || object.locked) return;
     dragPreviewRef.current = null;
     setDragPreview(null);

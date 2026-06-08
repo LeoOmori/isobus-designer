@@ -1108,7 +1108,8 @@ button.list-row {
   max-width: 100%;
   display: inline-block;
   outline: none;
-  cursor: text;
+  pointer-events: none;
+  cursor: inherit;
 }
 
 .inline-text-input {
