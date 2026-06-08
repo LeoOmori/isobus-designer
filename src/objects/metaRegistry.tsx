@@ -6,6 +6,7 @@ import { dataMaskMeta } from './data-mask/logic';
 import { fillAttributeMeta } from './fill-attribute/logic';
 import { fontAttributeMeta } from './font-attribute/logic';
 import { inputBooleanMeta } from './input-boolean/logic';
+import { inputStringMeta } from './input-string/logic';
 import { keyMeta } from './key/logic';
 import { lineAttributeMeta } from './line-attribute/logic';
 import { numberVariableMeta } from './number-variable/logic';
@@ -23,6 +24,7 @@ export const metaRegistry = {
   'key':              keyMeta,
   'button':           buttonMeta,
   'input-boolean':    inputBooleanMeta,
+  'input-string':     inputStringMeta,
   'output-string':    outputStringMeta,
   'output-number':    outputNumberMeta,
   'output-rectangle': outputRectangleMeta,

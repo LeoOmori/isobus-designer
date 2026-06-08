@@ -1,4 +1,4 @@
-import { Crosshair, Download, Eye, EyeOff, Grid3X3, Hand, Hash, Image, Minus, MousePointer2, MousePointerClick, Plus, Redo2, Square, ToggleLeft, Type, Undo2 } from 'lucide-react';
+import { Crosshair, Download, Eye, EyeOff, Grid3X3, Hand, Hash, Image, Minus, MousePointer2, MousePointerClick, Plus, Redo2, Square, TextCursorInput, ToggleLeft, Type, Undo2 } from 'lucide-react';
 import type { ToolMode } from '../domain/types';
 import { ToolButton } from '../ui/primitives';
 import logoSrc from '../assets/logo.png';
@@ -36,6 +36,7 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, side
         <ToolButton active={tool === 'output-number'}    onClick={() => onToolChange('output-number')}    title="Output Number">   <Hash size={20} /></ToolButton>
         <ToolButton active={tool === 'button'}           onClick={() => onToolChange('button')}           title="Button">          <MousePointerClick size={20} /></ToolButton>
         <ToolButton active={tool === 'input-boolean'}    onClick={() => onToolChange('input-boolean')}    title="Input Boolean">   <ToggleLeft size={20} /></ToolButton>
+        <ToolButton active={tool === 'input-string'}     onClick={() => onToolChange('input-string')}     title="Input String">    <TextCursorInput size={20} /></ToolButton>
         <ToolButton active={tool === 'picture-graphic'}  onClick={() => onToolChange('picture-graphic')}  title="Picture Graphic"> <Image size={20} /></ToolButton>
         <span className="divider" />
         <button type="button" className="zoom-btn" onClick={() => onZoom(zoom - 0.1)}><Minus size={17} /></button>

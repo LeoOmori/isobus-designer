@@ -8,6 +8,7 @@ const KIND_PREFIX: Record<ObjectKind, string> = {
   'key':              'KEY',
   'button':           'BTN',
   'input-boolean':    'IB',
+  'input-string':     'IS',
   'output-string':    'STR',
   'output-number':    'NUM',
   'output-rectangle': 'RECT',

@@ -6,6 +6,7 @@ import { DataMaskProperties } from './data-mask';
 import { FillAttributeProperties } from './fill-attribute';
 import { FontAttributeProperties } from './font-attribute';
 import { InputBooleanProperties } from './input-boolean';
+import { InputStringProperties } from './input-string';
 import { KeyProperties } from './key';
 import { LineAttributeProperties } from './line-attribute';
 import { NumberVariableProperties } from './number-variable';
@@ -36,6 +37,7 @@ export const objectPropertyComponents = {
   'container': ContainerProperties,
   'button': ButtonProperties,
   'input-boolean': InputBooleanProperties,
+  'input-string': InputStringProperties,
   'key': KeyProperties,
   'data-mask': DataMaskProperties,
   'soft-key-mask': SoftKeyMaskProperties,

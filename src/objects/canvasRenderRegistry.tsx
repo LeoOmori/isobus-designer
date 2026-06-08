@@ -12,6 +12,7 @@ import type { EditorObject, ObjectKind, ProjectState } from '../domain/types';
 import { ButtonContent, buttonFrameStyle } from './button';
 import { ContainerContent, containerFrameStyle } from './container';
 import { InputBooleanContent } from './input-boolean';
+import { InputStringContent } from './input-string';
 import { KeyContent } from './key';
 import { OutputNumberContent } from './output-number';
 import { outputRectangleStyle } from './output-rectangle/logic';
@@ -103,6 +104,14 @@ export const canvasObjectRenderers: Partial<Record<ObjectKind, CanvasObjectRende
       return <InputBooleanContent object={object} fontAttr={fontAttr} />;
     },
   },
+  'input-string': {
+    frameStyle: (object, context) => outputTextFrameStyle(object, context, OUTPUT_STRING_OPTION_TRANSPARENT),
+    renderContent: (object, context) => {
+      const font = context.objectById.get(object.fontAttributeId ?? '');
+      const stringVariable = object.variableReference ? context.objectById.get(object.variableReference) : undefined;
+      return <InputStringContent object={object} font={font} stringVariable={stringVariable} />;
+    },
+  },
 };
 
 export function canvasObjectFrameStyle(object: EditorObject, context: CanvasRenderContext): CSSProperties {
@@ -126,15 +135,15 @@ export function visibleChildObjects(project: ProjectState, object: EditorObject)
 
 function outputTextFrameStyle(object: EditorObject, context: CanvasRenderContext, transparentBit: number): CSSProperties {
   const font = context.objectById.get(object.fontAttributeId ?? '');
-  const outputStringAutoWrap = object.kind === 'output-string' && ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_AUTO_WRAP) !== 0;
-  const outputStringWrapOnHyphen = object.kind === 'output-string' && ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) !== 0;
+  const outputStringAutoWrap = (object.kind === 'output-string' || object.kind === 'input-string') && ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_AUTO_WRAP) !== 0;
+  const outputStringWrapOnHyphen = (object.kind === 'output-string' || object.kind === 'input-string') && ((object.outputOptions ?? 0) & OUTPUT_STRING_OPTION_WRAP_ON_HYPHEN) !== 0;
 
   return {
     borderColor: object.borderColor,
     borderWidth: 1,
     borderStyle: 'solid',
     background: ((object.outputOptions ?? 0) & transparentBit) !== 0 ? 'transparent' : vtColor(object.backgroundColorIndex ?? 1),
-    fontSize: object.kind === 'output-string'
+    fontSize: (object.kind === 'output-string' || object.kind === 'input-string')
       ? (font?.fontHeight ?? font?.fontSize ?? object.fontSize)
       : (font?.fontHeight ?? font?.fontSize ?? 16),
     fontFamily: font?.proportional === false ? 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace' : undefined,

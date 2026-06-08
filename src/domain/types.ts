@@ -10,6 +10,7 @@ export type ObjectKind =
   | 'key'
   | 'button'
   | 'input-boolean'
+  | 'input-string'
   | 'output-string'
   | 'output-number'
   | 'output-rectangle'
@@ -29,6 +30,7 @@ export type ToolMode =
   | 'output-rectangle'
   | 'button'
   | 'input-boolean'
+  | 'input-string'
   | 'output-number'
   | 'picture-graphic';
 

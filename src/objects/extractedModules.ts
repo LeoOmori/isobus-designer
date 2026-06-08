@@ -6,6 +6,7 @@ import { dataMaskModule } from './data-mask/logic';
 import { fillAttributeModule } from './fill-attribute/logic';
 import { fontAttributeModule } from './font-attribute/logic';
 import { inputBooleanModule } from './input-boolean/logic';
+import { inputStringModule } from './input-string/logic';
 import { keyModule } from './key/logic';
 import { lineAttributeModule } from './line-attribute/logic';
 import { numberVariableModule } from './number-variable/logic';
@@ -29,6 +30,7 @@ export const extractedModules: Record<ObjectKind, ObjectModule> = {
   'container': containerModule,
   'button': buttonModule,
   'input-boolean': inputBooleanModule,
+  'input-string': inputStringModule,
   'key': keyModule,
   'data-mask': dataMaskModule,
   'soft-key-mask': softKeyMaskModule,

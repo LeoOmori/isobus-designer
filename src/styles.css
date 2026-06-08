@@ -1215,6 +1215,7 @@ button.list-row {
   text-align: center;
 }
 
+.object-input-string,
 .object-output-string,
 .object-output-number {
   display: flex;
