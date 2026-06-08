@@ -224,6 +224,47 @@ button:focus-visible {
   border-color: var(--accent) !important;
 }
 
+.top-action-select {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px 0 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  font-weight: 500;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
+}
+
+.top-action-select:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.top-action-select select {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 28px;
+  text-align: center;
+}
+
+.top-action-select select option {
+  background: #181c26;
+  color: #e2e8f0;
+}
+
 /* ──────────────────────────────────────────────────────────────────────
    Workspace — flex row: left sidebar | stage | right sidebar
    ────────────────────────────────────────────────────────────────────── */

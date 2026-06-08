@@ -44,8 +44,8 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, side
         <button type="button" className="zoom-btn" onClick={() => onZoom(1)}><Crosshair size={17} /></button>
       </div>
       <div className="top-actions">
-        <label className="vt-version-select" title="VT version target for export">
-          <span className="vt-version-label">VT</span>
+        <label className="top-action-select" title="VT version target for export">
+          <span>VT</span>
           <select value={String(vtVersion)} onChange={(e) => onVtVersionChange(Number(e.target.value) as 3 | 4)}>
             <option value="3">v3</option>
             <option value="4">v4</option>
