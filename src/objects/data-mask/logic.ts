@@ -1,5 +1,6 @@
 import { LayoutPanelLeft } from 'lucide-react';
 import type { CSSProperties } from 'react';
+import { vtColor } from '../../domain/isobus';
 import type { EditorObject, ProjectState } from '../../domain/types';
 import { writeDataMask } from '../../domain/export/writers/dataMask';
 import { activeParent, toObjectId } from '../createHelpers';
@@ -46,7 +47,7 @@ export function dataMaskFrameStyle(mask: EditorObject): CSSProperties {
     top: mask.y,
     width: mask.width,
     height: mask.height,
-    background: mask.backgroundColor,
+    background: vtColor(mask.backgroundColorIndex ?? 1),
     opacity: mask.visible ? 1 : 0,
     pointerEvents: mask.visible ? 'auto' : 'none',
     zIndex: mask.zIndex,
