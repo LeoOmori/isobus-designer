@@ -7,6 +7,7 @@ import { fillAttributeMeta } from './fill-attribute/logic';
 import { fontAttributeMeta } from './font-attribute/logic';
 import { inputBooleanMeta } from './input-boolean/logic';
 import { inputStringMeta } from './input-string/logic';
+import { inputNumberMeta } from './input-number/logic';
 import { keyMeta } from './key/logic';
 import { lineAttributeMeta } from './line-attribute/logic';
 import { numberVariableMeta } from './number-variable/logic';
@@ -25,6 +26,7 @@ export const metaRegistry = {
   'button':           buttonMeta,
   'input-boolean':    inputBooleanMeta,
   'input-string':     inputStringMeta,
+  'input-number':     inputNumberMeta,
   'output-string':    outputStringMeta,
   'output-number':    outputNumberMeta,
   'output-rectangle': outputRectangleMeta,

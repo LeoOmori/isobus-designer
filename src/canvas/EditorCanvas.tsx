@@ -16,7 +16,7 @@ import { SOFT_KEY_GAP, SOFT_KEY_SLOT_SIZE, SOFT_KEY_SLOTS, SOFT_KEY_ROWS, SOFT_K
 
 /** Tools that create a canvas object on click. */
 const CANVAS_TOOLS = new Set<ToolMode>([
-  'container', 'output-rectangle', 'output-string', 'button', 'input-boolean', 'input-string', 'output-number', 'picture-graphic',
+  'container', 'output-rectangle', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'output-number', 'picture-graphic',
 ]);
 
 const BUTTON_CHILD_TOOLS = new Set<ToolMode>([
@@ -24,7 +24,7 @@ const BUTTON_CHILD_TOOLS = new Set<ToolMode>([
 ]);
 
 const CONTAINER_CHILD_TOOLS = new Set<ToolMode>([
-  'container', 'output-rectangle', 'output-string', 'button', 'input-boolean', 'input-string', 'output-number', 'picture-graphic',
+  'container', 'output-rectangle', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'output-number', 'picture-graphic',
 ]);
 
 const KEY_CHILD_TOOLS = new Set<ToolMode>([

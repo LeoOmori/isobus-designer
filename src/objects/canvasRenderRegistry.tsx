@@ -13,6 +13,7 @@ import { ButtonContent, buttonFrameStyle } from './button';
 import { ContainerContent, containerFrameStyle } from './container';
 import { InputBooleanContent } from './input-boolean';
 import { InputStringContent } from './input-string';
+import { InputNumberContent } from './input-number';
 import { KeyContent } from './key';
 import { OutputNumberContent } from './output-number';
 import { outputRectangleStyle } from './output-rectangle/logic';
@@ -110,6 +111,14 @@ export const canvasObjectRenderers: Partial<Record<ObjectKind, CanvasObjectRende
       const font = context.objectById.get(object.fontAttributeId ?? '');
       const stringVariable = object.variableReference ? context.objectById.get(object.variableReference) : undefined;
       return <InputStringContent object={object} font={font} stringVariable={stringVariable} />;
+    },
+  },
+  'input-number': {
+    frameStyle: (object, context) => outputTextFrameStyle(object, context, OUTPUT_NUMBER_OPTION_TRANSPARENT),
+    renderContent: (object, context) => {
+      const font = context.objectById.get(object.fontAttributeId ?? '');
+      const numberVariable = object.variableReference ? context.objectById.get(object.variableReference) : undefined;
+      return <InputNumberContent object={object} font={font} numberVariable={numberVariable} />;
     },
   },
 };

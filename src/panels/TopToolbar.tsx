@@ -37,6 +37,7 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, side
         <ToolButton active={tool === 'button'}           onClick={() => onToolChange('button')}           title="Button">          <MousePointerClick size={20} /></ToolButton>
         <ToolButton active={tool === 'input-boolean'}    onClick={() => onToolChange('input-boolean')}    title="Input Boolean">   <ToggleLeft size={20} /></ToolButton>
         <ToolButton active={tool === 'input-string'}     onClick={() => onToolChange('input-string')}     title="Input String">    <TextCursorInput size={20} /></ToolButton>
+        <ToolButton active={tool === 'input-number'}     onClick={() => onToolChange('input-number')}     title="Input Number">    <Hash size={20} /></ToolButton>
         <ToolButton active={tool === 'picture-graphic'}  onClick={() => onToolChange('picture-graphic')}  title="Picture Graphic"> <Image size={20} /></ToolButton>
         <span className="divider" />
         <button type="button" className="zoom-btn" onClick={() => onZoom(zoom - 0.1)}><Minus size={17} /></button>

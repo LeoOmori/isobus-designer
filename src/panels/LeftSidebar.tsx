@@ -82,6 +82,7 @@ export function LeftSidebar({
             sc('Button',        <PaletteCard label="Button"        icon={<MousePointerClick size={24} />} selected={tool === 'button'}        onClick={() => onToolChange('button')} />),
             sc('Input Boolean', <PaletteCard label="Input Boolean" icon={<ToggleLeft size={24} />}        selected={tool === 'input-boolean'} onClick={() => onToolChange('input-boolean')} />),
             sc('Input String',  <PaletteCard label="Input String"  icon={<TextCursorInput size={24} />}   selected={tool === 'input-string'}  onClick={() => onToolChange('input-string')} />),
+            sc('Input Number',  <PaletteCard label="Input Number"  icon={<Hash size={24} />}              selected={tool === 'input-number'}  onClick={() => onToolChange('input-number')} />),
             sc('Key',           <PaletteCard label="Key"           icon={<KeyRound size={24} />}          onClick={() => onCreateObject('key')} />),
           ])}
 
@@ -97,7 +98,7 @@ export function LeftSidebar({
             sc('Meter',      <PaletteCard label="Meter"      disabled icon={<AlignCenter size={24} />} />),
             sc('Bar Graph',  <PaletteCard label="Bar Graph"  disabled icon={<AlignCenter size={24} />} />),
             sc('Ellipse',    <PaletteCard label="Ellipse"    disabled icon={<Circle size={24} />} />),
-            sc('Input Num',  <PaletteCard label="Input Num"  disabled icon={<Hash size={24} />} />),
+
             sc('Input List', <PaletteCard label="Input List" disabled icon={<ClipboardList size={24} />} />),
           ])}
         </Panel>

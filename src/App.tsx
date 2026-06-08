@@ -22,7 +22,7 @@ import { storageKey, useProjectState } from './state/useProjectState';
 
 /** Kinds that are placed as children of a Data Mask on the canvas. */
 const CANVAS_KINDS = new Set<ObjectKind>([
-  'container', 'output-string', 'output-number', 'output-rectangle', 'button', 'input-boolean', 'input-string', 'picture-graphic',
+  'container', 'output-string', 'output-number', 'output-rectangle', 'button', 'input-boolean', 'input-string', 'input-number', 'picture-graphic',
 ]);
 
 export function App() {
@@ -262,9 +262,9 @@ export function App() {
   }
 
   function canApplyReferencePatch(object: EditorObject, kind: ReferenceKind) {
-    if (kind === 'font-attribute') return object.kind === 'output-string' || object.kind === 'output-number' || object.kind === 'input-boolean' || object.kind === 'input-string';
+    if (kind === 'font-attribute') return object.kind === 'output-string' || object.kind === 'output-number' || object.kind === 'input-boolean' || object.kind === 'input-string' || object.kind === 'input-number';
     if (kind === 'string-variable') return object.kind === 'output-string' || object.kind === 'input-string';
-    if (kind === 'number-variable') return object.kind === 'output-number' || object.kind === 'input-boolean';
+    if (kind === 'number-variable') return object.kind === 'output-number' || object.kind === 'input-boolean' || object.kind === 'input-number';
     if (kind === 'line-attribute' || kind === 'fill-attribute') return object.kind === 'output-rectangle';
     return false;
   }

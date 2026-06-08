@@ -24,6 +24,7 @@ export const VT_OBJECT_TYPES: Record<ObjectKind, number> = {
   'key':             5,
   'button':          6,
   'input-boolean':   7,
+  'input-number':    9,
   'input-string':    8,
   'output-string':  11,
   'output-number':  12,

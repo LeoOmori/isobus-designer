@@ -7,6 +7,7 @@ import { FillAttributeProperties } from './fill-attribute';
 import { FontAttributeProperties } from './font-attribute';
 import { InputBooleanProperties } from './input-boolean';
 import { InputStringProperties } from './input-string';
+import { InputNumberProperties } from './input-number';
 import { KeyProperties } from './key';
 import { LineAttributeProperties } from './line-attribute';
 import { NumberVariableProperties } from './number-variable';
@@ -38,6 +39,7 @@ export const objectPropertyComponents = {
   'button': ButtonProperties,
   'input-boolean': InputBooleanProperties,
   'input-string': InputStringProperties,
+  'input-number': InputNumberProperties,
   'key': KeyProperties,
   'data-mask': DataMaskProperties,
   'soft-key-mask': SoftKeyMaskProperties,

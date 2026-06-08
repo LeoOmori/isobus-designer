@@ -11,6 +11,7 @@ export type ObjectKind =
   | 'button'
   | 'input-boolean'
   | 'input-string'
+  | 'input-number'
   | 'output-string'
   | 'output-number'
   | 'output-rectangle'
@@ -31,6 +32,7 @@ export type ToolMode =
   | 'button'
   | 'input-boolean'
   | 'input-string'
+  | 'input-number'
   | 'output-number'
   | 'picture-graphic';
 
@@ -113,6 +115,11 @@ export type EditorObject = {
   numberOfDecimals?: number;    // uint8
   numberFormat?: number;        // uint8 (0=fixed decimal, 1=exponential)
   value?: number;               // uint32 — also used by Number Variable
+
+  // ── Input Number (objectType 9) ──────────────────────────────────────────
+  minValue?: number;            // uint32 raw min
+  maxValue?: number;            // uint32 raw max
+  realTimeEditing?: boolean;    // options2 bit 1
 
   // ── Output Rectangle (objectType 14) ─────────────────────────────────
   lineAttributeId?: string;
