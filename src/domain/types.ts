@@ -26,7 +26,8 @@ export type ObjectKind =
   | 'line-attribute'
   | 'fill-attribute'
   | 'string-variable'
-  | 'number-variable';
+  | 'number-variable'
+  | 'object-pointer';
 
 export type ToolMode =
   | 'select'
@@ -45,7 +46,8 @@ export type ToolMode =
   | 'input-list'
   | 'output-number'
   | 'output-meter'
-  | 'picture-graphic';
+  | 'picture-graphic'
+  | 'object-pointer';
 
 export type ReferenceKind =
   | 'line-attribute'
@@ -202,6 +204,9 @@ export type EditorObject = {
   unit?: string;
   minPreview?: number;
   maxPreview?: number;
+
+  // ── Object Pointer (objectType 27) ────────────────────────────────────
+  pointerValue?: string | null;     // editor ID of referenced object, or null = 0xFFFF NULL
 
   // ── Editor-only helpers ───────────────────────────────────────────────
 };

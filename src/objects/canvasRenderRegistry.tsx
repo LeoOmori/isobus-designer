@@ -25,6 +25,7 @@ import { OutputNumberContent } from './output-number';
 import { outputRectangleStyle } from './output-rectangle/logic';
 import { OutputStringContent } from './output-string';
 import { PictureGraphicContent } from './picture-graphic';
+import { ObjectPointerNullContent, ObjectPointerSync, ObjectPointerTargetContent, objectPointerFrameStyle } from './object-pointer';
 
 export type CanvasRenderContext = {
   project: ProjectState;
@@ -182,6 +183,27 @@ export const canvasObjectRenderers: Partial<Record<ObjectKind, CanvasObjectRende
             </div>
           )}
         </InputListContent>
+      );
+    },
+  },
+  'object-pointer': {
+    frameStyle: (object) => objectPointerFrameStyle(object),
+    renderContent: (object, context) => {
+      const target = object.pointerValue ? context.objectById.get(object.pointerValue) : undefined;
+      if (!target || target.kind === 'object-pointer') return <ObjectPointerNullContent name={object.name} />;
+      const targetFrameStyle = canvasObjectFrameStyle(target, { ...context, isSelected: false });
+      return (
+        <>
+          <ObjectPointerSync pointer={object} target={target} onPatch={context.onPatch} />
+          <ObjectPointerTargetContent
+            name={object.name}
+            targetWidth={target.width}
+            targetHeight={target.height}
+            targetFrameStyle={targetFrameStyle}
+          >
+            {renderCanvasObjectContent(target, { ...context, isSelected: false })}
+          </ObjectPointerTargetContent>
+        </>
       );
     },
   },

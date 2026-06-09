@@ -47,6 +47,7 @@ function parseObject(r: Reader): number {
     case 23: { r.u8(); r.u8(); r.u8(); r.u8(); r.u8(); return type; }
     case 24: { r.u8(); r.u8(); r.u16(); r.u8(); return type; }
     case 25: { r.u8(); r.u8(); r.u16(); r.u8(); return type; }
+    case 27: { r.u16(); return type; }
     default: throw new Error(`Unknown object type ${type}`);
   }
 }

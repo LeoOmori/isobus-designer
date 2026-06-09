@@ -21,19 +21,19 @@ type BuildingPolygonState = {
 
 /** Tools that create a canvas object on click. */
 const CANVAS_TOOLS = new Set<ToolMode>([
-  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'output-meter', 'picture-graphic',
+  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'output-meter', 'picture-graphic', 'object-pointer',
 ]);
 
 const BUTTON_CHILD_TOOLS = new Set<ToolMode>([
-  'output-rectangle', 'output-string', 'output-number', 'picture-graphic',
+  'output-rectangle', 'output-string', 'output-number', 'picture-graphic', 'object-pointer',
 ]);
 
 const CONTAINER_CHILD_TOOLS = new Set<ToolMode>([
-  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'output-meter', 'picture-graphic',
+  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'output-meter', 'picture-graphic', 'object-pointer',
 ]);
 
 const KEY_CHILD_TOOLS = new Set<ToolMode>([
-  'container', 'output-rectangle', 'output-string', 'output-number', 'picture-graphic',
+  'container', 'output-rectangle', 'output-string', 'output-number', 'picture-graphic', 'object-pointer',
 ]);
 
 export function EditorCanvas({
@@ -475,7 +475,7 @@ export function EditorCanvas({
       >
         {renderCanvasObjectContent(renderedObject, context)}
 
-        {selected && <span className="resize-handle" onPointerDown={(e) => beginResize(e, renderedObject)} />}
+        {selected && renderedObject.kind !== 'object-pointer' && <span className="resize-handle" onPointerDown={(e) => beginResize(e, renderedObject)} />}
       </div>
     );
   }

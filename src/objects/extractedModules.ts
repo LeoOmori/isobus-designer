@@ -23,6 +23,7 @@ import { outputStringModule } from './output-string/module';
 import { pictureGraphicModule } from './picture-graphic/logic';
 import { softKeyMaskModule } from './soft-key-mask/logic';
 import { stringVariableModule } from './string-variable/logic';
+import { objectPointerModule } from './object-pointer/logic';
 
 export const extractedModules: Record<ObjectKind, ObjectModule> = {
   'font-attribute': fontAttributeModule,
@@ -48,4 +49,5 @@ export const extractedModules: Record<ObjectKind, ObjectModule> = {
   'data-mask': dataMaskModule,
   'alarm-mask': alarmMaskModule,
   'soft-key-mask': softKeyMaskModule,
+  'object-pointer': objectPointerModule,
 } satisfies Record<ObjectKind, ObjectModule>;

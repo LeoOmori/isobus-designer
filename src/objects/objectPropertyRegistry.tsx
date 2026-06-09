@@ -23,6 +23,7 @@ import { OutputStringProperties } from './output-string';
 import { PictureGraphicProperties } from './picture-graphic';
 import { SoftKeyMaskProperties } from './soft-key-mask';
 import { StringVariableProperties } from './string-variable';
+import { ObjectPointerProperties } from './object-pointer';
 
 export type ObjectPropertiesProps = {
   object: EditorObject;
@@ -55,4 +56,5 @@ export const objectPropertyComponents = {
   'data-mask': DataMaskProperties,
   'alarm-mask': AlarmMaskProperties,
   'soft-key-mask': SoftKeyMaskProperties,
+  'object-pointer': ObjectPointerProperties,
 } satisfies Record<ObjectKind, ComponentType<ObjectPropertiesProps>>;

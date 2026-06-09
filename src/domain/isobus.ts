@@ -41,6 +41,7 @@ export const VT_OBJECT_TYPES: Record<ObjectKind, number> = {
   'font-attribute':  23,
   'line-attribute':  24,
   'fill-attribute':  25,
+  'object-pointer':  27,
 };
 
 /** ISO 11783-6 Fill Attribute fillType values. */

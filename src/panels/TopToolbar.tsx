@@ -44,6 +44,7 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, side
         <ToolButton active={tool === 'input-number'}    onClick={() => onToolChange('input-number')}     title="Input Number">    <Hash size={20} /></ToolButton>
         <ToolButton active={tool === 'input-list'}      onClick={() => onToolChange('input-list')}       title="Input List">      <List size={20} /></ToolButton>
         <ToolButton active={tool === 'picture-graphic'}  onClick={() => onToolChange('picture-graphic')}  title="Picture Graphic"> <Image size={20} /></ToolButton>
+        <ToolButton active={tool === 'object-pointer'}   onClick={() => onToolChange('object-pointer')}   title="Object Pointer">  <Crosshair size={20} /></ToolButton>
         <span className="divider" />
         <button type="button" className="zoom-btn" onClick={() => onZoom(zoom - 0.1)}><Minus size={17} /></button>
         <strong className="zoom-label">{Math.round(zoom * 100)}%</strong>

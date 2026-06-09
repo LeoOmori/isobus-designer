@@ -23,6 +23,7 @@ import { outputStringMeta } from './output-string/meta';
 import { pictureGraphicMeta } from './picture-graphic/logic';
 import { softKeyMaskMeta } from './soft-key-mask/logic';
 import { stringVariableMeta } from './string-variable/logic';
+import { objectPointerMeta } from './object-pointer/logic';
 
 export const metaRegistry = {
   'data-mask':        dataMaskMeta,
@@ -48,4 +49,5 @@ export const metaRegistry = {
   'fill-attribute':   fillAttributeMeta,
   'string-variable':  stringVariableMeta,
   'number-variable':  numberVariableMeta,
+  'object-pointer':   objectPointerMeta,
 } satisfies Record<ObjectKind, ObjectMeta>;

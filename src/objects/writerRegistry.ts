@@ -23,6 +23,7 @@ import { keyModule } from './key/logic';
 import { lineAttributeModule } from './line-attribute/logic';
 import { numberVariableModule } from './number-variable/logic';
 import { stringVariableModule } from './string-variable/logic';
+import { objectPointerModule } from './object-pointer/logic';
 
 export const writerModules = {
   'font-attribute':    fontAttributeModule,
@@ -48,4 +49,5 @@ export const writerModules = {
   'soft-key-mask':     softKeyMaskModule,
   'data-mask':         dataMaskModule,
   'alarm-mask':        alarmMaskModule,
+  'object-pointer':    objectPointerModule,
 } satisfies Record<ObjectKind, Pick<ObjectModule, 'exportOrder' | 'writer'>>;

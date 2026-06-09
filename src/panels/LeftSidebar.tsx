@@ -3,7 +3,7 @@ import {
   AlignCenter, Bell, ClipboardList, Copy, Eye, Folder, Gauge,
   Grid3X3, Hash, Hexagon, Image, KeyRound, Keyboard, LayoutPanelLeft, List, MoveUpRight,
   MoreVertical, MousePointerClick, PenLine, Plus, Square, TextCursorInput, ToggleLeft, Trash2, Type, Zap,
-  Circle,
+  Circle, Crosshair,
 } from 'lucide-react';
 import type { EditorObject, ObjectKind, ReferenceKind, ToolMode } from '../domain/types';
 import { PaletteCard, Panel, ResizableSplit, SearchBox, SectionHeader } from '../ui/primitives';
@@ -89,6 +89,7 @@ export function LeftSidebar({
             sc('Output Polygon',  <PaletteCard label="Output Polygon"  icon={<Hexagon size={24} />}      selected={tool === 'output-polygon'}   onClick={() => onToolChange('output-polygon')} />),
             sc('Output Ellipse',  <PaletteCard label="Output Ellipse"  icon={<Circle size={24} />}      selected={tool === 'output-ellipse'}   onClick={() => onToolChange('output-ellipse')} />),
             sc('Picture Graphic', <PaletteCard label="Picture Graphic" icon={<Image size={24} />}       selected={tool === 'picture-graphic'}  onClick={() => onToolChange('picture-graphic')} />),
+            sc('Object Pointer',  <PaletteCard label="Object Pointer"  icon={<Crosshair size={24} />}     selected={tool === 'object-pointer'}   onClick={() => onToolChange('object-pointer')} />),
           ])}
 
           {section('INPUTS', [
