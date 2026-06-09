@@ -19,6 +19,7 @@ export const vtFontCells = [
 /** ISO 11783-6 objectType numbers for each ObjectKind. */
 export const VT_OBJECT_TYPES: Record<ObjectKind, number> = {
   'data-mask':       1,
+  'alarm-mask':      2,
   'container':       3,
   'soft-key-mask':   4,
   'key':             5,

@@ -36,7 +36,8 @@ export function App() {
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const errors = validate(project);
 
-  const masks       = project.objects.filter((o) => o.kind === 'data-mask');
+  const masks        = project.objects.filter((o) => o.kind === 'data-mask');
+  const alarmMasks   = project.objects.filter((o) => o.kind === 'alarm-mask');
   const softKeyMasks = project.objects.filter((o) => o.kind === 'soft-key-mask');
 
   function selectSingle(id: string) {
@@ -204,11 +205,12 @@ export function App() {
   function createObject(kind: ObjectKind, x = 70, y = 70, parentId = project.activeMaskId, overrides?: Partial<EditorObject>) {
     commit((current) => {
       const isMask      = kind === 'data-mask';
+      const isAlarmMask = kind === 'alarm-mask';
       const isSKM       = kind === 'soft-key-mask';
       const isKey       = kind === 'key';
       const isCanvas    = CANVAS_KINDS.has(kind);
 
-      // Which Data Mask or Button to append this canvas child to.
+      // Which Data Mask, Alarm Mask, or Button to append this canvas child to.
       const targetParentId = isCanvas ? parentId : current.activeMaskId;
       const activeSKMId  = current.workingSet.activeSoftKeyMaskId;
       const base        = createEditorObject(kind, current, x, y, targetParentId);
@@ -274,8 +276,9 @@ export function App() {
   function deleteObject(id: string) {
     const object = project.objects.find((o) => o.id === id);
     if (!object) return;
-    // Prevent deleting the last data mask
+    // Prevent deleting the last data mask or alarm mask
     if (object.kind === 'data-mask' && project.objects.filter((o) => o.kind === 'data-mask').length === 1) return;
+    if (object.kind === 'alarm-mask' && project.objects.filter((o) => o.kind === 'alarm-mask').length === 1) return;
 
     commit((current) => {
       const deleteIds = new Set<string>();
@@ -457,6 +460,10 @@ export function App() {
             const id = project.workingSet.activeSoftKeyMaskId;
             if (id) deleteObject(id);
           }}
+          alarmMasks={alarmMasks}
+          onAlarmMaskSelect={(id) => selectSingle(id)}
+          onAddAlarmMask={() => createObject('alarm-mask')}
+          onDeleteAlarmMask={() => deleteObject(selectedId)}
           onCreateObject={(kind) => createObject(kind)}
           onCreateAttribute={createAttributeReference}
         />

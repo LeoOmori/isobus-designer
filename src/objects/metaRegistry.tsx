@@ -1,5 +1,6 @@
 import type { ObjectKind } from '../domain/types';
 import type { ObjectMeta } from './ObjectModule';
+import { alarmMaskMeta } from './alarm-mask/logic';
 import { buttonMeta } from './button/logic';
 import { containerMeta } from './container/logic';
 import { dataMaskMeta } from './data-mask/logic';
@@ -24,6 +25,7 @@ import { stringVariableMeta } from './string-variable/logic';
 
 export const metaRegistry = {
   'data-mask':        dataMaskMeta,
+  'alarm-mask':       alarmMaskMeta,
   'container':        containerMeta,
   'soft-key-mask':    softKeyMaskMeta,
   'key':              keyMeta,

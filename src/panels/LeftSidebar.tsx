@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  AlignCenter, ClipboardList, Copy, Eye, Folder,
+  AlignCenter, Bell, ClipboardList, Copy, Eye, Folder,
   Grid3X3, Hash, Hexagon, Image, KeyRound, Keyboard, LayoutPanelLeft, List, MoveUpRight,
   MoreVertical, MousePointerClick, PenLine, Plus, Square, TextCursorInput, ToggleLeft, Trash2, Type, Zap,
   Circle,
@@ -12,6 +12,7 @@ export function LeftSidebar({
   tool, onToolChange,
   masks, activeMaskId, onMaskSelect, onAddMask, onDuplicateMask, onDeleteMask,
   softKeyMasks, activeSoftKeyMaskId, onSoftKeyMaskSelect, onAddSoftKeyMask, onDeleteSoftKeyMask,
+  alarmMasks, onAlarmMaskSelect, onAddAlarmMask, onDeleteAlarmMask,
   onCreateObject, onCreateAttribute,
 }: {
   tool: ToolMode;
@@ -27,13 +28,18 @@ export function LeftSidebar({
   onSoftKeyMaskSelect: (id: string) => void;
   onAddSoftKeyMask: () => void;
   onDeleteSoftKeyMask: () => void;
+  alarmMasks: EditorObject[];
+  onAlarmMaskSelect: (id: string) => void;
+  onAddAlarmMask: () => void;
+  onDeleteAlarmMask: () => void;
   onCreateObject: (kind: ObjectKind) => void;
   onCreateAttribute: (kind: ReferenceKind) => void;
 }) {
-  const [tab, setTab] = useState<'data-masks' | 'soft-key-masks'>('data-masks');
+  const [tab, setTab] = useState<'data-masks' | 'soft-key-masks' | 'alarm-masks'>('data-masks');
   const [objectSearch, setObjectSearch] = useState('');
   const [dataMaskSearch, setDataMaskSearch] = useState('');
   const [skmSearch, setSkmSearch] = useState('');
+  const [alarmMaskSearch, setAlarmMaskSearch] = useState('');
 
   const q = objectSearch.toLowerCase();
 
@@ -53,8 +59,9 @@ export function LeftSidebar({
   const filteredMasks   = q ? masks  .filter((m) => m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q)) : masks;
   const filteredSKMs    = q ? softKeyMasks.filter((m) => m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q)) : softKeyMasks;
 
-  const filteredDMasks  = dataMaskSearch ? masks  .filter((m) => m.name.toLowerCase().includes(dataMaskSearch.toLowerCase()) || m.id.toLowerCase().includes(dataMaskSearch.toLowerCase())) : masks;
-  const filteredDSKMs   = skmSearch      ? softKeyMasks.filter((m) => m.name.toLowerCase().includes(skmSearch.toLowerCase()) || m.id.toLowerCase().includes(skmSearch.toLowerCase())) : softKeyMasks;
+  const filteredDMasks   = dataMaskSearch ? masks       .filter((m) => m.name.toLowerCase().includes(dataMaskSearch.toLowerCase()) || m.id.toLowerCase().includes(dataMaskSearch.toLowerCase())) : masks;
+  const filteredDSKMs    = skmSearch      ? softKeyMasks.filter((m) => m.name.toLowerCase().includes(skmSearch.toLowerCase()) || m.id.toLowerCase().includes(skmSearch.toLowerCase())) : softKeyMasks;
+  const filteredAlarmMasks = alarmMaskSearch ? alarmMasks.filter((m) => m.name.toLowerCase().includes(alarmMaskSearch.toLowerCase()) || m.id.toLowerCase().includes(alarmMaskSearch.toLowerCase())) : alarmMasks;
 
   return (
     <aside className="left-sidebar">
@@ -65,6 +72,7 @@ export function LeftSidebar({
 
           {section('SCREENS', [
             sc('Data Mask',     <PaletteCard label="Data Mask"     icon={<LayoutPanelLeft size={24} />} selected={tool === 'data-mask'}     onClick={() => onToolChange('data-mask')} />),
+            sc('Alarm Mask',    <PaletteCard label="Alarm Mask"    icon={<Bell size={24} />}            onClick={() => onCreateObject('alarm-mask')} />),
             sc('Soft Key Mask', <PaletteCard label="Soft Key Mask" icon={<Keyboard size={24} />}        onClick={() => onCreateObject('soft-key-mask')} />),
           ])}
 
@@ -105,10 +113,11 @@ export function LeftSidebar({
           ])}
         </Panel>
 
-        {/* ── Masks (Data + Soft Key) ──────────────────────────────────────── */}
+        {/* ── Masks (Data + Alarm + Soft Key) ──────────────────────────────── */}
         <Panel title="Masks" className="masks-panel">
           <div className="tabs">
             <button className={tab === 'data-masks' ? 'active' : ''} onClick={() => setTab('data-masks')}>Data Masks</button>
+            <button className={tab === 'alarm-masks' ? 'active' : ''} onClick={() => setTab('alarm-masks')}>Alarm Masks</button>
             <button className={tab === 'soft-key-masks' ? 'active' : ''} onClick={() => setTab('soft-key-masks')}>Soft Key Masks</button>
           </div>
 
@@ -162,6 +171,33 @@ export function LeftSidebar({
               <div className="panel-actions">
                 <button onClick={onAddSoftKeyMask}><Plus size={18} /></button>
                 <button onClick={onDeleteSoftKeyMask}><Trash2 size={18} /></button>
+              </div>
+            </>
+          )}
+
+          {tab === 'alarm-masks' && (
+            <>
+              <SearchBox value={alarmMaskSearch} onChange={setAlarmMaskSearch} placeholder="Search alarm masks..." />
+              <div className="list">
+                {filteredAlarmMasks.map((am) => (
+                  <button
+                    key={am.id}
+                    className="list-row"
+                    onClick={() => onAlarmMaskSelect(am.id)}
+                  >
+                    <Bell size={14} />
+                    <span className="mono-id">{am.id}</span>
+                    <span>{am.name}</span>
+                    <MoreVertical size={14} />
+                  </button>
+                ))}
+                {alarmMasks.length === 0 && (
+                  <div style={{ padding: '8px 12px', color: '#9ca3af', fontSize: 12 }}>No Alarm Masks</div>
+                )}
+              </div>
+              <div className="panel-actions">
+                <button onClick={onAddAlarmMask}><Plus size={18} /></button>
+                <button onClick={onDeleteAlarmMask}><Trash2 size={18} /></button>
               </div>
             </>
           )}

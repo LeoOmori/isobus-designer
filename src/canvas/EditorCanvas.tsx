@@ -8,6 +8,7 @@ import {
 import { getActiveMask, getCanvasChildren, getSoftKeyMaskKeys } from '../domain/selectors';
 import type { DragState, EditorObject, ObjectKind, ProjectState, ToolMode, Viewport } from '../domain/types';
 import { derivedPictureGraphicHeight } from '../domain/vtPalette';
+import { alarmMaskFrameStyle } from '../objects/alarm-mask';
 import { dataMaskFrameStyle } from '../objects/data-mask';
 import { buttonFrameStyle } from '../objects/button';
 import { canvasObjectFrameStyle, isCanvasObjectRenderable, renderCanvasObjectContent, visibleChildObjects } from '../objects/canvasRenderRegistry';
@@ -62,6 +63,7 @@ export function EditorCanvas({
 
   const activeMask = getActiveMask(project);
   const masks      = project.objects.filter((o) => o.kind === 'data-mask' && o.visible);
+  const alarmMasks = project.objects.filter((o) => o.kind === 'alarm-mask' && o.visible);
 
   const objectById = new Map(project.objects.map((object) => [object.id, object]));
 
@@ -563,6 +565,77 @@ export function EditorCanvas({
                           e.stopPropagation();
                           if (KEY_CHILD_TOOLS.has(tool) && key) {
                             createOnKeySlot(e.clientX, e.clientY, key, renderedMask.x + renderedMask.width + SOFT_KEY_GAP + col * SOFT_KEY_WIDTH, renderedMask.y + row * SOFT_KEY_SLOT_SIZE);
+                            return;
+                          }
+                          onSelect(key?.id ?? skm.id, e.shiftKey || e.metaKey || e.ctrlKey);
+                        }}
+                      >
+                        {key
+                          ? <>
+                              <div className="key-face" style={{ position: 'absolute', inset: 0, overflow: key && isSelectedOrDescendant(key) ? 'visible' : 'hidden' }}>
+                                {(key.childObjectIds ?? [])
+                                  .map((childId) => project.objects.find((candidate) => candidate.id === childId))
+                                  .filter((candidate): candidate is EditorObject => candidate !== undefined && candidate.visible)
+                                  .sort((a, b) => a.zIndex - b.zIndex)
+                                  .map(renderObject)}
+                              </div>
+                              {((key.childObjectIds ?? []).length === 0) && <span className="soft-key-label">{key.label || key.name}</span>}
+                            </>
+                          : <span className="soft-key-empty">{i + 1}</span>
+                        }
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </Fragment>
+          );
+        })}
+
+        {/* ── Alarm Masks ─────────────────────────────────────────────── */}
+        {alarmMasks.map((am) => {
+          const renderedAm = dragPreview[am.id] ? { ...am, ...dragPreview[am.id] } : am;
+          const children = getCanvasChildren(project, am.id);
+
+          // Resolve Soft Key Mask for this Alarm Mask (if assigned)
+          const skm = am.alarmSoftKeyMaskId
+            ? project.objects.find((o) => o.id === am.alarmSoftKeyMaskId && o.kind === 'soft-key-mask')
+            : undefined;
+          const skmKeys = skm ? getSoftKeyMaskKeys(project, skm.id) : [];
+
+          return (
+            <Fragment key={renderedAm.id}>
+              <div
+                className={`vt-card interactive ${selectedIds.includes(renderedAm.id) ? 'selected-object' : ''}`}
+                style={alarmMaskFrameStyle(renderedAm)}
+                onPointerDown={(e) => handleMaskPointerDown(e, renderedAm)}
+              >
+                <div className="mask-label alarm">{renderedAm.id}</div>
+                {children.map(renderObject)}
+              </div>
+
+              {/* ── Soft Key Mask strip ───────────────────────────────── */}
+              {skm && (
+                <div
+                  className={`vt-soft-key-mask ${selectedIds.includes(skm.id) ? 'selected-object' : ''}`}
+                  style={softKeyMaskFrameStyle(renderedAm, skm)}
+                  onPointerDown={(e) => { e.stopPropagation(); onSelect(skm.id, e.shiftKey || e.metaKey || e.ctrlKey); }}
+                >
+                  <div className="mask-label">{skm.id}</div>
+                  {Array.from({ length: skm.softKeyCountPreview ?? SOFT_KEY_SLOTS }, (_, i) => {
+                    const key = skmKeys[i];
+                    const keySelected = key && selectedIds.includes(key.id);
+                    const col = Math.floor(i / SOFT_KEY_ROWS);
+                    const row = i % SOFT_KEY_ROWS;
+                    return (
+                      <div
+                        key={key?.id ?? `skm-slot-${i}`}
+                        className={`soft-key-slot ${keySelected ? 'key-selected' : ''}`}
+                        style={softKeySlotStyle(key)}
+                        onPointerDown={(e) => {
+                          e.stopPropagation();
+                          if (KEY_CHILD_TOOLS.has(tool) && key) {
+                            createOnKeySlot(e.clientX, e.clientY, key, renderedAm.x + renderedAm.width + SOFT_KEY_GAP + col * SOFT_KEY_WIDTH, renderedAm.y + row * SOFT_KEY_SLOT_SIZE);
                             return;
                           }
                           onSelect(key?.id ?? skm.id, e.shiftKey || e.metaKey || e.ctrlKey);

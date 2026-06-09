@@ -25,6 +25,7 @@ function parseObject(r: Reader): number {
   switch (type) {
     case 0: { r.u8(); r.u8(); r.u16(); const n = r.u8(); const m = r.u8(); const l = r.u8(); r.skip(n * 6 + m * 2 + l * 2); return type; }
     case 1: { r.u8(); r.u16(); const n = r.u8(); const m = r.u8(); r.skip(n * 6 + m * 2); return type; }
+    case 2: { r.u8(); r.u16(); r.u8(); r.u8(); const n = r.u8(); const m = r.u8(); r.skip(n * 6 + m * 2); return type; }
     case 3: { r.u16(); r.u16(); r.u8(); const n = r.u8(); r.u8(); r.skip(n * 6); return type; }
     case 4: { r.u8(); const n = r.u8(); r.u8(); r.skip(n * 2); return type; }
     case 5: { r.u8(); r.u8(); const n = r.u8(); r.u8(); r.skip(n * 6); return type; }

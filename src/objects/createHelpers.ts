@@ -3,6 +3,7 @@ import { clamp } from '../domain/isobus';
 
 const KIND_PREFIX: Record<ObjectKind, string> = {
   'data-mask':        'DM',
+  'alarm-mask':       'AM',
   'container':        'CT',
   'soft-key-mask':    'SKM',
   'key':              'KEY',

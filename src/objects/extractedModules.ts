@@ -1,5 +1,6 @@
 import type { ObjectKind } from '../domain/types';
 import type { ObjectModule } from './ObjectModule';
+import { alarmMaskModule } from './alarm-mask/logic';
 import { buttonModule } from './button/logic';
 import { containerModule } from './container/logic';
 import { dataMaskModule } from './data-mask/logic';
@@ -43,5 +44,6 @@ export const extractedModules: Record<ObjectKind, ObjectModule> = {
   'input-list': inputListModule,
   'key': keyModule,
   'data-mask': dataMaskModule,
+  'alarm-mask': alarmMaskModule,
   'soft-key-mask': softKeyMaskModule,
 } satisfies Record<ObjectKind, ObjectModule>;

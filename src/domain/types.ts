@@ -5,6 +5,7 @@ export type MacroReference = {
 
 export type ObjectKind =
   | 'data-mask'
+  | 'alarm-mask'
   | 'container'
   | 'soft-key-mask'
   | 'key'
@@ -83,6 +84,11 @@ export type EditorObject = {
   softKeyMaskId?: string;
   nextMaskId?: string;
   previousMaskId?: string;
+
+  // ── Alarm Mask (objectType 2) ────────────────────────────────────────
+  alarmSoftKeyMaskId?: string;
+  priority?: 0 | 1 | 2;
+  acousticSignal?: 0 | 1 | 2 | 3;
 
   // ── Container (objectType 3) ─────────────────────────────────────────
   hidden?: boolean;             // uint8 in pool: 0=visible, 1=hidden

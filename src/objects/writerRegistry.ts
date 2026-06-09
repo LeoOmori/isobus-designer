@@ -1,4 +1,5 @@
 import type { ObjectKind } from '../domain/types';
+import { alarmMaskModule } from './alarm-mask/logic';
 import { buttonModule } from './button/logic';
 import { containerModule } from './container/logic';
 import { dataMaskModule } from './data-mask/logic';
@@ -44,4 +45,5 @@ export const writerModules = {
   'key':               keyModule,
   'soft-key-mask':     softKeyMaskModule,
   'data-mask':         dataMaskModule,
+  'alarm-mask':        alarmMaskModule,
 } satisfies Record<ObjectKind, Pick<ObjectModule, 'exportOrder' | 'writer'>>;

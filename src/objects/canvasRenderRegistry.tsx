@@ -9,6 +9,7 @@ import {
   vtColor,
 } from '../domain/isobus';
 import type { EditorObject, ObjectKind, ProjectState } from '../domain/types';
+import { alarmMaskFrameStyle } from './alarm-mask';
 import { ButtonContent, buttonFrameStyle } from './button';
 import { ContainerContent, containerFrameStyle } from './container';
 import { InputBooleanContent } from './input-boolean';
@@ -42,6 +43,10 @@ export type CanvasObjectRenderer = {
 };
 
 export const canvasObjectRenderers: Partial<Record<ObjectKind, CanvasObjectRenderer>> = {
+  'alarm-mask': {
+    frameStyle: (object) => alarmMaskFrameStyle(object),
+    renderContent: (_object, context) => <>{context.renderChildren(_object)}</>,
+  },
   'container': {
     isRenderable: (object) => !object.hidden,
     frameStyle: () => containerFrameStyle(),

@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react';
 import type { EditorObject, ObjectKind, ReferenceKind } from '../domain/types';
+import { AlarmMaskProperties } from './alarm-mask';
 import { ButtonProperties } from './button';
 import { ContainerProperties } from './container';
 import { DataMaskProperties } from './data-mask';
@@ -50,5 +51,6 @@ export const objectPropertyComponents = {
   'input-list': InputListProperties,
   'key': KeyProperties,
   'data-mask': DataMaskProperties,
+  'alarm-mask': AlarmMaskProperties,
   'soft-key-mask': SoftKeyMaskProperties,
 } satisfies Record<ObjectKind, ComponentType<ObjectPropertiesProps>>;
