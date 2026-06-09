@@ -1146,7 +1146,8 @@ button.list-row {
 .stage.tool-button,
 .stage.tool-output-number,
 .stage.tool-picture-graphic,
-.stage.tool-output-rectangle { cursor: crosshair; }
+.stage.tool-output-rectangle,
+.stage.tool-output-polygon   { cursor: crosshair; }
 .stage.tool-output-string    { cursor: text; }
 
 .world {
@@ -1213,6 +1214,12 @@ button.list-row {
   border: 1px solid #dfe6f0;
   background: #fff;
   text-align: center;
+}
+
+.object-polygon {
+  background: transparent;
+  border: none;
+  overflow: hidden;
 }
 
 .object-input-string,

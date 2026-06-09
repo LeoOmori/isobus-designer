@@ -14,6 +14,7 @@ import { lineAttributeMeta } from './line-attribute/logic';
 import { numberVariableMeta } from './number-variable/logic';
 import { outputEllipseMeta } from './output-ellipse/logic';
 import { outputLineMeta } from './output-line/logic';
+import { outputPolygonMeta } from './output-polygon/logic';
 import { outputNumberMeta } from './output-number/logic';
 import { outputRectangleMeta } from './output-rectangle/logic';
 import { outputStringMeta } from './output-string/meta';
@@ -33,6 +34,7 @@ export const metaRegistry = {
   'input-list':       inputListMeta,
   'output-string':    outputStringMeta,
   'output-line':      outputLineMeta,
+  'output-polygon':   outputPolygonMeta,
   'output-ellipse':   outputEllipseMeta,
   'output-number':    outputNumberMeta,
   'output-rectangle': outputRectangleMeta,

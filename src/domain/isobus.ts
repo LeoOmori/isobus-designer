@@ -30,6 +30,7 @@ export const VT_OBJECT_TYPES: Record<ObjectKind, number> = {
   'output-string':  11,
   'output-number':  12,
   'output-line':    13,
+  'output-polygon':  16,
   'output-ellipse': 15,
   'output-rectangle': 14,
   'picture-graphic': 20,

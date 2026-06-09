@@ -14,6 +14,7 @@ import { LineAttributeProperties } from './line-attribute';
 import { NumberVariableProperties } from './number-variable';
 import { OutputEllipseProperties } from './output-ellipse';
 import { OutputLineProperties } from './output-line';
+import { OutputPolygonProperties } from './output-polygon';
 import { OutputNumberProperties } from './output-number';
 import { OutputRectangleProperties } from './output-rectangle';
 import { OutputStringProperties } from './output-string';
@@ -36,6 +37,7 @@ export const objectPropertyComponents = {
   'number-variable': NumberVariableProperties,
   'output-string': OutputStringProperties,
   'output-line': OutputLineProperties,
+  'output-polygon': OutputPolygonProperties,
   'output-ellipse': OutputEllipseProperties,
   'output-number': OutputNumberProperties,
   'output-rectangle': OutputRectangleProperties,

@@ -8,6 +8,7 @@ import { inputNumberModule } from './input-number/logic';
 import { inputListModule } from './input-list/logic';
 import { outputEllipseModule } from './output-ellipse/logic';
 import { outputLineModule } from './output-line/logic';
+import { outputPolygonModule } from './output-polygon/logic';
 import { outputNumberModule } from './output-number/logic';
 import { outputRectangleModule } from './output-rectangle/logic';
 import { outputStringModule } from './output-string/module';
@@ -30,6 +31,7 @@ export const writerModules = {
   'picture-graphic':   pictureGraphicModule,
   'output-string':     outputStringModule,
   'output-line':       outputLineModule,
+  'output-polygon':    outputPolygonModule,
   'output-ellipse':    outputEllipseModule,
   'output-number':     outputNumberModule,
   'output-rectangle':  outputRectangleModule,

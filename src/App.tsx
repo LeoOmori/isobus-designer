@@ -22,7 +22,7 @@ import { storageKey, useProjectState } from './state/useProjectState';
 
 /** Kinds that are placed as children of a Data Mask on the canvas. */
 const CANVAS_KINDS = new Set<ObjectKind>([
-  'container', 'output-string', 'output-number', 'output-line', 'output-ellipse', 'output-rectangle', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'picture-graphic',
+  'container', 'output-string', 'output-number', 'output-line', 'output-polygon', 'output-ellipse', 'output-rectangle', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'picture-graphic',
 ]);
 
 export function App() {
@@ -201,7 +201,7 @@ export function App() {
   }
 
   // ── Object creation ───────────────────────────────────────────────────
-  function createObject(kind: ObjectKind, x = 70, y = 70, parentId = project.activeMaskId) {
+  function createObject(kind: ObjectKind, x = 70, y = 70, parentId = project.activeMaskId, overrides?: Partial<EditorObject>) {
     commit((current) => {
       const isMask      = kind === 'data-mask';
       const isSKM       = kind === 'soft-key-mask';
@@ -211,7 +211,8 @@ export function App() {
       // Which Data Mask or Button to append this canvas child to.
       const targetParentId = isCanvas ? parentId : current.activeMaskId;
       const activeSKMId  = current.workingSet.activeSoftKeyMaskId;
-      const next        = createEditorObject(kind, current, x, y, targetParentId);
+      const base        = createEditorObject(kind, current, x, y, targetParentId);
+      const next        = overrides ? { ...base, ...overrides } : base;
 
       selectSingle(next.id);
 
@@ -265,7 +266,7 @@ export function App() {
     if (kind === 'font-attribute') return object.kind === 'output-string' || object.kind === 'output-number' || object.kind === 'input-boolean' || object.kind === 'input-string' || object.kind === 'input-number';
     if (kind === 'string-variable') return object.kind === 'output-string' || object.kind === 'input-string';
     if (kind === 'number-variable') return object.kind === 'output-number' || object.kind === 'input-boolean' || object.kind === 'input-number' || object.kind === 'input-list';
-    if (kind === 'line-attribute' || kind === 'fill-attribute') return object.kind === 'output-rectangle' || object.kind === 'output-ellipse';
+    if (kind === 'line-attribute' || kind === 'fill-attribute') return object.kind === 'output-rectangle' || object.kind === 'output-polygon' || object.kind === 'output-ellipse';
     return false;
   }
 

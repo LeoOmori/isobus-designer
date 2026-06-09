@@ -1,4 +1,4 @@
-import { Fragment, type PointerEvent, type WheelEvent, useCallback, useRef, useState } from 'react';
+import { Fragment, type PointerEvent, type WheelEvent, useCallback, useEffect, useRef, useState } from 'react';
 import {
   BUTTON_FACE_INSET,
   BUTTON_OPTION_NO_BORDER,
@@ -13,10 +13,14 @@ import { buttonFrameStyle } from '../objects/button';
 import { canvasObjectFrameStyle, isCanvasObjectRenderable, renderCanvasObjectContent, visibleChildObjects } from '../objects/canvasRenderRegistry';
 import { SOFT_KEY_GAP, SOFT_KEY_SLOT_SIZE, SOFT_KEY_SLOTS, SOFT_KEY_ROWS, SOFT_KEY_WIDTH, softKeyMaskFrameStyle, softKeySlotStyle } from '../objects/soft-key-mask';
 
+type BuildingPolygonState = {
+  points: Array<{ x: number; y: number }>;
+  maskId: string;
+} | null;
 
 /** Tools that create a canvas object on click. */
 const CANVAS_TOOLS = new Set<ToolMode>([
-  'container', 'output-rectangle', 'output-line', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'picture-graphic',
+  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'picture-graphic',
 ]);
 
 const BUTTON_CHILD_TOOLS = new Set<ToolMode>([
@@ -24,7 +28,7 @@ const BUTTON_CHILD_TOOLS = new Set<ToolMode>([
 ]);
 
 const CONTAINER_CHILD_TOOLS = new Set<ToolMode>([
-  'container', 'output-rectangle', 'output-line', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'picture-graphic',
+  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'picture-graphic',
 ]);
 
 const KEY_CHILD_TOOLS = new Set<ToolMode>([
@@ -43,7 +47,7 @@ export function EditorCanvas({
   onSelect: (id: string, additive?: boolean) => void;
   onViewportChange: (viewport: Viewport) => void;
   onToolChange: (tool: ToolMode) => void;
-  onCreateObject: (kind: ObjectKind, x: number, y: number, parentMaskId?: string) => void;
+  onCreateObject: (kind: ObjectKind, x: number, y: number, parentMaskId?: string, overrides?: Partial<EditorObject>) => void;
   onUpdateObject: (id: string, changes: Partial<EditorObject>) => void;
   onUpdateObjects: (updates: { id: string; changes: Partial<EditorObject> }[]) => void;
 }) {
@@ -53,6 +57,8 @@ export function EditorCanvas({
   const lastObjectClickRef = useRef<{ id: string; time: number } | null>(null);
   const [editingTextObjectId, setEditingTextObjectId] = useState<string | null>(null);
   const [dragPreview, setDragPreview] = useState<Record<string, Partial<EditorObject>>>({});
+  const [buildingPolygon, setBuildingPolygon] = useState<BuildingPolygonState>(null);
+  const lastBuildClickRef = useRef<number>(0);
 
   const activeMask = getActiveMask(project);
   const masks      = project.objects.filter((o) => o.kind === 'data-mask' && o.visible);
@@ -92,6 +98,88 @@ export function EditorCanvas({
     onCreateObject(tool as ObjectKind, snap(point.x), snap(point.y), mask.id);
     onToolChange('select');
   }
+
+  // ── Polygon point-by-point building ──────────────────────────────────
+
+  function handlePolygonClick(clientX: number, clientY: number, mask: EditorObject | undefined) {
+    if (buildingPolygon) {
+      // Double-click detection: finalize on rapid second click
+      const now = Date.now();
+      if (now - lastBuildClickRef.current <= 400) {
+        finalizePolygon();
+        return;
+      }
+
+      // Add a point relative to the building mask (always the original mask)
+      const buildMask = objectById.get(buildingPolygon.maskId);
+      if (!buildMask) { cancelPolygon(); return; }
+      const point = screenToMask(clientX, clientY, buildMask);
+      setBuildingPolygon({
+        ...buildingPolygon,
+        points: [...buildingPolygon.points, { x: snap(point.x), y: snap(point.y) }],
+      });
+      lastBuildClickRef.current = now;
+    } else {
+      // Start a new polygon build
+      if (!mask) return;
+      const point = screenToMask(clientX, clientY, mask);
+      onSelect(mask.id);
+      setBuildingPolygon({ maskId: mask.id, points: [{ x: snap(point.x), y: snap(point.y) }] });
+      lastBuildClickRef.current = Date.now();
+    }
+  }
+
+  function createPolygonFromPoints(points: Array<{ x: number; y: number }>, maskId: string) {
+    const xs = points.map((p) => p.x);
+    const ys = points.map((p) => p.y);
+    const minX = Math.min(...xs);
+    const minY = Math.min(...ys);
+    const width = Math.max(1, Math.max(...xs) - minX);
+    const height = Math.max(1, Math.max(...ys) - minY);
+    const translatedPoints = points.map((p) => ({ x: p.x - minX, y: p.y - minY }));
+    onCreateObject('output-polygon', minX, minY, maskId, { polygonPoints: translatedPoints, width, height });
+  }
+
+  function finalizePolygon() {
+    if (!buildingPolygon) return;
+    const { points, maskId } = buildingPolygon;
+    setBuildingPolygon(null);
+    if (points.length >= 3) {
+      createPolygonFromPoints(points, maskId);
+    }
+    onToolChange('select');
+  }
+
+  function cancelPolygon() {
+    setBuildingPolygon(null);
+  }
+
+  // Finalize/cancel on tool change away from output-polygon
+  const prevToolRef = useRef(tool);
+  useEffect(() => {
+    const wasBuilding = buildingPolygon && prevToolRef.current === 'output-polygon';
+    prevToolRef.current = tool;
+    if (wasBuilding && tool !== 'output-polygon') {
+      const { points, maskId } = buildingPolygon!;
+      setBuildingPolygon(null);
+      if (points.length >= 3) {
+        createPolygonFromPoints(points, maskId);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tool]);
+
+  // Keyboard shortcuts during polygon building (Enter = finalize, Escape = cancel)
+  useEffect(() => {
+    if (!buildingPolygon) return;
+    function handler(event: KeyboardEvent) {
+      if (event.key === 'Enter') { event.preventDefault(); finalizePolygon(); }
+      if (event.key === 'Escape') { event.preventDefault(); cancelPolygon(); }
+    }
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [buildingPolygon]);
 
   function buttonFaceInset(button: EditorObject) {
     return ((button.buttonOptions ?? 0) & BUTTON_OPTION_NO_BORDER) !== 0 ? 0 : BUTTON_FACE_INSET;
@@ -166,6 +254,11 @@ export function EditorCanvas({
       event.currentTarget.setPointerCapture(event.pointerId);
       return;
     }
+    // Polygon tool uses a multi-click point-by-point workflow.
+    if (tool === 'output-polygon') {
+      handlePolygonClick(event.clientX, event.clientY, findMaskAt(event.clientX, event.clientY));
+      return;
+    }
     // When a creation tool is active, clicking the stage background creates on nearest/active mask.
     if (CANVAS_TOOLS.has(tool)) {
       createOnMask(event.clientX, event.clientY, findMaskAt(event.clientX, event.clientY));
@@ -177,6 +270,10 @@ export function EditorCanvas({
   // ── Mask background pointer down ──────────────────────────────────────
   function handleMaskPointerDown(event: PointerEvent<HTMLDivElement>, mask: EditorObject) {
     event.stopPropagation();
+    if (tool === 'output-polygon') {
+      handlePolygonClick(event.clientX, event.clientY, mask);
+      return;
+    }
     if (CANVAS_TOOLS.has(tool)) {
       createOnMask(event.clientX, event.clientY, mask);
       return;
@@ -252,6 +349,9 @@ export function EditorCanvas({
 
   // ── Object drag handles ────────────────────────────────────────────────
   function beginMove(event: PointerEvent<HTMLElement>, object: EditorObject) {
+    // During polygon point-building, let all clicks bubble to the mask handler for point placement.
+    if (tool === 'output-polygon') return;
+
     // When a creation tool is active, let the click bubble up to the mask handler.
     if (CANVAS_TOOLS.has(tool)) {
       if (object.kind === 'button' && BUTTON_CHILD_TOOLS.has(tool)) {
@@ -373,6 +473,13 @@ export function EditorCanvas({
     );
   }
 
+  function handleContextMenu(event: React.MouseEvent) {
+    if (buildingPolygon) {
+      event.preventDefault();
+      finalizePolygon();
+    }
+  }
+
   // ── Render ────────────────────────────────────────────────────────────
   return (
     <main
@@ -383,6 +490,7 @@ export function EditorCanvas({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
+      onContextMenu={handleContextMenu}
     >
       <div className="world" style={{ transform: `translate(${viewport.x}px, ${viewport.y}px) scale(${viewport.zoom})` }}>
         {project.workingSet.visible && masks.map((mask) => {
@@ -405,6 +513,32 @@ export function EditorCanvas({
               >
                 <div className="mask-label">{renderedMask.id}</div>
                 {children.map(renderObject)}
+
+                {/* ── Polygon point-building preview ──────────────────── */}
+                {buildingPolygon && buildingPolygon.maskId === mask.id && (
+                  <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible' }}>
+                    <svg width={renderedMask.width} height={renderedMask.height} style={{ overflow: 'visible' }}>
+                      {buildingPolygon.points.length >= 3 && (
+                        <polygon
+                          points={buildingPolygon.points.map(p => `${p.x},${p.y}`).join(' ')}
+                          fill="rgba(59,130,246,0.12)"
+                        />
+                      )}
+                      {buildingPolygon.points.length >= 2 && (
+                        <polyline
+                          points={buildingPolygon.points.map(p => `${p.x},${p.y}`).join(' ')}
+                          stroke="#3b82f6"
+                          strokeWidth={2 / viewport.zoom}
+                          strokeDasharray={`${4 / viewport.zoom},${4 / viewport.zoom}`}
+                          fill="none"
+                        />
+                      )}
+                      {buildingPolygon.points.map((p, i) => (
+                        <circle key={i} cx={p.x} cy={p.y} r={4 / viewport.zoom} fill="white" stroke="#3b82f6" strokeWidth={2 / viewport.zoom} />
+                      ))}
+                    </svg>
+                  </div>
+                )}
               </div>
 
               {/* ── Soft Key Mask strip ───────────────────────────────── */}

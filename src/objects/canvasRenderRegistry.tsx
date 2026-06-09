@@ -17,6 +17,7 @@ import { InputNumberContent } from './input-number';
 import { InputListContent } from './input-list';
 import { OutputEllipseContent } from './output-ellipse';
 import { OutputLineContent } from './output-line';
+import { OutputPolygonContent } from './output-polygon';
 import { KeyContent } from './key';
 import { OutputNumberContent } from './output-number';
 import { outputRectangleStyle } from './output-rectangle/logic';
@@ -90,6 +91,14 @@ export const canvasObjectRenderers: Partial<Record<ObjectKind, CanvasObjectRende
     renderContent: (object, context) => {
       const line = context.objectById.get(object.lineAttributeId ?? '');
       return <OutputLineContent object={object} line={line} />;
+    },
+  },
+  'output-polygon': {
+    frameStyle: () => ({ background: 'transparent', border: 'none' }),
+    renderContent: (object, context) => {
+      const line = context.objectById.get(object.lineAttributeId ?? '');
+      const fill = context.objectById.get(object.fillAttributeId ?? '');
+      return <OutputPolygonContent object={object} line={line} fill={fill} />;
     },
   },
   'output-ellipse': {

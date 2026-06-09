@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   AlignCenter, ClipboardList, Copy, Eye, Folder,
-  Grid3X3, Hash, Image, KeyRound, Keyboard, LayoutPanelLeft, List, MoveUpRight,
+  Grid3X3, Hash, Hexagon, Image, KeyRound, Keyboard, LayoutPanelLeft, List, MoveUpRight,
   MoreVertical, MousePointerClick, PenLine, Plus, Square, TextCursorInput, ToggleLeft, Trash2, Type, Zap,
   Circle,
 } from 'lucide-react';
@@ -77,6 +77,7 @@ export function LeftSidebar({
             sc('Output Number',   <PaletteCard label="Output Number"   icon={<Hash size={24} />}        selected={tool === 'output-number'}    onClick={() => onToolChange('output-number')} />),
             sc('Rectangle',       <PaletteCard label="Rectangle"       icon={<Square size={24} />}      selected={tool === 'output-rectangle'} onClick={() => onToolChange('output-rectangle')} />),
             sc('Output Line',     <PaletteCard label="Output Line"     icon={<MoveUpRight size={24} />} selected={tool === 'output-line'}      onClick={() => onToolChange('output-line')} />),
+            sc('Output Polygon',  <PaletteCard label="Output Polygon"  icon={<Hexagon size={24} />}      selected={tool === 'output-polygon'}   onClick={() => onToolChange('output-polygon')} />),
             sc('Output Ellipse',  <PaletteCard label="Output Ellipse"  icon={<Circle size={24} />}      selected={tool === 'output-ellipse'}   onClick={() => onToolChange('output-ellipse')} />),
             sc('Picture Graphic', <PaletteCard label="Picture Graphic" icon={<Image size={24} />}       selected={tool === 'picture-graphic'}  onClick={() => onToolChange('picture-graphic')} />),
           ])}

@@ -14,6 +14,7 @@ export type ObjectKind =
   | 'input-number'
   | 'input-list'
   | 'output-line'
+  | 'output-polygon'
   | 'output-ellipse'
   | 'output-string'
   | 'output-number'
@@ -33,6 +34,7 @@ export type ToolMode =
   | 'output-string'
   | 'output-rectangle'
   | 'output-line'
+  | 'output-polygon'
   | 'output-ellipse'
   | 'button'
   | 'input-boolean'
@@ -132,6 +134,10 @@ export type EditorObject = {
 
   // ── Output Line (objectType 13) ──────────────────────────────────────
   lineDirection?: 0 | 1;        // 0 = top-left→bottom-right, 1 = bottom-left→top-right
+
+  // ── Output Polygon (objectType 16) ──────────────────────────────────
+  polygonType?: 0 | 1 | 2 | 3;   // 0=convex, 1=non-convex, 2=complex, 3=open
+  polygonPoints?: Array<{x: number, y: number}>;
 
   // ── Output Ellipse (objectType 15) ───────────────────────────────────
   ellipseType?: 0 | 1 | 2 | 3; // 0=closed ellipse, 1=open arc, 2=segment, 3=section
