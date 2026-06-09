@@ -12,6 +12,7 @@ import { inputListMeta } from './input-list/logic';
 import { keyMeta } from './key/logic';
 import { lineAttributeMeta } from './line-attribute/logic';
 import { numberVariableMeta } from './number-variable/logic';
+import { outputLineMeta } from './output-line/logic';
 import { outputNumberMeta } from './output-number/logic';
 import { outputRectangleMeta } from './output-rectangle/logic';
 import { outputStringMeta } from './output-string/meta';
@@ -30,6 +31,7 @@ export const metaRegistry = {
   'input-number':     inputNumberMeta,
   'input-list':       inputListMeta,
   'output-string':    outputStringMeta,
+  'output-line':      outputLineMeta,
   'output-number':    outputNumberMeta,
   'output-rectangle': outputRectangleMeta,
   'picture-graphic':  pictureGraphicMeta,

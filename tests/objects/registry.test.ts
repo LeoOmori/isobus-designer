@@ -8,7 +8,7 @@ import { writerModules } from '../../src/objects/writerRegistry';
 
 const kinds: ObjectKind[] = [
   'data-mask', 'container', 'soft-key-mask', 'key', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-string', 'output-number',
-  'output-rectangle', 'picture-graphic', 'font-attribute', 'line-attribute', 'fill-attribute',
+  'output-line', 'output-rectangle', 'picture-graphic', 'font-attribute', 'line-attribute', 'fill-attribute',
   'string-variable', 'number-variable',
 ];
 
@@ -22,7 +22,7 @@ describe('object registries', () => {
 
   it('contains canvas renderers for canvas-renderable child kinds', () => {
     expect(Object.keys(canvasObjectRenderers).sort()).toEqual([
-      'button', 'container', 'input-boolean', 'input-list', 'input-number', 'input-string', 'key', 'output-number', 'output-rectangle', 'output-string', 'picture-graphic',
+      'button', 'container', 'input-boolean', 'input-list', 'input-number', 'input-string', 'key', 'output-line', 'output-number', 'output-rectangle', 'output-string', 'picture-graphic',
     ].sort());
   });
 

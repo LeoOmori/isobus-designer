@@ -29,6 +29,7 @@ export const VT_OBJECT_TYPES: Record<ObjectKind, number> = {
   'input-list':      10,
   'output-string':  11,
   'output-number':  12,
+  'output-line':    13,
   'output-rectangle': 14,
   'picture-graphic': 20,
   'number-variable': 21,

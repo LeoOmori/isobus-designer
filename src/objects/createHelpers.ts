@@ -13,6 +13,7 @@ const KIND_PREFIX: Record<ObjectKind, string> = {
   'input-list':       'IL',
   'output-string':    'STR',
   'output-number':    'NUM',
+  'output-line':      'OL',
   'output-rectangle': 'RECT',
   'picture-graphic':  'PIC',
   'font-attribute':   'FONT',

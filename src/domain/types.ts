@@ -13,6 +13,7 @@ export type ObjectKind =
   | 'input-string'
   | 'input-number'
   | 'input-list'
+  | 'output-line'
   | 'output-string'
   | 'output-number'
   | 'output-rectangle'
@@ -30,6 +31,7 @@ export type ToolMode =
   | 'container'
   | 'output-string'
   | 'output-rectangle'
+  | 'output-line'
   | 'button'
   | 'input-boolean'
   | 'input-string'
@@ -125,6 +127,9 @@ export type EditorObject = {
   minValue?: number;            // uint32 raw min
   maxValue?: number;            // uint32 raw max
   realTimeEditing?: boolean;    // options2 bit 1
+
+  // ── Output Line (objectType 13) ──────────────────────────────────────
+  lineDirection?: 0 | 1;        // 0 = top-left→bottom-right, 1 = bottom-left→top-right
 
   // ── Output Rectangle (objectType 14) ─────────────────────────────────
   lineAttributeId?: string;

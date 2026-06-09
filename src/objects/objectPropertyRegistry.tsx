@@ -12,6 +12,7 @@ import { InputListProperties } from './input-list';
 import { KeyProperties } from './key';
 import { LineAttributeProperties } from './line-attribute';
 import { NumberVariableProperties } from './number-variable';
+import { OutputLineProperties } from './output-line';
 import { OutputNumberProperties } from './output-number';
 import { OutputRectangleProperties } from './output-rectangle';
 import { OutputStringProperties } from './output-string';
@@ -33,6 +34,7 @@ export const objectPropertyComponents = {
   'string-variable': StringVariableProperties,
   'number-variable': NumberVariableProperties,
   'output-string': OutputStringProperties,
+  'output-line': OutputLineProperties,
   'output-number': OutputNumberProperties,
   'output-rectangle': OutputRectangleProperties,
   'picture-graphic': PictureGraphicProperties,

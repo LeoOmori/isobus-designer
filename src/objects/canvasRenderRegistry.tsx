@@ -15,6 +15,7 @@ import { InputBooleanContent } from './input-boolean';
 import { InputStringContent } from './input-string';
 import { InputNumberContent } from './input-number';
 import { InputListContent } from './input-list';
+import { OutputLineContent } from './output-line';
 import { KeyContent } from './key';
 import { OutputNumberContent } from './output-number';
 import { outputRectangleStyle } from './output-rectangle/logic';
@@ -81,6 +82,13 @@ export const canvasObjectRenderers: Partial<Record<ObjectKind, CanvasObjectRende
       const variableReference = object.variableReference !== undefined ? object.variableReference : object.numberVariableId || null;
       const numberVariable = variableReference ? context.objectById.get(variableReference) : undefined;
       return <OutputNumberContent object={object} font={font} numberVariable={numberVariable} />;
+    },
+  },
+  'output-line': {
+    frameStyle: () => ({ background: 'transparent', border: 'none' }),
+    renderContent: (object, context) => {
+      const line = context.objectById.get(object.lineAttributeId ?? '');
+      return <OutputLineContent object={object} line={line} />;
     },
   },
   'output-rectangle': {

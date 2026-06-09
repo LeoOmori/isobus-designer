@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   AlignCenter, Circle, ClipboardList, Copy, Eye, Folder,
-  Grid3X3, Hash, Image, KeyRound, Keyboard, LayoutPanelLeft, List,
+  Grid3X3, Hash, Image, KeyRound, Keyboard, LayoutPanelLeft, List, MoveUpRight,
   MoreVertical, MousePointerClick, PenLine, Plus, Square, TextCursorInput, ToggleLeft, Trash2, Type, Zap,
 } from 'lucide-react';
 import type { EditorObject, ObjectKind, ReferenceKind, ToolMode } from '../domain/types';
@@ -72,10 +72,11 @@ export function LeftSidebar({
           ])}
 
           {section('OUTPUTS', [
-            sc('Output String',   <PaletteCard label="Output String"   icon={<Type size={24} />}     selected={tool === 'output-string'}    onClick={() => onToolChange('output-string')} />),
-            sc('Output Number',   <PaletteCard label="Output Number"   icon={<Hash size={24} />}     selected={tool === 'output-number'}    onClick={() => onToolChange('output-number')} />),
-            sc('Rectangle',       <PaletteCard label="Rectangle"       icon={<Square size={24} />}   selected={tool === 'output-rectangle'} onClick={() => onToolChange('output-rectangle')} />),
-            sc('Picture Graphic', <PaletteCard label="Picture Graphic" icon={<Image size={24} />}    selected={tool === 'picture-graphic'}  onClick={() => onToolChange('picture-graphic')} />),
+            sc('Output String',   <PaletteCard label="Output String"   icon={<Type size={24} />}        selected={tool === 'output-string'}    onClick={() => onToolChange('output-string')} />),
+            sc('Output Number',   <PaletteCard label="Output Number"   icon={<Hash size={24} />}        selected={tool === 'output-number'}    onClick={() => onToolChange('output-number')} />),
+            sc('Rectangle',       <PaletteCard label="Rectangle"       icon={<Square size={24} />}      selected={tool === 'output-rectangle'} onClick={() => onToolChange('output-rectangle')} />),
+            sc('Output Line',     <PaletteCard label="Output Line"     icon={<MoveUpRight size={24} />} selected={tool === 'output-line'}      onClick={() => onToolChange('output-line')} />),
+            sc('Picture Graphic', <PaletteCard label="Picture Graphic" icon={<Image size={24} />}       selected={tool === 'picture-graphic'}  onClick={() => onToolChange('picture-graphic')} />),
           ])}
 
           {section('INPUTS', [
