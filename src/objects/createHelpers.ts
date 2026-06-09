@@ -10,6 +10,7 @@ const KIND_PREFIX: Record<ObjectKind, string> = {
   'input-boolean':    'IB',
   'input-string':     'IS',
   'input-number':     'IN',
+  'input-list':       'IL',
   'output-string':    'STR',
   'output-number':    'NUM',
   'output-rectangle': 'RECT',

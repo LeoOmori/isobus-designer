@@ -12,6 +12,7 @@ export type ObjectKind =
   | 'input-boolean'
   | 'input-string'
   | 'input-number'
+  | 'input-list'
   | 'output-string'
   | 'output-number'
   | 'output-rectangle'
@@ -33,6 +34,7 @@ export type ToolMode =
   | 'input-boolean'
   | 'input-string'
   | 'input-number'
+  | 'input-list'
   | 'output-number'
   | 'picture-graphic';
 
@@ -115,6 +117,9 @@ export type EditorObject = {
   numberOfDecimals?: number;    // uint8
   numberFormat?: number;        // uint8 (0=fixed decimal, 1=exponential)
   value?: number;               // uint32 — also used by Number Variable
+
+  // ── Input List (objectType 10) ───────────────────────────────────────────
+  listItems?: string[];         // ordered editor IDs of list item objects (or '' for NULL)
 
   // ── Input Number (objectType 9) ──────────────────────────────────────────
   minValue?: number;            // uint32 raw min

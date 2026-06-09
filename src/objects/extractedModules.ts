@@ -8,6 +8,7 @@ import { fontAttributeModule } from './font-attribute/logic';
 import { inputBooleanModule } from './input-boolean/logic';
 import { inputStringModule } from './input-string/logic';
 import { inputNumberModule } from './input-number/logic';
+import { inputListModule } from './input-list/logic';
 import { keyModule } from './key/logic';
 import { lineAttributeModule } from './line-attribute/logic';
 import { numberVariableModule } from './number-variable/logic';
@@ -33,6 +34,7 @@ export const extractedModules: Record<ObjectKind, ObjectModule> = {
   'input-boolean': inputBooleanModule,
   'input-string': inputStringModule,
   'input-number': inputNumberModule,
+  'input-list': inputListModule,
   'key': keyModule,
   'data-mask': dataMaskModule,
   'soft-key-mask': softKeyMaskModule,

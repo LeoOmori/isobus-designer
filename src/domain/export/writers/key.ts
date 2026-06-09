@@ -18,7 +18,8 @@ export function writeKey(obj: EditorObject, ctx: WriteContext): void {
 
   const children = (obj.childObjectIds ?? [])
     .map((id) => ctx.objectById.get(id))
-    .filter((c): c is EditorObject => c !== undefined);
+    .filter((c): c is EditorObject => c !== undefined)
+    .sort((a, b) => a.zIndex - b.zIndex);
 
   w.u16(ctx.idMap.get(obj.id)!);
   w.u8(5);

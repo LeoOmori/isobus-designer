@@ -19,7 +19,8 @@ export function writeDataMask(obj: EditorObject, ctx: WriteContext): void {
 
   const children = (obj.childObjectIds ?? [])
     .map((id) => ctx.objectById.get(id))
-    .filter((c): c is EditorObject => c !== undefined);
+    .filter((c): c is EditorObject => c !== undefined)
+    .sort((a, b) => a.zIndex - b.zIndex);
 
   const skmId = ctx.resolve(obj.softKeyMaskId);
 

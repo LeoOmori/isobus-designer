@@ -14,6 +14,7 @@ import { ContainerContent, containerFrameStyle } from './container';
 import { InputBooleanContent } from './input-boolean';
 import { InputStringContent } from './input-string';
 import { InputNumberContent } from './input-number';
+import { InputListContent } from './input-list';
 import { KeyContent } from './key';
 import { OutputNumberContent } from './output-number';
 import { outputRectangleStyle } from './output-rectangle/logic';
@@ -119,6 +120,30 @@ export const canvasObjectRenderers: Partial<Record<ObjectKind, CanvasObjectRende
       const font = context.objectById.get(object.fontAttributeId ?? '');
       const numberVariable = object.variableReference ? context.objectById.get(object.variableReference) : undefined;
       return <InputNumberContent object={object} font={font} numberVariable={numberVariable} />;
+    },
+  },
+  'input-list': {
+    frameStyle: (object) => ({
+      borderColor: object.borderColor,
+      borderWidth: 1,
+      borderStyle: 'solid',
+      background: vtColor(object.backgroundColorIndex ?? 1),
+    }),
+    renderContent: (object, context) => {
+      const value = object.value ?? 255;
+      const listItems = object.listItems ?? [];
+      const selectedId = value !== 255 ? listItems[value] : undefined;
+      const selectedItem = selectedId ? context.objectById.get(selectedId) : undefined;
+
+      return (
+        <InputListContent object={object}>
+          {selectedItem && (
+            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+              {renderCanvasObjectContent(selectedItem, { ...context, isSelected: false })}
+            </div>
+          )}
+        </InputListContent>
+      );
     },
   },
 };

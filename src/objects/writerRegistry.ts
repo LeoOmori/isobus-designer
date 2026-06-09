@@ -5,6 +5,7 @@ import { dataMaskModule } from './data-mask/logic';
 import { inputBooleanModule } from './input-boolean/logic';
 import { inputStringModule } from './input-string/logic';
 import { inputNumberModule } from './input-number/logic';
+import { inputListModule } from './input-list/logic';
 import { outputNumberModule } from './output-number/logic';
 import { outputRectangleModule } from './output-rectangle/logic';
 import { outputStringModule } from './output-string/module';
@@ -33,6 +34,7 @@ export const writerModules = {
   'input-boolean':     inputBooleanModule,
   'input-string':      inputStringModule,
   'input-number':      inputNumberModule,
+  'input-list':        inputListModule,
   'key':               keyModule,
   'soft-key-mask':     softKeyMaskModule,
   'data-mask':         dataMaskModule,
