@@ -12,6 +12,7 @@ import { inputListModule } from './input-list/logic';
 import { keyModule } from './key/logic';
 import { lineAttributeModule } from './line-attribute/logic';
 import { numberVariableModule } from './number-variable/logic';
+import { outputEllipseModule } from './output-ellipse/logic';
 import { outputLineModule } from './output-line/logic';
 import { outputNumberModule } from './output-number/logic';
 import { outputRectangleModule } from './output-rectangle/logic';
@@ -28,6 +29,7 @@ export const extractedModules: Record<ObjectKind, ObjectModule> = {
   'string-variable': stringVariableModule,
   'output-string': outputStringModule,
   'output-line': outputLineModule,
+  'output-ellipse': outputEllipseModule,
   'output-number': outputNumberModule,
   'output-rectangle': outputRectangleModule,
   'picture-graphic': pictureGraphicModule,

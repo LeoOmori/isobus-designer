@@ -30,6 +30,7 @@ export const VT_OBJECT_TYPES: Record<ObjectKind, number> = {
   'output-string':  11,
   'output-number':  12,
   'output-line':    13,
+  'output-ellipse': 15,
   'output-rectangle': 14,
   'picture-graphic': 20,
   'number-variable': 21,
@@ -141,6 +142,34 @@ export function unpackJustification(justification: number) {
     horizontal: asHorizontalJustification(justification & 0b11),
     vertical: asVerticalJustification((justification >> 2) & 0b11),
   };
+}
+
+/** Convert ISOBUS lineArt hex string to SVG strokeDasharray scaled by strokeWidth. */
+export function lineArtToDash(lineArt = '0xFFFF', strokeWidth: number): string | undefined {
+  const n = lineArt.toUpperCase();
+  if (n === '0XFFFF') return undefined;                          // solid
+  if (n === '0XF0F0') return `${strokeWidth * 4} ${strokeWidth * 2}`;  // dashed
+  if (n === '0XAAAA') return `${strokeWidth} ${strokeWidth * 2}`;       // dotted
+  // Generic 16-bit pattern: convert run-length to dash array
+  const bits = parseInt(lineArt, 16);
+  if (isNaN(bits)) return undefined;
+  const dashes: number[] = [];
+  let current = (bits >> 15) & 1;
+  let run = 0;
+  for (let i = 15; i >= 0; i--) {
+    const bit = (bits >> i) & 1;
+    if (bit === current) {
+      run++;
+    } else {
+      dashes.push(run * strokeWidth);
+      current = bit;
+      run = 1;
+    }
+  }
+  dashes.push(run * strokeWidth);
+  // If pattern doesn't start with a filled bit, prepend a zero gap
+  if (((bits >> 15) & 1) === 0) dashes.unshift(0);
+  return dashes.join(' ');
 }
 
 export function lineArtToCss(lineArt = '0xFFFF') {

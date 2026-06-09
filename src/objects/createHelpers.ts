@@ -14,6 +14,7 @@ const KIND_PREFIX: Record<ObjectKind, string> = {
   'output-string':    'STR',
   'output-number':    'NUM',
   'output-line':      'OL',
+  'output-ellipse':   'OE',
   'output-rectangle': 'RECT',
   'picture-graphic':  'PIC',
   'font-attribute':   'FONT',

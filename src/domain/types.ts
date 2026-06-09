@@ -14,6 +14,7 @@ export type ObjectKind =
   | 'input-number'
   | 'input-list'
   | 'output-line'
+  | 'output-ellipse'
   | 'output-string'
   | 'output-number'
   | 'output-rectangle'
@@ -32,6 +33,7 @@ export type ToolMode =
   | 'output-string'
   | 'output-rectangle'
   | 'output-line'
+  | 'output-ellipse'
   | 'button'
   | 'input-boolean'
   | 'input-string'
@@ -130,6 +132,11 @@ export type EditorObject = {
 
   // ── Output Line (objectType 13) ──────────────────────────────────────
   lineDirection?: 0 | 1;        // 0 = top-left→bottom-right, 1 = bottom-left→top-right
+
+  // ── Output Ellipse (objectType 15) ───────────────────────────────────
+  ellipseType?: 0 | 1 | 2 | 3; // 0=closed ellipse, 1=open arc, 2=segment, 3=section
+  startAngle?: number;          // encoded angle 0–180 (0°–360°)
+  endAngle?: number;            // encoded angle 0–180 (0°–360°)
 
   // ── Output Rectangle (objectType 14) ─────────────────────────────────
   lineAttributeId?: string;

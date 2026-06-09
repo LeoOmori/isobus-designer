@@ -6,6 +6,7 @@ import { inputBooleanModule } from './input-boolean/logic';
 import { inputStringModule } from './input-string/logic';
 import { inputNumberModule } from './input-number/logic';
 import { inputListModule } from './input-list/logic';
+import { outputEllipseModule } from './output-ellipse/logic';
 import { outputLineModule } from './output-line/logic';
 import { outputNumberModule } from './output-number/logic';
 import { outputRectangleModule } from './output-rectangle/logic';
@@ -29,6 +30,7 @@ export const writerModules = {
   'picture-graphic':   pictureGraphicModule,
   'output-string':     outputStringModule,
   'output-line':       outputLineModule,
+  'output-ellipse':    outputEllipseModule,
   'output-number':     outputNumberModule,
   'output-rectangle':  outputRectangleModule,
   'container':         containerModule,

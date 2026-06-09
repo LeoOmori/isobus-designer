@@ -15,6 +15,7 @@ import { InputBooleanContent } from './input-boolean';
 import { InputStringContent } from './input-string';
 import { InputNumberContent } from './input-number';
 import { InputListContent } from './input-list';
+import { OutputEllipseContent } from './output-ellipse';
 import { OutputLineContent } from './output-line';
 import { KeyContent } from './key';
 import { OutputNumberContent } from './output-number';
@@ -89,6 +90,14 @@ export const canvasObjectRenderers: Partial<Record<ObjectKind, CanvasObjectRende
     renderContent: (object, context) => {
       const line = context.objectById.get(object.lineAttributeId ?? '');
       return <OutputLineContent object={object} line={line} />;
+    },
+  },
+  'output-ellipse': {
+    frameStyle: () => ({ background: 'transparent', border: 'none' }),
+    renderContent: (object, context) => {
+      const line = context.objectById.get(object.lineAttributeId ?? '');
+      const fill = context.objectById.get(object.fillAttributeId ?? '');
+      return <OutputEllipseContent object={object} line={line} fill={fill} />;
     },
   },
   'output-rectangle': {
