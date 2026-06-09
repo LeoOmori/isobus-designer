@@ -2,6 +2,7 @@ import type { ObjectKind } from '../domain/types';
 import type { ObjectModule } from './ObjectModule';
 import { alarmMaskModule } from './alarm-mask/logic';
 import { buttonModule } from './button/logic';
+import { outputMeterModule } from './output-meter/logic';
 import { containerModule } from './container/logic';
 import { dataMaskModule } from './data-mask/logic';
 import { fillAttributeModule } from './fill-attribute/logic';
@@ -35,6 +36,7 @@ export const extractedModules: Record<ObjectKind, ObjectModule> = {
   'output-ellipse': outputEllipseModule,
   'output-number': outputNumberModule,
   'output-rectangle': outputRectangleModule,
+  'output-meter':     outputMeterModule,
   'picture-graphic': pictureGraphicModule,
   'container': containerModule,
   'button': buttonModule,

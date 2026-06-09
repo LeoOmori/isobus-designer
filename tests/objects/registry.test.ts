@@ -8,7 +8,7 @@ import { writerModules } from '../../src/objects/writerRegistry';
 
 const kinds: ObjectKind[] = [
   'data-mask', 'alarm-mask', 'container', 'soft-key-mask', 'key', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-string', 'output-number',
-  'output-line', 'output-polygon', 'output-ellipse', 'output-rectangle', 'picture-graphic', 'font-attribute', 'line-attribute', 'fill-attribute',
+  'output-line', 'output-polygon', 'output-ellipse', 'output-rectangle', 'output-meter', 'picture-graphic', 'font-attribute', 'line-attribute', 'fill-attribute',
   'string-variable', 'number-variable',
 ];
 
@@ -22,7 +22,7 @@ describe('object registries', () => {
 
   it('contains canvas renderers for canvas-renderable child kinds', () => {
     expect(Object.keys(canvasObjectRenderers).sort()).toEqual([
-      'alarm-mask', 'button', 'container', 'input-boolean', 'input-list', 'input-number', 'input-string', 'key', 'output-ellipse', 'output-line', 'output-polygon', 'output-number', 'output-rectangle', 'output-string', 'picture-graphic',
+      'alarm-mask', 'button', 'container', 'input-boolean', 'input-list', 'input-number', 'input-string', 'key', 'output-ellipse', 'output-line', 'output-meter', 'output-polygon', 'output-number', 'output-rectangle', 'output-string', 'picture-graphic',
     ].sort());
   });
 

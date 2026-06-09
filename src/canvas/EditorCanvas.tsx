@@ -21,7 +21,7 @@ type BuildingPolygonState = {
 
 /** Tools that create a canvas object on click. */
 const CANVAS_TOOLS = new Set<ToolMode>([
-  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'picture-graphic',
+  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'output-meter', 'picture-graphic',
 ]);
 
 const BUTTON_CHILD_TOOLS = new Set<ToolMode>([
@@ -29,7 +29,7 @@ const BUTTON_CHILD_TOOLS = new Set<ToolMode>([
 ]);
 
 const CONTAINER_CHILD_TOOLS = new Set<ToolMode>([
-  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'picture-graphic',
+  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'output-meter', 'picture-graphic',
 ]);
 
 const KEY_CHILD_TOOLS = new Set<ToolMode>([
@@ -312,6 +312,11 @@ export function EditorCanvas({
           width,
           height: derivedPictureGraphicHeight(width, drag.startObject.actualWidth ?? width, drag.startObject.actualHeight ?? drag.startObject.height),
         } });
+        return;
+      }
+      if (drag.startObject.kind === 'output-meter') {
+        const width = Math.max(20, snap(drag.startObject.width + dx));
+        updateDragPreview({ [drag.objectId]: { width, height: width } });
         return;
       }
       updateDragPreview({ [drag.objectId]: {

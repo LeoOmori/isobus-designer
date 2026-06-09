@@ -18,6 +18,7 @@ const KIND_PREFIX: Record<ObjectKind, string> = {
   'output-polygon':    'POLY',
   'output-ellipse':   'OE',
   'output-rectangle': 'RECT',
+  'output-meter':    'OM',
   'picture-graphic':  'PIC',
   'font-attribute':   'FONT',
   'line-attribute':   'LA',

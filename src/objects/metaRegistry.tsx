@@ -2,6 +2,7 @@ import type { ObjectKind } from '../domain/types';
 import type { ObjectMeta } from './ObjectModule';
 import { alarmMaskMeta } from './alarm-mask/logic';
 import { buttonMeta } from './button/logic';
+import { outputMeterMeta } from './output-meter/logic';
 import { containerMeta } from './container/logic';
 import { dataMaskMeta } from './data-mask/logic';
 import { fillAttributeMeta } from './fill-attribute/logic';
@@ -40,6 +41,7 @@ export const metaRegistry = {
   'output-ellipse':   outputEllipseMeta,
   'output-number':    outputNumberMeta,
   'output-rectangle': outputRectangleMeta,
+  'output-meter':     outputMeterMeta,
   'picture-graphic':  pictureGraphicMeta,
   'font-attribute':   fontAttributeMeta,
   'line-attribute':   lineAttributeMeta,

@@ -20,6 +20,7 @@ export type ObjectKind =
   | 'output-string'
   | 'output-number'
   | 'output-rectangle'
+  | 'output-meter'
   | 'picture-graphic'
   | 'font-attribute'
   | 'line-attribute'
@@ -43,6 +44,7 @@ export type ToolMode =
   | 'input-number'
   | 'input-list'
   | 'output-number'
+  | 'output-meter'
   | 'picture-graphic';
 
 export type ReferenceKind =
@@ -154,6 +156,12 @@ export type EditorObject = {
   lineAttributeId?: string;
   fillAttributeId?: string | null;   // null = 0xFFFF NULL = no fill
   lineSuppression?: number;     // uint8 bitmask – hide sides
+
+  // ── Output Meter (objectType 17) ─────────────────────────────────────
+  needleColor?: number;          // uint8 VT palette index
+  arcAndTickColor?: number;      // uint8 VT palette index
+  meterOptions?: number;         // uint8 bitfield: bit0=drawArc, bit1=drawBorder, bit2=drawTicks, bit3=clockwise
+  numberOfTicks?: number;        // uint8
 
   // ── Picture Graphic (objectType 20) ──────────────────────────────────
   targetWidth?: number;         // uint16 — VT stores target width only; target height is derived from aspect ratio

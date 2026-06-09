@@ -11,6 +11,7 @@ import { outputEllipseModule } from './output-ellipse/logic';
 import { outputLineModule } from './output-line/logic';
 import { outputPolygonModule } from './output-polygon/logic';
 import { outputNumberModule } from './output-number/logic';
+import { outputMeterModule } from './output-meter/logic';
 import { outputRectangleModule } from './output-rectangle/logic';
 import { outputStringModule } from './output-string/module';
 import { pictureGraphicModule } from './picture-graphic/logic';
@@ -36,6 +37,7 @@ export const writerModules = {
   'output-ellipse':    outputEllipseModule,
   'output-number':     outputNumberModule,
   'output-rectangle':  outputRectangleModule,
+  'output-meter':      outputMeterModule,
   'container':         containerModule,
   'button':            buttonModule,
   'input-boolean':     inputBooleanModule,

@@ -18,6 +18,7 @@ import { InputNumberContent } from './input-number';
 import { InputListContent } from './input-list';
 import { OutputEllipseContent } from './output-ellipse';
 import { OutputLineContent } from './output-line';
+import { OutputMeterContent, outputMeterStyle } from './output-meter';
 import { OutputPolygonContent } from './output-polygon';
 import { KeyContent } from './key';
 import { OutputNumberContent } from './output-number';
@@ -119,6 +120,13 @@ export const canvasObjectRenderers: Partial<Record<ObjectKind, CanvasObjectRende
       const line = context.objectById.get(object.lineAttributeId ?? '');
       const fill = context.objectById.get(object.fillAttributeId ?? '');
       return outputRectangleStyle(object, line, fill, context.project.objects);
+    },
+  },
+  'output-meter': {
+    frameStyle: (object) => outputMeterStyle(object),
+    renderContent: (object, context) => {
+      const numberVariable = object.variableReference ? context.objectById.get(object.variableReference) : undefined;
+      return <OutputMeterContent object={object} numberVariable={numberVariable} />;
     },
   },
   'picture-graphic': {

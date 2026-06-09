@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import {
-  AlignCenter, Bell, ClipboardList, Copy, Eye, Folder,
+  AlignCenter, Bell, ClipboardList, Copy, Eye, Folder, Gauge,
   Grid3X3, Hash, Hexagon, Image, KeyRound, Keyboard, LayoutPanelLeft, List, MoveUpRight,
   MoreVertical, MousePointerClick, PenLine, Plus, Square, TextCursorInput, ToggleLeft, Trash2, Type, Zap,
   Circle,
@@ -83,6 +83,7 @@ export function LeftSidebar({
           {section('OUTPUTS', [
             sc('Output String',   <PaletteCard label="Output String"   icon={<Type size={24} />}        selected={tool === 'output-string'}    onClick={() => onToolChange('output-string')} />),
             sc('Output Number',   <PaletteCard label="Output Number"   icon={<Hash size={24} />}        selected={tool === 'output-number'}    onClick={() => onToolChange('output-number')} />),
+            sc('Output Meter',    <PaletteCard label="Output Meter"    icon={<Gauge size={24} />}        selected={tool === 'output-meter'}     onClick={() => onToolChange('output-meter')} />),
             sc('Rectangle',       <PaletteCard label="Rectangle"       icon={<Square size={24} />}      selected={tool === 'output-rectangle'} onClick={() => onToolChange('output-rectangle')} />),
             sc('Output Line',     <PaletteCard label="Output Line"     icon={<MoveUpRight size={24} />} selected={tool === 'output-line'}      onClick={() => onToolChange('output-line')} />),
             sc('Output Polygon',  <PaletteCard label="Output Polygon"  icon={<Hexagon size={24} />}      selected={tool === 'output-polygon'}   onClick={() => onToolChange('output-polygon')} />),

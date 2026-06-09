@@ -40,6 +40,7 @@ function parseObject(r: Reader): number {
     case 14: { r.u16(); r.u16(); r.u16(); r.u8(); r.u16(); r.u8(); return type; }
     case 15: { r.u16(); r.u16(); r.u16(); r.u8(); r.u8(); r.u8(); r.u16(); const m = r.u8(); r.skip(m * 2); return type; }
     case 16: { r.u16(); r.u16(); r.u16(); r.u16(); r.u8(); const n = r.u8(); const m = r.u8(); r.skip(n * 4 + m * 2); return type; }
+    case 17: { r.u16(); r.u8(); r.u8(); r.u8(); r.u8(); r.u8(); r.u8(); r.u8(); r.u16(); r.u16(); r.u16(); r.u16(); const m = r.u8(); r.skip(m * 2); return type; }
     case 20: { r.u16(); r.u16(); r.u16(); r.u8(); r.u8(); r.u8(); const len = r.u32(); const m = r.u8(); r.skip(len + m * 2); return type; }
     case 21: { r.u32(); return type; }
     case 22: { const len = r.u16(); r.skip(len); return type; }

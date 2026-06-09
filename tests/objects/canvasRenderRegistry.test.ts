@@ -6,7 +6,7 @@ import { canvasObjectFrameStyle, canvasObjectRenderers, isCanvasObjectRenderable
 describe('canvas render registry', () => {
   it('covers all renderable canvas object kinds', () => {
     expect(Object.keys(canvasObjectRenderers).sort()).toEqual([
-      'alarm-mask', 'button', 'container', 'input-boolean', 'input-list', 'input-number', 'input-string', 'key', 'output-ellipse', 'output-line', 'output-polygon', 'output-number', 'output-rectangle', 'output-string', 'picture-graphic',
+      'alarm-mask', 'button', 'container', 'input-boolean', 'input-list', 'input-number', 'input-string', 'key', 'output-ellipse', 'output-line', 'output-meter', 'output-polygon', 'output-number', 'output-rectangle', 'output-string', 'picture-graphic',
     ].sort());
   });
 

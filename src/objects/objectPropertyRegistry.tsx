@@ -2,6 +2,7 @@ import type { ComponentType } from 'react';
 import type { EditorObject, ObjectKind, ReferenceKind } from '../domain/types';
 import { AlarmMaskProperties } from './alarm-mask';
 import { ButtonProperties } from './button';
+import { OutputMeterProperties } from './output-meter';
 import { ContainerProperties } from './container';
 import { DataMaskProperties } from './data-mask';
 import { FillAttributeProperties } from './fill-attribute';
@@ -42,6 +43,7 @@ export const objectPropertyComponents = {
   'output-ellipse': OutputEllipseProperties,
   'output-number': OutputNumberProperties,
   'output-rectangle': OutputRectangleProperties,
+  'output-meter':     OutputMeterProperties,
   'picture-graphic': PictureGraphicProperties,
   'container': ContainerProperties,
   'button': ButtonProperties,
