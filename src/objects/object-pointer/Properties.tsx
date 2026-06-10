@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import type { ObjectKind } from '../../domain/types';
-import type { ObjectPropertiesProps } from '../objectPropertyRegistry';
+import type { ObjectPropertiesProps } from '../ObjectModule';
 import { SelectField, PropertySection, Field } from '../../properties/fields';
 
 function validTargetKinds(parentKind: string | undefined): Set<ObjectKind> {

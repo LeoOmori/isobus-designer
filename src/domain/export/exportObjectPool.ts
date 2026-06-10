@@ -1,5 +1,5 @@
 import type { EditorObject, ProjectState } from '../types';
-import { writerModules } from '../../objects/writerRegistry';
+import { objectRegistry } from '../../objects/registry';
 import { ByteWriter } from './byteWriter';
 import type { WriteContext } from './context';
 import { validateForExport } from './exportValidation';
@@ -26,15 +26,15 @@ export type ExportResult = {
  */
 function orderObjectsForExport(objects: EditorObject[]): EditorObject[] {
   return [...objects].sort((a, b) => {
-    const oa = writerModules[a.kind].exportOrder;
-    const ob = writerModules[b.kind].exportOrder;
+    const oa = objectRegistry[a.kind].exportOrder;
+    const ob = objectRegistry[b.kind].exportOrder;
     if (oa !== ob) return oa - ob;
     return a.objectId.localeCompare(b.objectId); // stable within same kind
   });
 }
 
 function writeObject(obj: EditorObject, ctx: WriteContext): void {
-  writerModules[obj.kind].writer(obj, ctx);
+  objectRegistry[obj.kind].writer(obj, ctx);
 }
 
 /**

@@ -2,8 +2,7 @@ import { Trash2 } from 'lucide-react';
 import { objectKindName } from '../domain/objectMeta';
 import type { EditorObject, ReferenceKind } from '../domain/types';
 import { Panel } from '../ui/primitives';
-import { metaRegistry } from '../objects/metaRegistry';
-import { objectPropertyComponents } from '../objects/objectPropertyRegistry';
+import { objectRegistry } from '../objects/registry';
 import { CheckboxField, Field, PropertySection } from './fields';
 
 // ── Main PropertiesPanel ──────────────────────────────────────────────────
@@ -17,9 +16,11 @@ export function PropertiesPanel({ selectedObject, objects, onPatch, onDelete, on
   onCreateAttributeReference: (kind: ReferenceKind) => void;
 }) {
   const kind       = selectedObject.kind;
-  const isNoLayout = !metaRegistry[kind].hasLayout;
+  const module     = objectRegistry[kind];
+  const isNoLayout = !module.meta.hasLayout;
 
-  const ObjectProperties = objectPropertyComponents[kind];
+  const ObjectProperties = module.Properties;
+  if (!ObjectProperties) throw new Error(`No Properties component registered for kind "${kind}"`);
 
   return (
     <Panel title="Object Parameter Editor">

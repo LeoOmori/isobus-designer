@@ -2,7 +2,7 @@ import type { ProjectState } from '../types';
 import { validate } from '../validation';
 import { asPictureGraphicFormat } from '../vtPalette';
 import { parseHexObjectId } from './idResolver';
-import { extractedModules } from '../../objects/extractedModules';
+import { objectRegistry } from '../../objects/registry';
 import { workingSetModule } from '../../objects/working-set/logic';
 
 /**
@@ -95,7 +95,7 @@ export function validateForExport(project: ProjectState): string[] {
 
   // ── Latin-1 string validation ────────────────────────────────────────────
   for (const obj of objects) {
-    errors.push(...(extractedModules[obj.kind]?.validateExport?.(obj, project, { objectById }) ?? []));
+    errors.push(...(objectRegistry[obj.kind]?.validateExport?.(obj, project, { objectById }) ?? []));
   }
 
   // ── Picture Graphic constraints ──────────────────────────────────────────

@@ -21,6 +21,13 @@ export type CreateObjectContext = {
   parentId: string;
 };
 
+export type ObjectPropertiesProps = {
+  object: EditorObject;
+  objects: EditorObject[];
+  onPatch: (changes: Partial<EditorObject>) => void;
+  onCreateAttributeReference: (kind: ReferenceKind) => void;
+};
+
 export type ObjectModule<K extends ObjectKind = ObjectKind> = {
   kind: K;
   meta: ObjectMeta;
@@ -30,10 +37,7 @@ export type ObjectModule<K extends ObjectKind = ObjectKind> = {
   migrate?: (object: EditorObject) => EditorObject;
   validate?: (object: EditorObject, project: ProjectState, lookup: ObjectLookup) => string[];
   validateExport?: (object: EditorObject, project: ProjectState, lookup: ObjectLookup) => string[];
-  Properties?: ComponentType<{
-    object: EditorObject;
-    objects: EditorObject[];
-    onPatch: (changes: Partial<EditorObject>) => void;
-    onCreateAttributeReference: (kind: ReferenceKind) => void;
-  }>;
+  /** Reference kinds (font, line, fill, string-var, number-var) this object can attach. */
+  acceptsReferences?: readonly ReferenceKind[];
+  Properties?: ComponentType<ObjectPropertiesProps>;
 };

@@ -1,5 +1,5 @@
 import type { EditorObject, ObjectKind, ProjectState, ReferenceKind } from './types';
-import { extractedModules } from '../objects/extractedModules';
+import { objectRegistry } from '../objects/registry';
 
 export function createEditorObject(
   kind: ObjectKind,
@@ -8,7 +8,7 @@ export function createEditorObject(
   y = 70,
   parentId = current.activeMaskId,
 ): EditorObject {
-  const createDefault = extractedModules[kind].createDefault;
+  const createDefault = objectRegistry[kind].createDefault;
   if (!createDefault) throw new Error(`Object kind "${kind}" has no createDefault module`);
   return createDefault({ current, x, y, parentId });
 }

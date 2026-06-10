@@ -12,19 +12,22 @@
 
 ## Structure
 - Single-package Vite + React + TypeScript app; entrypoints are `index.html` -> `src/main.tsx` -> `src/App.tsx`.
-- `src/App.tsx` owns the editor wiring: project state, selection, tool mode, object creation/deletion, export actions, and sidebar/canvas composition.
+- `src/App.tsx` only wires hooks + panels together. Project mutation, selection, persistence, keyboard shortcuts, and picture-graphic sync live in dedicated hooks under `src/state/`.
 - Project state lives in `src/state/useProjectState.ts`, persists to localStorage under `isobus-iop-editor-project`, and migrates stale saved objects on load.
+- Selection state (single + multi) lives in `src/state/useSelection.ts`; object commands (create/delete/clone/patch) live in `src/state/useObjectCommands.ts`; z-order in `src/state/useLayerCommands.ts`. Background effects: `usePersistence`, `useKeyboardShortcuts`, `usePictureGraphicSync`.
 - Core domain shape is `src/domain/types.ts`; ISO/VT constants and helpers are in `src/domain/isobus.ts` and `src/domain/vtPalette.ts`.
-- Binary `.iop` export starts at `src/domain/export/exportObjectPool.ts`; writer dispatch now goes through `src/objects/writerRegistry.ts`, while legacy per-object writers still live under `src/domain/export/writers/` until each kind is migrated.
-- Object-specific architecture lives under `src/objects/<kind>/`; all current `ObjectKind`s plus the special Working Set now have object modules, properties/render helpers, or tests under `src/objects/`.
-- `src/domain/objectFactory.ts` delegates default object creation to `extractedModules[kind].createDefault`; keep new object defaults in their `src/objects/<kind>/` module.
-- Object property panels are dispatched through `src/objects/objectPropertyRegistry.tsx`; `referencePropertyRegistry.tsx` is only a compatibility re-export.
+- Binary `.iop` export starts at `src/domain/export/exportObjectPool.ts`; writer dispatch goes through `src/objects/registry.ts`, while per-object writers live under `src/domain/export/writers/`.
+- Object-specific architecture lives under `src/objects/<kind>/`; all current `ObjectKind`s plus the special Working Set have object modules, properties/render helpers, or tests under `src/objects/`.
+- `src/domain/objectFactory.ts` delegates default object creation to `objectRegistry[kind].createDefault`; keep new object defaults in their `src/objects/<kind>/` module.
+- Object property panels live on `objectRegistry[kind].Properties`. To declare which attribute / variable kinds an object can attach, add it to the `acceptsReferences` map in `src/objects/registry.ts`; runtime check is `acceptsReference(objectKind, refKind)`.
 - Canvas object frame/content rendering is dispatched through `src/objects/canvasRenderRegistry.tsx`; keep object-specific render content and frame style decisions in object modules/registry instead of branching in `EditorCanvas.tsx`.
+- Soft Key Mask strip rendering (slot grid + key-child placement) lives in `src/canvas/SoftKeyMaskStrip.tsx`; both Data Mask and Alarm Mask render paths reuse it.
 
 ## Object model gotchas
 - Editor IDs like `DM_1` are distinct from ISO `objectId` hex strings; `objectFactory.toObjectId()` allocates from `0x0200 + nextNumber`, while export maps Working Set to `0x0000`.
 - Parent/child consistency is enforced: children need both `parentId` and inclusion in the parent `childObjectIds`/`keys` array. Update both when moving or creating nested objects.
-- Adding or changing an `ObjectKind` should prefer the `src/objects/<kind>/` module pattern. Keep registry entries (`writerRegistry.ts`, `metaRegistry.tsx`) in sync; the old scattered whitelists still exist for not-yet-migrated kinds.
+- Adding or changing an `ObjectKind` should be done as a `src/objects/<kind>/` module + a single entry in `src/objects/registry.ts`. Canvas-renderable kinds also need an entry in `src/objects/canvasRenderRegistry.tsx`.
+
 - Reference-only objects (`font/line/fill-attribute`, `string/number-variable`) have no canvas layout but are still exported and referenced by other objects.
 - Picture graphics keep editor-only `sourceImageDataUrl` for re-quantization; export requires packed palette-indexed `rawData`. Key icons are forced/validated as 48×48, 8-bit, no flashing, positioned at x=6 y=6.
 
@@ -59,20 +62,18 @@ When implementing a new ISOBUS object kind, touch these files in order:
 ### 5. Export smoke validator
 - `src/domain/export/smokeValidateObjectPool.ts` — add a `case N:` to `parseObject()` with the correct field layout
 
-### 6. Registries (all 5)
-- `src/objects/writerRegistry.ts` — import + add to `writerModules`
-- `src/objects/metaRegistry.tsx` — import + add to `metaRegistry`
-- `src/objects/extractedModules.ts` — import + add to `extractedModules`
-- `src/objects/objectPropertyRegistry.tsx` — import + add to `objectPropertyComponents`
-- `src/objects/canvasRenderRegistry.tsx` — import + add entry to `canvasObjectRenderers` (frameStyle + renderContent)
+### 6. Registries (2)
+- `src/objects/registry.ts` — import the `<kind>Module` and the `<Kind>Properties` component, then add an entry through `compose(<kind>Module, <Kind>Properties)`. If the object accepts attribute / variable references, add its kind to the `acceptsReferences` map at the top of that file.
+- `src/objects/canvasRenderRegistry.tsx` — import + add entry to `canvasObjectRenderers` (frameStyle + renderContent). Only needed for canvas-renderable kinds.
 
 ### 7. Editor wiring
-- `src/App.tsx`
+- `src/state/useObjectCommands.ts`
   - Add to `CANVAS_KINDS` if it's a canvas-placeable child object
-  - Update `canApplyReferencePatch()` if it can reference attributes/variables
 - `src/canvas/EditorCanvas.tsx`
   - Add to `CANVAS_TOOLS` if it's click-to-place on the canvas
   - Add to `CONTAINER_CHILD_TOOLS` if it can live inside containers
+- `src/canvas/SoftKeyMaskStrip.tsx`
+  - Add to `KEY_CHILD_TOOLS` if the tool can place children inside a Key slot
 
 ### 8. UI tool & picker
 - `src/panels/TopToolbar.tsx` — import lucide icon, add `<ToolButton>` in toolbar

@@ -2,7 +2,7 @@ import { useCallback, useState, type SetStateAction } from 'react';
 import { initialProject } from '../domain/initialProject';
 import { nearestVtColorIndex } from '../domain/isobus';
 import type { EditorObject, ProjectState } from '../domain/types';
-import { extractedModules } from '../objects/extractedModules';
+import { objectRegistry } from '../objects/registry';
 
 export const storageKey = 'isobus-iop-editor-project';
 
@@ -24,7 +24,7 @@ function migrateProject(project: ProjectState): ProjectState {
 
 function migrateObject(object: EditorObject): EditorObject {
   const backgroundColorIndex = object.backgroundColorIndex ?? backgroundColorToIndex(object.backgroundColor);
-  const migrate = extractedModules[object.kind]?.migrate;
+  const migrate = objectRegistry[object.kind]?.migrate;
   if (migrate) return migrate({ ...object, backgroundColorIndex });
 
   return {

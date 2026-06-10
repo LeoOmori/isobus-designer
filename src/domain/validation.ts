@@ -1,7 +1,6 @@
 import type { ProjectState } from './types';
-import { extractedModules } from '../objects/extractedModules';
+import { objectRegistry } from '../objects/registry';
 import { workingSetModule } from '../objects/working-set/logic';
-import { metaRegistry } from '../objects/metaRegistry';
 
 export function validate(project: ProjectState): string[] {
   const errors: string[] = [];
@@ -14,11 +13,11 @@ export function validate(project: ProjectState): string[] {
     ids.add(obj.id);
 
     // Canvas objects must have positive dimensions
-    if (metaRegistry[obj.kind].hasLayout && (obj.width <= 0 || obj.height <= 0)) {
+    if (objectRegistry[obj.kind].meta.hasLayout && (obj.width <= 0 || obj.height <= 0)) {
       errors.push(`Invalid size: ${obj.id} (${obj.width}×${obj.height})`);
     }
 
-    if (metaRegistry[obj.kind].hasLayout && obj.kind !== 'data-mask') {
+    if (objectRegistry[obj.kind].meta.hasLayout && obj.kind !== 'data-mask') {
       const childContainerIds = project.objects
         .filter((parent) => (parent.childObjectIds ?? []).includes(obj.id))
         .map((parent) => parent.id);
@@ -41,7 +40,7 @@ export function validate(project: ProjectState): string[] {
       }
     }
 
-    errors.push(...(extractedModules[obj.kind].validate?.(obj, project, { objectById }) ?? []));
+    errors.push(...(objectRegistry[obj.kind].validate?.(obj, project, { objectById }) ?? []));
 
   }
 
