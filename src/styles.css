@@ -1570,3 +1570,116 @@ button.list-row {
   background: var(--text-muted);
   background-clip: content-box;
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+   About dialog
+   ────────────────────────────────────────────────────────────────────── */
+
+.about-btn {
+  padding: 0 8px !important;
+}
+
+.about-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.about-modal {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  width: 500px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+.about-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.about-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.about-version {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 0 0 12px;
+}
+
+.about-close {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.about-close:hover {
+  color: var(--text-primary);
+  background: var(--hover-bg);
+}
+
+.about-body {
+  padding: 14px 18px 16px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.about-section {
+  margin-top: 4px;
+}
+
+.about-section-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 10px;
+  color: var(--text-primary);
+}
+
+.about-category {
+  margin-bottom: 10px;
+}
+
+.about-category-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  margin: 0 0 4px;
+}
+
+.about-object-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 16px;
+}
+
+.about-object-list li {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}

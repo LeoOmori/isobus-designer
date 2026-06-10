@@ -5,6 +5,7 @@ import type { ToolMode, Viewport } from './domain/types';
 import { validate } from './domain/validation';
 import { defaultIopFilename, downloadIopFile } from './domain/export/downloadIop';
 import { exportObjectPool } from './domain/export/exportObjectPool';
+import { AboutDialog } from './panels/AboutDialog';
 import { ExportErrorsDialog } from './panels/ExportErrorsDialog';
 import { LeftSidebar } from './panels/LeftSidebar';
 import { RightSidebar } from './panels/RightSidebar';
@@ -31,6 +32,7 @@ export function App() {
   const [viewport, setViewport] = useState<Viewport>({ x: 200, y: 100, zoom: 0.85 });
   const [exportErrors, setExportErrors] = useState<string[] | null>(null);
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
+  const [aboutVisible, setAboutVisible] = useState(false);
 
   usePersistence(project);
   usePictureGraphicSync(project, setProject);
@@ -76,6 +78,7 @@ export function App() {
         canRedo={canRedo}
         vtVersion={project.workingSet.vtVersion ?? 3}
         onVtVersionChange={(v) => commit((current) => ({ ...current, workingSet: { ...current.workingSet, vtVersion: v } }))}
+        onAbout={() => setAboutVisible(true)}
       />
       <div className={`workspace ${sidebarsVisible ? '' : 'sidebars-hidden'}`}>
         <LeftSidebar
@@ -142,6 +145,9 @@ export function App() {
       </div>
       {exportErrors && (
         <ExportErrorsDialog errors={exportErrors} onClose={() => setExportErrors(null)} />
+      )}
+      {aboutVisible && (
+        <AboutDialog onClose={() => setAboutVisible(false)} />
       )}
     </div>
   );
