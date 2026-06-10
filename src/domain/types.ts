@@ -1,6 +1,9 @@
 export type MacroReference = {
   eventId: number;
+  /** Direct uint8 ISO macro object ID (legacy / advanced use). */
   macroId: number;
+  /** Editor ID of the macro object; resolved to objectId at export. Preferred over macroId when present. */
+  macroEditorId?: string;
 };
 
 export type ObjectKind =
@@ -29,7 +32,37 @@ export type ObjectKind =
   | 'fill-attribute'
   | 'string-variable'
   | 'number-variable'
-  | 'object-pointer';
+  | 'object-pointer'
+  | 'macro';
+
+export type MacroCommandKind =
+  | 'hideShowObject'
+  | 'changeNumericValue'
+  | 'changeBackgroundColor'
+  | 'changeActiveMask'
+  | 'changeAttribute';
+
+/** A single friendly command stored inside a Macro object.
+ *  Compiled to raw 8-byte padded VT command packets at export time. */
+export type MacroCommand = {
+  /** Unique identifier for list management in the editor (not exported). */
+  id: string;
+  kind: MacroCommandKind;
+  /** Editor ID of the target object (hideShowObject, changeNumericValue, changeBackgroundColor, changeAttribute). */
+  objectEditorId?: string;
+  /** Editor ID of the new active mask (changeActiveMask). */
+  maskEditorId?: string;
+  /** uint32 new value (changeNumericValue). */
+  numericValue?: number;
+  /** uint8 VT palette colour index (changeBackgroundColor). */
+  colorIndex?: number;
+  /** true = show, false = hide (hideShowObject). */
+  showObject?: boolean;
+  /** uint8 attribute ID (changeAttribute). */
+  attributeId?: number;
+  /** uint32 new attribute value (changeAttribute). */
+  attributeValue?: number;
+};
 
 export type ToolMode =
   | 'select'
@@ -223,6 +256,9 @@ export type EditorObject = {
 
   // ── Object Pointer (objectType 27) ────────────────────────────────────
   pointerValue?: string | null;     // editor ID of referenced object, or null = 0xFFFF NULL
+
+  // ── Macro (objectType 28) ────────────────────────────────────────────────
+  macroCommands?: MacroCommand[];   // compiled to raw 8-byte command packets at export
 
   // ── Editor-only helpers ───────────────────────────────────────────────
 };

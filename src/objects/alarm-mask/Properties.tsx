@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../domain/types';
 import { PropertySection, SelectField, VtColorField } from '../../properties/fields';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 const PRIORITY_OPTIONS = [
   { value: '0', label: '0 — High' },
@@ -47,6 +48,7 @@ export function AlarmMaskProperties({ object, objects, onPatch }: {
           onChange={(alarmSoftKeyMaskId) => onPatch({ alarmSoftKeyMaskId })}
         />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

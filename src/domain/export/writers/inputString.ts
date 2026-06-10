@@ -1,6 +1,7 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
 import { asHorizontalJustification, asVerticalJustification, packJustification } from '../../isobus';
+import { writeMacroRefs } from './macroRef';
 
 function encodeLatin1Fixed(value: string, length: number): Uint8Array {
   const bytes = new Uint8Array(length);
@@ -43,9 +44,5 @@ export function writeInputString(obj: EditorObject, ctx: WriteContext): void {
 
   w.u8((obj.inputEnabled ?? true) ? 1 : 0); // Enabled (VT v4+)
 
-  w.u8(macros.length);
-  for (const macro of macros) {
-    w.u8(macro.eventId);
-    w.u8(macro.macroId);
-  }
+  writeMacroRefs(macros, w, ctx.idMap);
 }

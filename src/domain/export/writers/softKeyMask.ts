@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
+import { writeMacroCount, writeMacroPairs } from './macroRef';
 
 /**
  * ISO 11783-6 Soft Key Mask Object (Type 4)
@@ -23,11 +24,14 @@ export function writeSoftKeyMask(obj: EditorObject, ctx: WriteContext): void {
   w.u16(ctx.idMap.get(obj.id)!);
   w.u8(4);
   w.u8(obj.backgroundColorIndex ?? 1); // SKMs default transparent in editor; use white (1) for spec
+  const macros = obj.macros ?? [];
   w.u8(keys.length);
-  w.u8(0); // macro count = 0 for V1
+  writeMacroCount(macros, w);
 
   for (const key of keys) {
     w.u16(ctx.idMap.get(key.id) ?? 0xffff);
     // NOTE: Soft Key Mask key references have NO coordinates
   }
+
+  writeMacroPairs(macros, w, ctx.idMap);
 }

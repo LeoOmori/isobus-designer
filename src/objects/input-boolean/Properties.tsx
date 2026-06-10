@@ -2,6 +2,7 @@ import { clamp } from '../../domain/isobus';
 import type { EditorObject, ReferenceKind } from '../../domain/types';
 import { CheckboxField, Field, PropertySection, SelectField, VtColorField } from '../../properties/fields';
 import { handleRefSelect, nullableReferenceOptions, referenceOptions } from '../propertyHelpers';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 export function InputBooleanProperties({ object, objects, onPatch, onCreateAttributeReference }: {
   object: EditorObject;
@@ -52,6 +53,7 @@ export function InputBooleanProperties({ object, objects, onPatch, onCreateAttri
           onChange={(value) => handleRefSelect(value, 'number-variable', (id) => ({ variableReference: id === '__null' ? null : id }), onPatch, onCreateAttributeReference)}
         />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

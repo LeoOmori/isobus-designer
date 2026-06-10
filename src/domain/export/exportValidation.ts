@@ -128,10 +128,19 @@ export function validateForExport(project: ProjectState): string[] {
     }
   }
 
-  // ── Macros: unsupported in V1 ────────────────────────────────────────────
+  // ── Macro event reference validation ────────────────────────────────────
   for (const obj of objects) {
-    if ((obj.macros ?? []).length > 0) {
-      errors.push(`Export: ${obj.id} has macro references (macros are not supported in V1 export)`);
+    for (const ref of obj.macros ?? []) {
+      // Verify the referenced macro object exists
+      const macroEditorId = ref.macroEditorId;
+      if (macroEditorId) {
+        const target = objectById.get(macroEditorId);
+        if (!target) {
+          errors.push(`Export: ${obj.id} macro event references unknown macro "${macroEditorId}"`);
+        } else if (target.kind !== 'macro') {
+          errors.push(`Export: ${obj.id} macro event references "${macroEditorId}" which is not a Macro object`);
+        }
+      }
     }
   }
 

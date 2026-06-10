@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
+import { writeMacroRefs } from './macroRef';
 
 export function writeOutputLine(obj: EditorObject, ctx: WriteContext): void {
   const { w } = ctx;
@@ -13,9 +14,5 @@ export function writeOutputLine(obj: EditorObject, ctx: WriteContext): void {
   w.u16(obj.height);
   w.u8(obj.lineDirection ?? 0);
 
-  w.u8(macros.length);
-  for (const macro of macros) {
-    w.u8(macro.eventId);
-    w.u8(macro.macroId);
-  }
+  writeMacroRefs(macros, w, ctx.idMap);
 }

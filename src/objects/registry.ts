@@ -52,6 +52,8 @@ import { softKeyMaskModule } from './soft-key-mask/logic';
 import { SoftKeyMaskProperties } from './soft-key-mask';
 import { stringVariableModule } from './string-variable/logic';
 import { StringVariableProperties } from './string-variable';
+import { macroModule } from './macro/logic';
+import { MacroProperties } from './macro';
 
 /**
  * Per-kind declarations of which reference kinds (font, line, fill, string-variable,
@@ -116,6 +118,7 @@ export const objectRegistry = {
   'string-variable':          compose(stringVariableModule, StringVariableProperties),
   'number-variable':          compose(numberVariableModule, NumberVariableProperties),
   'object-pointer':           compose(objectPointerModule, ObjectPointerProperties),
+  'macro':                    compose(macroModule, MacroProperties),
 } satisfies Record<ObjectKind, ObjectModule>;
 
 export const objectKinds = Object.keys(objectRegistry) as ObjectKind[];

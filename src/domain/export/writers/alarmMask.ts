@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
+import { writeMacroCount, writeMacroPairs } from './macroRef';
 
 /**
  * ISO 11783-6 Alarm Mask Object (Type 2)
@@ -34,7 +35,7 @@ export function writeAlarmMask(obj: EditorObject, ctx: WriteContext): void {
   w.u8(obj.priority ?? 1);
   w.u8(obj.acousticSignal ?? 3);
   w.u8(children.length);
-  w.u8(macros.length);
+  writeMacroCount(macros, w);
 
   for (const child of children) {
     w.u16(ctx.idMap.get(child.id) ?? 0xffff);
@@ -42,8 +43,5 @@ export function writeAlarmMask(obj: EditorObject, ctx: WriteContext): void {
     w.i16(child.y);
   }
 
-  for (const macro of macros) {
-    w.u8(macro.eventId);
-    w.u8(macro.macroId);
-  }
+  writeMacroPairs(macros, w, ctx.idMap);
 }

@@ -28,6 +28,7 @@ const KIND_PREFIX: Record<ObjectKind, string> = {
   'string-variable':  'SV',
   'number-variable':  'NV',
   'object-pointer':   'OP',
+  'macro':            'MCR',
 };
 
 export function toObjectId(n: number) {

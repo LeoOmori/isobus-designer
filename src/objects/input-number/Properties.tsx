@@ -18,6 +18,7 @@ import {
 import type { EditorObject, ReferenceKind } from '../../domain/types';
 import { CheckboxField, Field, IconCheckboxField, IconToggleField, PropertySection, SelectField, VtColorField } from '../../properties/fields';
 import { handleRefSelect, nullableReferenceOptions, patchBit, referenceOptions } from '../propertyHelpers';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 export function InputNumberProperties({
   object,
@@ -120,6 +121,7 @@ export function InputNumberProperties({
           onChange={(v) => handleRefSelect(v, 'number-variable', (id) => ({ variableReference: id === '__null' ? null : id }), onPatch, onCreateAttributeReference)}
         />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

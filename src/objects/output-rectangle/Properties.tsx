@@ -7,6 +7,7 @@ import {
 import type { EditorObject, ReferenceKind } from '../../domain/types';
 import { CheckboxField, PropertySection, SelectField } from '../../properties/fields';
 import { handleRefSelect, nullableReferenceOptions, patchBit, referenceOptions } from '../propertyHelpers';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 export function OutputRectangleProperties({ object, objects, onPatch, onCreateAttributeReference }: {
   object: EditorObject;
@@ -30,6 +31,7 @@ export function OutputRectangleProperties({ object, objects, onPatch, onCreateAt
         <CheckboxField label="Left" checked={((object.lineSuppression ?? 0) & RECTANGLE_LINE_SUPPRESSION_LEFT) !== 0} onChange={(value) => onPatch({ lineSuppression: patchBit(object.lineSuppression, RECTANGLE_LINE_SUPPRESSION_LEFT, value) })} />
         <CheckboxField label="Suppress all" checked={(object.lineSuppression ?? 0) === 0b1111} onChange={(value) => onPatch({ lineSuppression: value ? 0b1111 : 0 })} />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

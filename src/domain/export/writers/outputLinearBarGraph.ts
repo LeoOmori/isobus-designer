@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
+import { writeMacroRefs } from './macroRef';
 
 export function writeOutputLinearBarGraph(obj: EditorObject, ctx: WriteContext): void {
   const { w } = ctx;
@@ -25,6 +26,7 @@ export function writeOutputLinearBarGraph(obj: EditorObject, ctx: WriteContext):
   
   w.u16(obj.targetValueVariableReference ? ctx.resolve(obj.targetValueVariableReference) : 0xffff);
   w.u16(obj.targetValue ?? 0);
-  
-  w.u8(0); // macros count
+
+  const macros = obj.macros ?? [];
+  writeMacroRefs(macros, w, ctx.idMap);
 }

@@ -75,6 +75,7 @@ function writeHex(writerFn: (object: EditorObject, ctx: WriteContext) => void, o
     resolve: (id) => idMap.get(id ?? '') ?? 0xffff,
     objectById: new Map(),
     project: current,
+    vtVersion: 4,
   });
   return Array.from(writer.result(), (byte) => byte.toString(16).padStart(2, '0')).join('');
 }

@@ -3,6 +3,7 @@ import { clamp } from '../../domain/isobus';
 import type { EditorObject, ReferenceKind } from '../../domain/types';
 import { CheckboxField, Field, PropertySection, SelectField, VtColorField } from '../../properties/fields';
 import { handleRefSelect, nullableReferenceOptions } from '../propertyHelpers';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 const VALID_LIST_ITEM_KINDS = ['output-string', 'output-number', 'picture-graphic', 'container'];
 
@@ -117,6 +118,7 @@ export function InputListProperties({ object, objects, onPatch, onCreateAttribut
           onChange={(v) => handleRefSelect(v, 'number-variable', (id) => ({ variableReference: id === '__null' ? null : id }), onPatch, onCreateAttributeReference)}
         />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

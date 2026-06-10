@@ -1,6 +1,7 @@
 import type { EditorObject } from '../../domain/types';
 import { objectKindName } from '../../domain/objectMeta';
 import { CheckboxField, PropertySection } from '../../properties/fields';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 export function ContainerProperties({ object, objects, onPatch }: { object: EditorObject; objects: EditorObject[]; onPatch: (changes: Partial<EditorObject>) => void }) {
   const children = objects.filter((candidate) => (object.childObjectIds ?? []).includes(candidate.id));
@@ -15,6 +16,7 @@ export function ContainerProperties({ object, objects, onPatch }: { object: Edit
           <div key={child.id} className="field-hint">{child.id} — {objectKindName(child.kind)} at {child.x}, {child.y}</div>
         ))}
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

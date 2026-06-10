@@ -14,6 +14,7 @@ import {
 import type { EditorObject, ReferenceKind } from '../../domain/types';
 import { Field, IconCheckboxField, IconToggleField, PropertySection, SelectField, VtColorField } from '../../properties/fields';
 import { handleRefSelect, nullableReferenceOptions, patchBit, referenceOptions } from '../propertyHelpers';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 export function OutputNumberProperties({ object, objects, onPatch, onCreateAttributeReference }: {
   object: EditorObject;
@@ -50,6 +51,7 @@ export function OutputNumberProperties({ object, objects, onPatch, onCreateAttri
         <SelectField label="Font Attribute" value={object.fontAttributeId ?? ''} options={fontAttrOpts} onChange={(value) => handleRefSelect(value, 'font-attribute', (id) => ({ fontAttributeId: id }), onPatch, onCreateAttributeReference)} />
         <SelectField label="Variable Reference" value={variableReference ?? '__null'} options={numberVariableOpts} onChange={(value) => handleRefSelect(value, 'number-variable', (id) => ({ variableReference: id === '__null' ? null : id, numberVariableId: undefined }), onPatch, onCreateAttributeReference)} />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

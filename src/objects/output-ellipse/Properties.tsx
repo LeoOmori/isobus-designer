@@ -2,6 +2,7 @@ import { clamp } from '../../domain/isobus';
 import type { EditorObject, ReferenceKind } from '../../domain/types';
 import { Field, PropertySection, SelectField } from '../../properties/fields';
 import { handleRefSelect, nullableReferenceOptions, referenceOptions } from '../propertyHelpers';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 const ELLIPSE_TYPE_OPTIONS = [
   { value: '0', label: 'Closed Ellipse' },
@@ -72,6 +73,7 @@ export function OutputEllipseProperties({ object, objects, onPatch, onCreateAttr
           onChange={(v) => handleRefSelect(v, 'fill-attribute', (id) => ({ fillAttributeId: id === '__null' ? null : id }), onPatch, onCreateAttributeReference)}
         />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

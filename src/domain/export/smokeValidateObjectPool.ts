@@ -26,18 +26,18 @@ function parseObject(r: Reader): number {
     case 0: { r.u8(); r.u8(); r.u16(); const n = r.u8(); const m = r.u8(); const l = r.u8(); r.skip(n * 6 + m * 2 + l * 2); return type; }
     case 1: { r.u8(); r.u16(); const n = r.u8(); const m = r.u8(); r.skip(n * 6 + m * 2); return type; }
     case 2: { r.u8(); r.u16(); r.u8(); r.u8(); const n = r.u8(); const m = r.u8(); r.skip(n * 6 + m * 2); return type; }
-    case 3: { r.u16(); r.u16(); r.u8(); const n = r.u8(); r.u8(); r.skip(n * 6); return type; }
-    case 4: { r.u8(); const n = r.u8(); r.u8(); r.skip(n * 2); return type; }
-    case 5: { r.u8(); r.u8(); const n = r.u8(); r.u8(); r.skip(n * 6); return type; }
+    case 3: { r.u16(); r.u16(); r.u8(); const n = r.u8(); const m = r.u8(); r.skip(n * 6 + m * 2); return type; }
+    case 4: { r.u8(); const n = r.u8(); const m = r.u8(); r.skip(n * 2 + m * 2); return type; }
+    case 5: { r.u8(); r.u8(); const n = r.u8(); const m = r.u8(); r.skip(n * 6 + m * 2); return type; }
     case 6: { r.u16(); r.u16(); r.u8(); r.u8(); r.u8(); r.u8(); const n = r.u8(); const m = r.u8(); r.skip(n * 6 + m * 2); return type; }
     case 7: { r.u8(); r.u16(); r.u16(); r.u16(); r.u8(); r.u8(); const n = r.u8(); r.skip(n * 2); return type; }
     case 8: { r.u16(); r.u16(); r.u8(); r.u16(); r.u16(); r.u8(); r.u16(); r.u8(); const len = r.u8(); r.skip(len); r.u8(); const n = r.u8(); r.skip(n * 2); return type; }
     case 9: { r.u16(); r.u16(); r.u8(); r.u16(); r.u8(); r.u16(); r.u32(); r.u32(); r.u32(); r.i32(); r.f32(); r.u8(); r.u8(); r.u8(); r.u8(); const n = r.u8(); r.skip(n * 2); return type; }
     case 10: { r.u16(); r.u16(); r.u16(); r.u8(); const n = r.u8(); r.u8(); const m = r.u8(); r.skip(n * 2 + m * 2); return type; }
-    case 11: { r.u16(); r.u16(); r.u8(); r.u16(); r.u8(); r.u16(); r.u8(); const len = r.u16(); r.skip(len); r.u8(); return type; }
-    case 12: { r.u16(); r.u16(); r.u8(); r.u16(); r.u8(); r.u16(); r.u32(); r.i32(); r.f32(); r.u8(); r.u8(); r.u8(); r.u8(); return type; }
+    case 11: { r.u16(); r.u16(); r.u8(); r.u16(); r.u8(); r.u16(); r.u8(); const len = r.u16(); r.skip(len); const m11 = r.u8(); r.skip(m11 * 2); return type; }
+    case 12: { r.u16(); r.u16(); r.u8(); r.u16(); r.u8(); r.u16(); r.u32(); r.i32(); r.f32(); r.u8(); r.u8(); r.u8(); const m12 = r.u8(); r.skip(m12 * 2); return type; }
     case 13: { r.u16(); r.u16(); r.u16(); r.u8(); const m = r.u8(); r.skip(m * 2); return type; }
-    case 14: { r.u16(); r.u16(); r.u16(); r.u8(); r.u16(); r.u8(); return type; }
+    case 14: { r.u16(); r.u16(); r.u16(); r.u8(); r.u16(); const m14 = r.u8(); r.skip(m14 * 2); return type; }
     case 15: { r.u16(); r.u16(); r.u16(); r.u8(); r.u8(); r.u8(); r.u16(); const m = r.u8(); r.skip(m * 2); return type; }
     case 16: { r.u16(); r.u16(); r.u16(); r.u16(); r.u8(); const n = r.u8(); const m = r.u8(); r.skip(n * 4 + m * 2); return type; }
     case 17: { r.u16(); r.u8(); r.u8(); r.u8(); r.u8(); r.u8(); r.u8(); r.u8(); r.u16(); r.u16(); r.u16(); r.u16(); const m = r.u8(); r.skip(m * 2); return type; }
@@ -50,6 +50,7 @@ function parseObject(r: Reader): number {
     case 24: { r.u8(); r.u8(); r.u16(); r.u8(); return type; }
     case 25: { r.u8(); r.u8(); r.u16(); r.u8(); return type; }
     case 27: { r.u16(); return type; }
+    case 28: { const n = r.u16(); r.skip(n); return type; }
     default: throw new Error(`Unknown object type ${type}`);
   }
 }

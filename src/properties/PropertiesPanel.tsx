@@ -71,8 +71,6 @@ export function PropertiesPanel({ selectedObject, objects, onPatch, onDelete, on
         onCreateAttributeReference={onCreateAttributeReference}
       />
 
-      {/* ── Events & Macros (placeholder) ─────────────────────────────── */}
-      <PropertySection title="Events & Macros" defaultOpen={false} />
     </Panel>
   );
 }

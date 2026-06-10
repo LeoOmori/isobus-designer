@@ -1,6 +1,7 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
 import { asHorizontalJustification, asVerticalJustification, packJustification } from '../../isobus';
+import { writeMacroRefs } from './macroRef';
 
 export function writeOutputString(obj: EditorObject, ctx: WriteContext): void {
   const { w } = ctx;
@@ -24,5 +25,6 @@ export function writeOutputString(obj: EditorObject, ctx: WriteContext): void {
   w.u8(packJustification(h, v));
   w.u16(length);
   w.raw(encoded);
-  w.u8(0);
+  const macros = obj.macros ?? [];
+  writeMacroRefs(macros, w, ctx.idMap);
 }

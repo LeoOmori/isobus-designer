@@ -2,6 +2,7 @@ import { clamp } from '../../domain/isobus';
 import type { EditorObject, ReferenceKind } from '../../domain/types';
 import { Field, IconToggleField, PropertySection, SelectField } from '../../properties/fields';
 import { handleRefSelect, referenceOptions } from '../propertyHelpers';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 const LINE_DIRECTION_OPTIONS = [
   { value: '0', label: '↘ Top-left to bottom-right', icon: <span className="chip-glyph">↘</span> },
@@ -46,6 +47,7 @@ export function OutputLineProperties({ object, objects, onPatch, onCreateAttribu
           onChange={(v) => handleRefSelect(v, 'line-attribute', (id) => ({ lineAttributeId: id }), onPatch, onCreateAttributeReference)}
         />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

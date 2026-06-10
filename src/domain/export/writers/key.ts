@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
+import { writeMacroCount, writeMacroPairs } from './macroRef';
 
 /**
  * ISO 11783-6 Key Object (Type 5)
@@ -25,12 +26,15 @@ export function writeKey(obj: EditorObject, ctx: WriteContext): void {
   w.u8(5);
   w.u8(obj.backgroundColorIndex ?? 1); // spec-backed default is white (1)
   w.u8(obj.keyCode ?? 1);
+  const macros = obj.macros ?? [];
   w.u8(children.length);
-  w.u8(0); // macro count = 0 for V1
+  writeMacroCount(macros, w);
 
   for (const child of children) {
     w.u16(ctx.idMap.get(child.id) ?? 0xffff);
     w.i16(child.x);
     w.i16(child.y);
   }
+
+  writeMacroPairs(macros, w, ctx.idMap);
 }

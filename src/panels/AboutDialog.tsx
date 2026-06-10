@@ -8,9 +8,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   input: 'Inputs',
   attribute: 'Attributes',
   variable: 'Variables',
+  automation: 'Automation',
 };
 
-const CATEGORY_ORDER = ['screen', 'group', 'output', 'input', 'attribute', 'variable'];
+const CATEGORY_ORDER = ['screen', 'group', 'output', 'input', 'attribute', 'variable', 'automation'];
 
 export function AboutDialog({ onClose }: { onClose: () => void }) {
   const grouped: Record<string, { kind: string; name: string }[]> = {};

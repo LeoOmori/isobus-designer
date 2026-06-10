@@ -15,6 +15,7 @@ import {
 import type { EditorObject, ReferenceKind } from '../../domain/types';
 import { CheckboxField, Field, IconCheckboxField, IconToggleField, PropertySection, SelectField, VtColorField } from '../../properties/fields';
 import { handleRefSelect, nullableReferenceOptions, referenceOptions } from '../propertyHelpers';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 export function InputStringProperties({
   object,
@@ -107,6 +108,7 @@ export function InputStringProperties({
           onChange={(value) => handleRefSelect(value, 'string-variable', (id) => ({ variableReference: id === '__null' ? null : id }), onPatch, onCreateAttributeReference)}
         />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

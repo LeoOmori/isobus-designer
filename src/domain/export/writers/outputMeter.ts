@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
+import { writeMacroRefs } from './macroRef';
 
 export function writeOutputMeter(obj: EditorObject, ctx: WriteContext): void {
   const { w } = ctx;
@@ -17,5 +18,6 @@ export function writeOutputMeter(obj: EditorObject, ctx: WriteContext): void {
   w.u16(obj.maxValue ?? 0);
   w.u16(obj.variableReference ? ctx.resolve(obj.variableReference) : 0xffff);
   w.u16(obj.value ?? 0);
-  w.u8(0); // macros count
+  const macros = obj.macros ?? [];
+  writeMacroRefs(macros, w, ctx.idMap);
 }

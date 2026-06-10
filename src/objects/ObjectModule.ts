@@ -5,7 +5,7 @@ import type { WriteContext } from '../domain/export/context';
 export type ObjectMeta = {
   name: string;
   Icon: ComponentType<{ size?: number }>;
-  category: 'screen' | 'group' | 'output' | 'input' | 'attribute' | 'variable';
+  category: 'screen' | 'group' | 'output' | 'input' | 'attribute' | 'variable' | 'automation';
   isReference: boolean;
   hasLayout: boolean;
 };

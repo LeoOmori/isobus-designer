@@ -1,6 +1,7 @@
 import type { EditorObject, ReferenceKind } from '../../domain/types';
 import { CheckboxField, Field, PropertySection, SelectField, VtColorField } from '../../properties/fields';
 import { handleRefSelect, nullableReferenceOptions } from '../propertyHelpers';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 export function OutputMeterProperties({ object, objects, onPatch, onCreateAttributeReference }: {
   object: EditorObject;
@@ -42,6 +43,7 @@ export function OutputMeterProperties({ object, objects, onPatch, onCreateAttrib
           onPatch({ value: clamped });
         }} />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

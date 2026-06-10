@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
+import { writeMacroRefs } from './macroRef';
 
 export function writeOutputEllipse(obj: EditorObject, ctx: WriteContext): void {
   const { w } = ctx;
@@ -16,9 +17,5 @@ export function writeOutputEllipse(obj: EditorObject, ctx: WriteContext): void {
   w.u8(obj.endAngle ?? 0);
   w.u16(obj.fillAttributeId ? ctx.resolve(obj.fillAttributeId) : 0xffff);
 
-  w.u8(macros.length);
-  for (const macro of macros) {
-    w.u8(macro.eventId);
-    w.u8(macro.macroId);
-  }
+  writeMacroRefs(macros, w, ctx.idMap);
 }

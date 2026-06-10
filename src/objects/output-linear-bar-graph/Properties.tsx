@@ -1,6 +1,7 @@
 import type { EditorObject, ReferenceKind } from '../../domain/types';
 import { CheckboxField, Field, PropertySection, SelectField, VtColorField } from '../../properties/fields';
 import { handleRefSelect, nullableReferenceOptions } from '../propertyHelpers';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 export function OutputLinearBarGraphProperties({ object, objects, onPatch, onCreateAttributeReference }: {
   object: EditorObject;
@@ -77,6 +78,7 @@ export function OutputLinearBarGraphProperties({ object, objects, onPatch, onCre
           onPatch({ targetValue: clamped });
         }} />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

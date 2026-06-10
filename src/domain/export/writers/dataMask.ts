@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
+import { writeMacroCount, writeMacroPairs } from './macroRef';
 
 /**
  * ISO 11783-6 Data Mask Object (Type 1)
@@ -23,17 +24,20 @@ export function writeDataMask(obj: EditorObject, ctx: WriteContext): void {
     .sort((a, b) => a.zIndex - b.zIndex);
 
   const skmId = ctx.resolve(obj.softKeyMaskId);
+  const macros = obj.macros ?? [];
 
   w.u16(ctx.idMap.get(obj.id)!);
   w.u8(1);
   w.u8(obj.backgroundColorIndex ?? 1);
   w.u16(skmId);
   w.u8(children.length);
-  w.u8(0); // macro count = 0 for V1
+  writeMacroCount(macros, w);
 
   for (const child of children) {
     w.u16(ctx.idMap.get(child.id) ?? 0xffff);
     w.i16(child.x);
     w.i16(child.y);
   }
+
+  writeMacroPairs(macros, w, ctx.idMap);
 }

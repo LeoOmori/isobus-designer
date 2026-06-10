@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
+import { writeMacroRefs } from './macroRef';
 
 export function writeInputBoolean(obj: EditorObject, ctx: WriteContext): void {
   const { w } = ctx;
@@ -24,9 +25,5 @@ export function writeInputBoolean(obj: EditorObject, ctx: WriteContext): void {
   w.u8((obj.inputEnabled ?? true) ? 1 : 0);
 
   // Macros
-  w.u8(macros.length);
-  for (const macro of macros) {
-    w.u8(macro.eventId);
-    w.u8(macro.macroId);
-  }
+  writeMacroRefs(macros, w, ctx.idMap);
 }

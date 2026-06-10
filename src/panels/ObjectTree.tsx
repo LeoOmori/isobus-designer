@@ -214,6 +214,30 @@ export function ObjectTree({
                 ))}
               </div>
             )}
+
+            {/* ── Macros ── */}
+            {project.objects.filter((o) => o.kind === 'macro').length > 0 && (
+              <div>
+                <div className="tree-row root attributes-row">
+                  <button className="tree-chevron" onClick={() => toggle('MACROS')}>
+                    {isExpanded('MACROS') ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+                  </button>
+                  <button className="tree-select" onClick={() => toggle('MACROS')}>
+                    <Zap size={15} /><span>Macros</span>
+                  </button>
+                  <span /><span />
+                </div>
+                {showExpanded('MACROS') && project.objects.filter((o) => o.kind === 'macro').filter(visibleInTree).map((macro) => (
+                  <div key={macro.id} className={`tree-row child ${selectedId === macro.id ? 'selected' : ''}`}>
+                    <button className="tree-select" onClick={() => onSelect(macro.id)}>
+                      <KindIcon kind={macro.kind} />{renderInvalidIcon(macro.id)}<span>{macro.name}</span>
+                    </button>
+                    <span />
+                    {renderActionMenu(macro.id)}
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>

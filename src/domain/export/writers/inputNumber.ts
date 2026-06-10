@@ -1,6 +1,7 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
 import { asHorizontalJustification, asVerticalJustification, packJustification } from '../../isobus';
+import { writeMacroRefs } from './macroRef';
 
 export function writeInputNumber(obj: EditorObject, ctx: WriteContext): void {
   const { w } = ctx;
@@ -39,9 +40,5 @@ export function writeInputNumber(obj: EditorObject, ctx: WriteContext): void {
   const rte = (obj.realTimeEditing ?? false) ? 2 : 0;
   w.u8(enabled | rte);
 
-  w.u8(macros.length);
-  for (const macro of macros) {
-    w.u8(macro.eventId);
-    w.u8(macro.macroId);
-  }
+  writeMacroRefs(macros, w, ctx.idMap);
 }

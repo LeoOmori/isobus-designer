@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../domain/types';
 import { PropertySection, SelectField, VtColorField } from '../../properties/fields';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 export function DataMaskProperties({ object, objects, onPatch }: {
   object: EditorObject;
@@ -20,6 +21,7 @@ export function DataMaskProperties({ object, objects, onPatch }: {
         <SelectField label="Next Mask" value={object.nextMaskId ?? ''} options={maskOptions} onChange={(nextMaskId) => onPatch({ nextMaskId })} />
         <SelectField label="Previous Mask" value={object.previousMaskId ?? ''} options={maskOptions} onChange={(previousMaskId) => onPatch({ previousMaskId })} />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

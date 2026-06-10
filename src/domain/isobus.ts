@@ -44,7 +44,48 @@ export const VT_OBJECT_TYPES: Record<ObjectKind, number> = {
   'line-attribute':  24,
   'fill-attribute':  25,
   'object-pointer':  27,
+  'macro':           28,
 };
+
+/**
+ * ISO 11783-6 Table A.3 — Macro Event IDs.
+ * ID 0 is reserved; 0xF0–0xFE are proprietary; 0xFF is the V5 extended-macro marker.
+ */
+export const VT_MACRO_EVENTS: { value: number; label: string }[] = [
+  { value:  1, label: 'On Activate' },
+  { value:  2, label: 'On Deactivate' },
+  { value:  3, label: 'On Show' },
+  { value:  4, label: 'On Hide' },
+  { value:  5, label: 'On Enable' },
+  { value:  6, label: 'On Disable' },
+  { value:  7, label: 'On Change Active Mask' },
+  { value:  8, label: 'On Change Soft Key Mask' },
+  { value:  9, label: 'On Change Attribute' },
+  { value: 10, label: 'On Change Background Colour' },
+  { value: 11, label: 'On Change Font Attributes' },
+  { value: 12, label: 'On Change Line Attributes' },
+  { value: 13, label: 'On Change Fill Attributes' },
+  { value: 14, label: 'On Change Child Location' },
+  { value: 15, label: 'On Change Size' },
+  { value: 16, label: 'On Change Value' },
+  { value: 17, label: 'On Change Priority' },
+  { value: 18, label: 'On Change End Point' },
+  { value: 19, label: 'On Input Field Selection' },
+  { value: 20, label: 'On Input Field Deselection' },
+  { value: 21, label: 'On ESC' },
+  { value: 22, label: 'On Entry of a Value' },
+  { value: 23, label: 'On Entry of a New Value' },
+  { value: 24, label: 'On Key Press' },
+  { value: 25, label: 'On Key Release' },
+  { value: 26, label: 'On Change Child Position' },
+  { value: 27, label: 'On Pointing Event Press (VT v5)' },
+  { value: 28, label: 'On Pointing Event Release (VT v5)' },
+];
+
+/** Lookup map for fast event label resolution by ID. */
+export const VT_MACRO_EVENT_LABEL: Map<number, string> = new Map(
+  VT_MACRO_EVENTS.map(({ value, label }) => [value, label]),
+);
 
 /** ISO 11783-6 Fill Attribute fillType values. */
 export const VT_FILL_TYPE_OPTIONS = [

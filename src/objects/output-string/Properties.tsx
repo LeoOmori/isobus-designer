@@ -10,6 +10,7 @@ import {
 } from '../../domain/isobus';
 import type { EditorObject, ReferenceKind } from '../../domain/types';
 import { Field, IconCheckboxField, IconToggleField, PropertySection, SelectField, VtColorField } from '../../properties/fields';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 export function OutputStringProperties({
   object,
@@ -48,6 +49,7 @@ export function OutputStringProperties({
         <SelectField label="Font Attribute" value={object.fontAttributeId ?? ''} options={fontAttrOpts} onChange={(value) => handleRefSelect(value, 'font-attribute', (id) => ({ fontAttributeId: id }), onPatch, onCreateAttributeReference)} />
         <SelectField label="Variable Reference" value={object.variableReference !== undefined ? object.variableReference ?? '__null' : object.stringVariableId || '__null'} options={variableOpts} onChange={(value) => handleRefSelect(value, 'string-variable', (id) => ({ variableReference: id === '__null' ? null : id }), onPatch, onCreateAttributeReference)} />
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }

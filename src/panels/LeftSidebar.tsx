@@ -2,7 +2,7 @@ import { useState } from 'react';
 import {
   AlignCenter, BarChart, Bell, Circle, CircleDot, ClipboardList, Copy, Crosshair, Eye, Folder, Gauge,
   Grid3X3, Hash, Hexagon, Image, KeyRound, Keyboard, LayoutPanelLeft, List, MoveUpRight,
-  MoreVertical, MousePointerClick, PenLine, Plus, Square, TextCursorInput, ToggleLeft, Trash2, Type, Zap,
+  MoreVertical, MousePointerClick, PenLine, Plus, Square, TextCursorInput, ToggleLeft, Trash2, Type, Zap as ZapIcon,
 } from 'lucide-react';
 import type { EditorObject, ObjectKind, ReferenceKind, ToolMode } from '../domain/types';
 import { PaletteCard, Panel, ResizableSplit, SearchBox, SectionHeader } from '../ui/primitives';
@@ -67,7 +67,7 @@ export function LeftSidebar({
       <ResizableSplit defaultTopHeight={320} minTopHeight={120} minBottomHeight={100}>
         {/* ── Object Picker ──────────────────────────────────────────────── */}
         <Panel title="Object Picker">
-          <div className="panel-toolbar"><SearchBox value={objectSearch} onChange={setObjectSearch} placeholder="Search objects..." /><Zap size={16} /></div>
+          <div className="panel-toolbar"><SearchBox value={objectSearch} onChange={setObjectSearch} placeholder="Search objects..." /><ZapIcon size={16} /></div>
 
           {section('SCREENS', [
             sc('Data Mask',     <PaletteCard label="Data Mask"     icon={<LayoutPanelLeft size={24} />} selected={tool === 'data-mask'}     onClick={() => onToolChange('data-mask')} />),
@@ -108,6 +108,10 @@ export function LeftSidebar({
             sc('Font Attr',   <PaletteCard label="Font Attr"   icon={<Type size={24} />}          onClick={() => onCreateAttribute('font-attribute')} />),
             sc('String Var',  <PaletteCard label="String Var"  icon={<ClipboardList size={24} />} onClick={() => onCreateAttribute('string-variable')} />),
             sc('Number Var',  <PaletteCard label="Number Var"  icon={<Hash size={24} />}          onClick={() => onCreateAttribute('number-variable')} />),
+          ])}
+
+          {section('AUTOMATION', [
+            sc('Macro', <PaletteCard label="Macro" icon={<ZapIcon size={24} />} onClick={() => onCreateObject('macro')} />),
           ])}
 
           {section('PLANNED', [

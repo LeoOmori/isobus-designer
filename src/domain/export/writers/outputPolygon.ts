@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
+import { writeMacroCount, writeMacroPairs } from './macroRef';
 
 export function writeOutputPolygon(obj: EditorObject, ctx: WriteContext): void {
   const { w } = ctx;
@@ -18,7 +19,7 @@ export function writeOutputPolygon(obj: EditorObject, ctx: WriteContext): void {
   w.u8(obj.polygonType ?? 2);
 
   w.u8(Math.min(points.length, 255));
-  w.u8(macros.length);
+  writeMacroCount(macros, w);
 
   const maxPoints = Math.min(points.length, 255);
   for (let i = 0; i < maxPoints; i++) {
@@ -26,8 +27,5 @@ export function writeOutputPolygon(obj: EditorObject, ctx: WriteContext): void {
     w.u16(points[i].y);
   }
 
-  for (const macro of macros) {
-    w.u8(macro.eventId);
-    w.u8(macro.macroId);
-  }
+  writeMacroPairs(macros, w, ctx.idMap);
 }

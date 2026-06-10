@@ -1,5 +1,6 @@
 import type { EditorObject } from '../../types';
 import type { WriteContext } from '../context';
+import { writeMacroCount, writeMacroPairs } from './macroRef';
 
 export function writeInputList(obj: EditorObject, ctx: WriteContext): void {
   const { w } = ctx;
@@ -27,7 +28,7 @@ export function writeInputList(obj: EditorObject, ctx: WriteContext): void {
   w.u8(enabled | rte);
 
   // Macro count
-  w.u8(macros.length);
+  writeMacroCount(macros, w);
 
   // List item object IDs (65535 = NULL placeholder for empty string entries)
   for (const itemId of listItems) {
@@ -36,8 +37,5 @@ export function writeInputList(obj: EditorObject, ctx: WriteContext): void {
   }
 
   // Macro records
-  for (const macro of macros) {
-    w.u8(macro.eventId);
-    w.u8(macro.macroId);
-  }
+  writeMacroPairs(macros, w, ctx.idMap);
 }

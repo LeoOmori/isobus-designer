@@ -11,6 +11,7 @@ import { objectKindName } from '../../domain/objectMeta';
 import type { EditorObject } from '../../domain/types';
 import { CheckboxField, Field, PropertySection, VtColorField } from '../../properties/fields';
 import { patchBit } from '../propertyHelpers';
+import { MacroReferencesSection } from '../../properties/MacroReferencesSection';
 
 export function ButtonProperties({ object, objects, onPatch }: { object: EditorObject; objects: EditorObject[]; onPatch: (changes: Partial<EditorObject>) => void }) {
   const children = objects.filter((candidate) => (object.childObjectIds ?? []).includes(candidate.id));
@@ -34,6 +35,7 @@ export function ButtonProperties({ object, objects, onPatch }: { object: EditorO
           <div key={child.id} className="field-hint">{child.id} — {objectKindName(child.kind)} at {child.x}, {child.y}</div>
         ))}
       </PropertySection>
+      <MacroReferencesSection object={object} objects={objects} onPatch={onPatch} />
     </>
   );
 }
