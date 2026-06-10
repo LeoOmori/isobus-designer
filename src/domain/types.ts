@@ -21,6 +21,7 @@ export type ObjectKind =
   | 'output-number'
   | 'output-rectangle'
   | 'output-meter'
+  | 'output-linear-bar-graph'
   | 'picture-graphic'
   | 'font-attribute'
   | 'line-attribute'
@@ -46,6 +47,7 @@ export type ToolMode =
   | 'input-list'
   | 'output-number'
   | 'output-meter'
+  | 'output-linear-bar-graph'
   | 'picture-graphic'
   | 'object-pointer';
 
@@ -164,6 +166,12 @@ export type EditorObject = {
   arcAndTickColor?: number;      // uint8 VT palette index
   meterOptions?: number;         // uint8 bitfield: bit0=drawArc, bit1=drawBorder, bit2=drawTicks, bit3=clockwise
   numberOfTicks?: number;        // uint8
+
+  // ── Output Linear Bar Graph (objectType 18) ──────────────────────────
+  targetLineColor?: number;      // uint8 VT palette index
+  targetValueVariableReference?: string | null; // null = 0xFFFF NULL/use local value
+  targetValue?: number;          // uint16
+  linearBarOptions?: number;     // uint8 bitfield: bit0=drawBorder, bit1=drawTargetLine, bit2=drawTicks, bit3=singleLineMode, bit4=horizontal, bit5=positiveDirection
 
   // ── Picture Graphic (objectType 20) ──────────────────────────────────
   targetWidth?: number;         // uint16 — VT stores target width only; target height is derived from aspect ratio

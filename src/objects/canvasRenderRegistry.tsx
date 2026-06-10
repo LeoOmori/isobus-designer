@@ -19,6 +19,7 @@ import { InputListContent } from './input-list';
 import { OutputEllipseContent } from './output-ellipse';
 import { OutputLineContent } from './output-line';
 import { OutputMeterContent, outputMeterStyle } from './output-meter';
+import { OutputLinearBarGraphContent, outputLinearBarGraphStyle } from './output-linear-bar-graph';
 import { OutputPolygonContent } from './output-polygon';
 import { KeyContent } from './key';
 import { OutputNumberContent } from './output-number';
@@ -128,6 +129,14 @@ export const canvasObjectRenderers: Partial<Record<ObjectKind, CanvasObjectRende
     renderContent: (object, context) => {
       const numberVariable = object.variableReference ? context.objectById.get(object.variableReference) : undefined;
       return <OutputMeterContent object={object} numberVariable={numberVariable} />;
+    },
+  },
+  'output-linear-bar-graph': {
+    frameStyle: (object) => outputLinearBarGraphStyle(object),
+    renderContent: (object, context) => {
+      const numberVariable = object.variableReference ? context.objectById.get(object.variableReference) : undefined;
+      const targetNumberVariable = object.targetValueVariableReference ? context.objectById.get(object.targetValueVariableReference) : undefined;
+      return <OutputLinearBarGraphContent object={object} numberVariable={numberVariable} targetNumberVariable={targetNumberVariable} />;
     },
   },
   'picture-graphic': {

@@ -3,6 +3,7 @@ import type { EditorObject, ObjectKind, ReferenceKind } from '../domain/types';
 import { AlarmMaskProperties } from './alarm-mask';
 import { ButtonProperties } from './button';
 import { OutputMeterProperties } from './output-meter';
+import { OutputLinearBarGraphProperties } from './output-linear-bar-graph';
 import { ContainerProperties } from './container';
 import { DataMaskProperties } from './data-mask';
 import { FillAttributeProperties } from './fill-attribute';
@@ -45,6 +46,7 @@ export const objectPropertyComponents = {
   'output-number': OutputNumberProperties,
   'output-rectangle': OutputRectangleProperties,
   'output-meter':     OutputMeterProperties,
+  'output-linear-bar-graph': OutputLinearBarGraphProperties,
   'picture-graphic': PictureGraphicProperties,
   'container': ContainerProperties,
   'button': ButtonProperties,

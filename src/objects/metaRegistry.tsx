@@ -3,6 +3,7 @@ import type { ObjectMeta } from './ObjectModule';
 import { alarmMaskMeta } from './alarm-mask/logic';
 import { buttonMeta } from './button/logic';
 import { outputMeterMeta } from './output-meter/logic';
+import { outputLinearBarGraphMeta } from './output-linear-bar-graph/logic';
 import { containerMeta } from './container/logic';
 import { dataMaskMeta } from './data-mask/logic';
 import { fillAttributeMeta } from './fill-attribute/logic';
@@ -43,6 +44,7 @@ export const metaRegistry = {
   'output-number':    outputNumberMeta,
   'output-rectangle': outputRectangleMeta,
   'output-meter':     outputMeterMeta,
+  'output-linear-bar-graph': outputLinearBarGraphMeta,
   'picture-graphic':  pictureGraphicMeta,
   'font-attribute':   fontAttributeMeta,
   'line-attribute':   lineAttributeMeta,

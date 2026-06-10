@@ -21,7 +21,7 @@ type BuildingPolygonState = {
 
 /** Tools that create a canvas object on click. */
 const CANVAS_TOOLS = new Set<ToolMode>([
-  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'output-meter', 'picture-graphic', 'object-pointer',
+  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'output-meter', 'output-linear-bar-graph', 'picture-graphic', 'object-pointer',
 ]);
 
 const BUTTON_CHILD_TOOLS = new Set<ToolMode>([
@@ -29,7 +29,7 @@ const BUTTON_CHILD_TOOLS = new Set<ToolMode>([
 ]);
 
 const CONTAINER_CHILD_TOOLS = new Set<ToolMode>([
-  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'output-meter', 'picture-graphic', 'object-pointer',
+  'container', 'output-rectangle', 'output-line', 'output-polygon', 'output-ellipse', 'output-string', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'output-number', 'output-meter', 'output-linear-bar-graph', 'picture-graphic', 'object-pointer',
 ]);
 
 const KEY_CHILD_TOOLS = new Set<ToolMode>([

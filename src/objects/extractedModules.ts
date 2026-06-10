@@ -3,6 +3,7 @@ import type { ObjectModule } from './ObjectModule';
 import { alarmMaskModule } from './alarm-mask/logic';
 import { buttonModule } from './button/logic';
 import { outputMeterModule } from './output-meter/logic';
+import { outputLinearBarGraphModule } from './output-linear-bar-graph/logic';
 import { containerModule } from './container/logic';
 import { dataMaskModule } from './data-mask/logic';
 import { fillAttributeModule } from './fill-attribute/logic';
@@ -38,6 +39,7 @@ export const extractedModules: Record<ObjectKind, ObjectModule> = {
   'output-number': outputNumberModule,
   'output-rectangle': outputRectangleModule,
   'output-meter':     outputMeterModule,
+  'output-linear-bar-graph': outputLinearBarGraphModule,
   'picture-graphic': pictureGraphicModule,
   'container': containerModule,
   'button': buttonModule,

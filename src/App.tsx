@@ -22,7 +22,7 @@ import { storageKey, useProjectState } from './state/useProjectState';
 
 /** Kinds that are placed as children of a Data Mask on the canvas. */
 const CANVAS_KINDS = new Set<ObjectKind>([
-  'container', 'output-string', 'output-number', 'output-line', 'output-polygon', 'output-ellipse', 'output-rectangle', 'output-meter', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'picture-graphic', 'object-pointer',
+  'container', 'output-string', 'output-number', 'output-line', 'output-polygon', 'output-ellipse', 'output-rectangle', 'output-meter', 'output-linear-bar-graph', 'button', 'input-boolean', 'input-string', 'input-number', 'input-list', 'picture-graphic', 'object-pointer',
 ]);
 
 export function App() {
@@ -267,7 +267,7 @@ export function App() {
   function canApplyReferencePatch(object: EditorObject, kind: ReferenceKind) {
     if (kind === 'font-attribute') return object.kind === 'output-string' || object.kind === 'output-number' || object.kind === 'input-boolean' || object.kind === 'input-string' || object.kind === 'input-number';
     if (kind === 'string-variable') return object.kind === 'output-string' || object.kind === 'input-string';
-    if (kind === 'number-variable') return object.kind === 'output-number' || object.kind === 'input-boolean' || object.kind === 'input-number' || object.kind === 'input-list';
+    if (kind === 'number-variable') return object.kind === 'output-number' || object.kind === 'output-meter' || object.kind === 'output-linear-bar-graph' || object.kind === 'input-boolean' || object.kind === 'input-number' || object.kind === 'input-list';
     if (kind === 'line-attribute' || kind === 'fill-attribute') return object.kind === 'output-rectangle' || object.kind === 'output-polygon' || object.kind === 'output-ellipse';
     return false;
   }
