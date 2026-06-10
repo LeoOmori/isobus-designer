@@ -13,6 +13,7 @@ import { outputPolygonModule } from './output-polygon/logic';
 import { outputNumberModule } from './output-number/logic';
 import { outputMeterModule } from './output-meter/logic';
 import { outputLinearBarGraphModule } from './output-linear-bar-graph/logic';
+import { outputArchedBarGraphModule } from './output-arched-bar-graph/logic';
 import { outputRectangleModule } from './output-rectangle/logic';
 import { outputStringModule } from './output-string/module';
 import { pictureGraphicModule } from './picture-graphic/logic';
@@ -41,6 +42,7 @@ export const writerModules = {
   'output-rectangle':  outputRectangleModule,
   'output-meter':      outputMeterModule,
   'output-linear-bar-graph': outputLinearBarGraphModule,
+  'output-arched-bar-graph': outputArchedBarGraphModule,
   'container':         containerModule,
   'button':            buttonModule,
   'input-boolean':     inputBooleanModule,

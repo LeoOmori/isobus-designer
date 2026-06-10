@@ -1,4 +1,4 @@
-import { BarChart, Circle, Crosshair, Download, Eye, EyeOff, Gauge, Grid3X3, Hand, Hash, Hexagon, Image, List, Minus, MousePointer2, MousePointerClick, MoveUpRight, Plus, Redo2, Square, TextCursorInput, ToggleLeft, Type, Undo2 } from 'lucide-react';
+import { BarChart, Circle, CircleDot, Crosshair, Download, Eye, EyeOff, Gauge, Grid3X3, Hand, Hash, Hexagon, Image, List, Minus, MousePointer2, MousePointerClick, MoveUpRight, Plus, Redo2, Square, TextCursorInput, ToggleLeft, Type, Undo2 } from 'lucide-react';
 import type { ToolMode } from '../domain/types';
 import { ToolButton } from '../ui/primitives';
 import logoSrc from '../assets/logo.png';
@@ -39,6 +39,7 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, side
         <ToolButton active={tool === 'output-number'}    onClick={() => onToolChange('output-number')}    title="Output Number">   <Hash size={20} /></ToolButton>
         <ToolButton active={tool === 'output-meter'}     onClick={() => onToolChange('output-meter')}     title="Output Meter">    <Gauge size={20} /></ToolButton>
         <ToolButton active={tool === 'output-linear-bar-graph'} onClick={() => onToolChange('output-linear-bar-graph')} title="Linear Bar Graph"><BarChart size={20} /></ToolButton>
+        <ToolButton active={tool === 'output-arched-bar-graph'} onClick={() => onToolChange('output-arched-bar-graph')} title="Arched Bar Graph"><CircleDot size={20} /></ToolButton>
         <ToolButton active={tool === 'button'}           onClick={() => onToolChange('button')}           title="Button">          <MousePointerClick size={20} /></ToolButton>
         <ToolButton active={tool === 'input-boolean'}    onClick={() => onToolChange('input-boolean')}    title="Input Boolean">   <ToggleLeft size={20} /></ToolButton>
         <ToolButton active={tool === 'input-string'}     onClick={() => onToolChange('input-string')}     title="Input String">    <TextCursorInput size={20} /></ToolButton>

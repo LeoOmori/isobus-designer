@@ -4,6 +4,7 @@ import { AlarmMaskProperties } from './alarm-mask';
 import { ButtonProperties } from './button';
 import { OutputMeterProperties } from './output-meter';
 import { OutputLinearBarGraphProperties } from './output-linear-bar-graph';
+import { OutputArchedBarGraphProperties } from './output-arched-bar-graph';
 import { ContainerProperties } from './container';
 import { DataMaskProperties } from './data-mask';
 import { FillAttributeProperties } from './fill-attribute';
@@ -47,6 +48,7 @@ export const objectPropertyComponents = {
   'output-rectangle': OutputRectangleProperties,
   'output-meter':     OutputMeterProperties,
   'output-linear-bar-graph': OutputLinearBarGraphProperties,
+  'output-arched-bar-graph': OutputArchedBarGraphProperties,
   'picture-graphic': PictureGraphicProperties,
   'container': ContainerProperties,
   'button': ButtonProperties,

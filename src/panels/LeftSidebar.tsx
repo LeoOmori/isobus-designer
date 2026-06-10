@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import {
-  AlignCenter, BarChart, Bell, ClipboardList, Copy, Eye, Folder, Gauge,
+  AlignCenter, BarChart, Bell, Circle, CircleDot, ClipboardList, Copy, Crosshair, Eye, Folder, Gauge,
   Grid3X3, Hash, Hexagon, Image, KeyRound, Keyboard, LayoutPanelLeft, List, MoveUpRight,
   MoreVertical, MousePointerClick, PenLine, Plus, Square, TextCursorInput, ToggleLeft, Trash2, Type, Zap,
-  Circle, Crosshair,
 } from 'lucide-react';
 import type { EditorObject, ObjectKind, ReferenceKind, ToolMode } from '../domain/types';
 import { PaletteCard, Panel, ResizableSplit, SearchBox, SectionHeader } from '../ui/primitives';
@@ -85,6 +84,7 @@ export function LeftSidebar({
             sc('Output Number',   <PaletteCard label="Output Number"   icon={<Hash size={24} />}        selected={tool === 'output-number'}    onClick={() => onToolChange('output-number')} />),
             sc('Output Meter',    <PaletteCard label="Output Meter"    icon={<Gauge size={24} />}        selected={tool === 'output-meter'}     onClick={() => onToolChange('output-meter')} />),
             sc('Linear Bar Graph', <PaletteCard label="Linear Bar Graph" icon={<BarChart size={24} />}     selected={tool === 'output-linear-bar-graph'} onClick={() => onToolChange('output-linear-bar-graph')} />),
+            sc('Arched Bar Graph', <PaletteCard label="Arched Bar Graph" icon={<CircleDot size={24} />}    selected={tool === 'output-arched-bar-graph'} onClick={() => onToolChange('output-arched-bar-graph')} />),
             sc('Rectangle',       <PaletteCard label="Rectangle"       icon={<Square size={24} />}      selected={tool === 'output-rectangle'} onClick={() => onToolChange('output-rectangle')} />),
             sc('Output Line',     <PaletteCard label="Output Line"     icon={<MoveUpRight size={24} />} selected={tool === 'output-line'}      onClick={() => onToolChange('output-line')} />),
             sc('Output Polygon',  <PaletteCard label="Output Polygon"  icon={<Hexagon size={24} />}      selected={tool === 'output-polygon'}   onClick={() => onToolChange('output-polygon')} />),

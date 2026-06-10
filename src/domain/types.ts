@@ -22,6 +22,7 @@ export type ObjectKind =
   | 'output-rectangle'
   | 'output-meter'
   | 'output-linear-bar-graph'
+  | 'output-arched-bar-graph'
   | 'picture-graphic'
   | 'font-attribute'
   | 'line-attribute'
@@ -48,6 +49,7 @@ export type ToolMode =
   | 'output-number'
   | 'output-meter'
   | 'output-linear-bar-graph'
+  | 'output-arched-bar-graph'
   | 'picture-graphic'
   | 'object-pointer';
 
@@ -172,6 +174,12 @@ export type EditorObject = {
   targetValueVariableReference?: string | null; // null = 0xFFFF NULL/use local value
   targetValue?: number;          // uint16
   linearBarOptions?: number;     // uint8 bitfield: bit0=drawBorder, bit1=drawTargetLine, bit2=drawTicks, bit3=singleLineMode, bit4=horizontal, bit5=positiveDirection
+
+  // ── Output Arched Bar Graph (objectType 19) ──────────────────────────
+  arcStartAngle?: number;        // uint8 stored as angle/2 (0-180 for 0°-360°)
+  arcEndAngle?: number;          // uint8 stored as angle/2 (0-180 for 0°-360°)
+  barGraphWidth?: number;        // uint16 arc thickness
+  archedBarOptions?: number;     // uint8 bitfield: bit0=drawBorder, bit1=drawTargetLine, bit3=valueAsLine, bit4=clockwise
 
   // ── Picture Graphic (objectType 20) ──────────────────────────────────
   targetWidth?: number;         // uint16 — VT stores target width only; target height is derived from aspect ratio

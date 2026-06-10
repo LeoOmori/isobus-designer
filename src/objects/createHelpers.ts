@@ -20,6 +20,7 @@ const KIND_PREFIX: Record<ObjectKind, string> = {
   'output-rectangle': 'RECT',
   'output-meter':    'OM',
   'output-linear-bar-graph': 'LBG',
+  'output-arched-bar-graph': 'ABG',
   'picture-graphic':  'PIC',
   'font-attribute':   'FONT',
   'line-attribute':   'LA',
