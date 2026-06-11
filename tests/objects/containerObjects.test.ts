@@ -13,14 +13,14 @@ const current = { workingSet: { id: 'WS_1' }, activeMaskId: 'DM_1', nextNumber: 
 describe('container/button/key object modules', () => {
   it('create defaults matching existing editor behavior', () => {
     expect(containerModule.createDefault?.({ current, x: 999, y: 999, parentId: 'DM_1' })).toMatchObject({
-      id: 'CT_7', objectId: '0x0207', kind: 'container', parentId: 'DM_1', x: 440, y: 450, width: 200, height: 200,
+      id: 'CT_7', objectId: '0x0BB8', kind: 'container', parentId: 'DM_1', x: 440, y: 450, width: 200, height: 200,
       locked: false, childObjectIds: [], hidden: false,
     });
     expect(buttonModule.createDefault?.({ current, x: 10, y: 20, parentId: 'DM_1' })).toMatchObject({
-      id: 'BTN_7', kind: 'button', parentId: 'DM_1', width: 120, height: 42, childObjectIds: [], keyCode: 0, buttonOptions: 0, borderColorIndex: 0,
+      id: 'BTN_7', kind: 'button', parentId: 'DM_1', width: 120, height: 42, childObjectIds: [], keyCode: 0, buttonOptions: 0, borderColorIndex: 0, objectId: '0x1770',
     });
     expect(keyModule.createDefault?.({ current, x: 10, y: 20, parentId: 'DM_1' })).toMatchObject({
-      id: 'KEY_7', kind: 'key', x: 0, y: 0, width: 60, height: 60, childObjectIds: [], label: 'Key', actionName: '', keyCode: 1,
+      id: 'KEY_7', kind: 'key', x: 0, y: 0, width: 60, height: 60, childObjectIds: [], label: 'Key', actionName: '', keyCode: 1, objectId: '0x1388',
     });
   });
 

@@ -18,7 +18,7 @@ const current = {
 describe('reference-only object modules', () => {
   it('create reference defaults without canvas layout', () => {
     expect(fontAttributeModule.createDefault?.({ current, x: 0, y: 0, parentId: 'DM_1' })).toMatchObject({
-      id: 'FONT_7', objectId: '0x0207', name: 'Font Attribute 7', kind: 'font-attribute', width: 0, height: 0,
+      id: 'FONT_7', objectId: '0x59D8', name: 'Font Attribute 7', kind: 'font-attribute', width: 0, height: 0,
       backgroundColor: 'transparent', borderColor: 'transparent', fontColor: 0, fontWidth: 16, fontHeight: 24, fontType: 1, fontStyle: 0,
     });
     expect(lineAttributeModule.createDefault?.({ current, x: 0, y: 0, parentId: 'DM_1' })).toMatchObject({

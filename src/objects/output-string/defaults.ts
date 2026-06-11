@@ -1,10 +1,7 @@
 import { OUTPUT_STRING_OPTION_TRANSPARENT, asHorizontalJustification, asVerticalJustification, clamp, nearestVtColorIndex } from '../../domain/isobus';
 import type { CreateObjectContext } from '../ObjectModule';
 import type { EditorObject } from '../../domain/types';
-
-function toObjectId(n: number) {
-  return `0x${(0x200 + n).toString(16).padStart(4, '0').toUpperCase()}`;
-}
+import { toObjectId } from '../createHelpers';
 
 export function createDefaultOutputString({ current, x, y, parentId }: CreateObjectContext): EditorObject {
   const n = current.nextNumber;
@@ -16,7 +13,7 @@ export function createDefaultOutputString({ current, x, y, parentId }: CreateObj
 
   return {
     id: `STR_${n}`,
-    objectId: toObjectId(n),
+    objectId: toObjectId('output-string', current),
     name: `Output String ${n}`,
     kind: 'output-string',
     parentId: activeParent.id || undefined,

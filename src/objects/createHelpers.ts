@@ -1,5 +1,5 @@
+import { clamp, VT_OBJECT_TYPES } from '../domain/isobus';
 import type { EditorObject, ObjectKind, ProjectState } from '../domain/types';
-import { clamp } from '../domain/isobus';
 
 const KIND_PREFIX: Record<ObjectKind, string> = {
   'data-mask':        'DM',
@@ -31,15 +31,18 @@ const KIND_PREFIX: Record<ObjectKind, string> = {
   'macro':            'MCR',
 };
 
-export function toObjectId(n: number) {
-  return `0x${(0x200 + n).toString(16).padStart(4, '0').toUpperCase()}`;
+/** Generate ISO objectId = VT type × 1000 + per-kind sequence. */
+export function toObjectId(kind: ObjectKind, current: ProjectState): string {
+  const type = VT_OBJECT_TYPES[kind];
+  const seq = current.nextObjectId?.[kind] ?? 0;
+  return `0x${(type * 1000 + seq).toString(16).padStart(4, '0').toUpperCase()}`;
 }
 
 export function createReferenceBase(kind: ObjectKind, name: string, current: ProjectState): EditorObject {
   const n = current.nextNumber;
   return {
     id: `${KIND_PREFIX[kind]}_${n}`,
-    objectId: toObjectId(n),
+    objectId: toObjectId(kind, current),
     name: `${name} ${n}`,
     kind,
     visible: true,
@@ -66,7 +69,7 @@ export function createCanvasBase(kind: ObjectKind, name: string, current: Projec
 
   return {
     id: `${KIND_PREFIX[kind]}_${n}`,
-    objectId: toObjectId(n),
+    objectId: toObjectId(kind, current),
     name: `${name} ${n}`,
     kind,
     parentId: parent.id || undefined,

@@ -296,6 +296,8 @@ export type ProjectState = {
   objects: EditorObject[];
   activeMaskId: string;
   nextNumber: number;
+  /** Per-kind sequence counter for ISO objectId (type * 1000 + seq). */
+  nextObjectId?: Partial<Record<ObjectKind, number>>;
 };
 
 export type Viewport = { x: number; y: number; zoom: number };

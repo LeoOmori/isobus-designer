@@ -3,6 +3,12 @@ import { createEditorObject, referencePatch } from '../domain/objectFactory';
 import type { EditorObject, ObjectKind, ProjectState, ReferenceKind, WorkingSet } from '../domain/types';
 import { acceptsReference } from '../objects/registry';
 
+/** Advance the per-kind objectId counter and return the new state slice. */
+function bumpObjectId(project: ProjectState, kind: ObjectKind): Partial<ProjectState> {
+  const current = project.nextObjectId?.[kind] ?? 0;
+  return { nextObjectId: { ...(project.nextObjectId ?? {}), [kind]: current + 1 } };
+}
+
 /** Kinds that live as children of a Data Mask, Container, Button, or Key on the canvas. */
 const CANVAS_KINDS = new Set<ObjectKind>([
   'container', 'output-string', 'output-number', 'output-line', 'output-polygon', 'output-ellipse',
@@ -92,6 +98,7 @@ export function useObjectCommands({
           activeDataMaskId:    isMask ? next.id : current.workingSet.activeDataMaskId,
           activeSoftKeyMaskId: isSKM  ? next.id : current.workingSet.activeSoftKeyMaskId,
         },
+        ...bumpObjectId(current, kind),
         nextNumber: current.nextNumber + 1,
         objects: [
           ...current.objects.map((o) => {
@@ -117,6 +124,7 @@ export function useObjectCommands({
       const attribute = createEditorObject(kind, current);
       return {
         ...current,
+        ...bumpObjectId(current, kind),
         nextNumber: current.nextNumber + 1,
         objects: current.objects.map((o) =>
           o.id === selectedId && acceptsReference(o.kind, kind)
@@ -185,6 +193,7 @@ export function useObjectCommands({
 
       return {
         ...current,
+        ...bumpObjectId(current, source.kind),
         nextNumber: current.nextNumber + 1,
         objects: [
           ...current.objects.map((object) => {

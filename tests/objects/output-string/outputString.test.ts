@@ -38,7 +38,7 @@ describe('output-string object module', () => {
 
     expect(created).toMatchObject({
       id: 'STR_7',
-      objectId: '0x0207',
+      objectId: '0x2AF8',
       kind: 'output-string',
       parentId: 'DM_1',
       x: 440,

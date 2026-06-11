@@ -15,7 +15,7 @@ export function createDefaultAlarmMask({ current }: CreateObjectContext): Editor
   const parent = activeParent(current, current.activeMaskId);
   return {
     id: `AM_${n}`,
-    objectId: toObjectId(n),
+    objectId: toObjectId('alarm-mask', current),
     name: `Alarm Mask ${n}`,
     kind: 'alarm-mask',
     visible: true,

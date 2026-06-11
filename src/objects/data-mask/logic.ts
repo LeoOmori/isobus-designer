@@ -15,7 +15,7 @@ export function createDefaultDataMask({ current }: CreateObjectContext): EditorO
   const parent = activeParent(current, current.activeMaskId);
   return {
     id: `DM_${n}`,
-    objectId: toObjectId(n),
+    objectId: toObjectId('data-mask', current),
     name: `Data Mask ${n}`,
     kind: 'data-mask',
     visible: true,

@@ -19,7 +19,7 @@ export function createDefaultSoftKeyMask({ current }: CreateObjectContext): Edit
   const n = current.nextNumber;
   return {
     id: `SKM_${n}`,
-    objectId: toObjectId(n),
+    objectId: toObjectId('soft-key-mask', current),
     name: `Soft Key Mask ${n}`,
     kind: 'soft-key-mask',
     visible: true,

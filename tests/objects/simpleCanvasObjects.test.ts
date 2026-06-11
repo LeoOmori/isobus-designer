@@ -15,7 +15,7 @@ const current = { workingSet: { id: 'WS_1' }, activeMaskId: 'DM_1', nextNumber: 
 describe('simple canvas object modules', () => {
   it('create default output-number, output-rectangle, and picture-graphic objects', () => {
     expect(outputNumberModule.createDefault?.({ current, x: 999, y: 999, parentId: 'DM_1' })).toMatchObject({
-      id: 'NUM_7', objectId: '0x0207', kind: 'output-number', parentId: 'DM_1', x: 440, y: 450,
+      id: 'NUM_7', objectId: '0x2EE0', kind: 'output-number', parentId: 'DM_1', x: 440, y: 450,
       width: 80, height: 30, fontAttributeId: 'FONT_1', variableReference: null, value: 0,
     });
     expect(outputRectangleModule.createDefault?.({ current, x: 10, y: 20, parentId: 'DM_1' })).toMatchObject({

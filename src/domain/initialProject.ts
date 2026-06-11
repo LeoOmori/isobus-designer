@@ -17,5 +17,6 @@ export const initialProject: ProjectState = {
   },
   activeMaskId: '',
   nextNumber: 1,
+  nextObjectId: {},
   objects: [],
 };

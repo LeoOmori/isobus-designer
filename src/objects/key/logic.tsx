@@ -15,7 +15,7 @@ export function createDefaultKey({ current }: CreateObjectContext): EditorObject
   const n = current.nextNumber;
   return {
     id: `KEY_${n}`,
-    objectId: toObjectId(n),
+    objectId: toObjectId('key', current),
     name: `Key ${n}`,
     kind: 'key',
     visible: true,

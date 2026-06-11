@@ -16,15 +16,15 @@ const current = { workingSet: { id: 'WS_1' }, activeMaskId: 'DM_1', nextNumber: 
 describe('top-level object modules', () => {
   it('creates data-mask, alarm-mask, and soft-key-mask defaults', () => {
     expect(dataMaskModule.createDefault?.({ current, x: 0, y: 0, parentId: 'DM_1' })).toMatchObject({
-      id: 'DM_7', objectId: '0x0207', kind: 'data-mask', x: 90, y: 100, width: 480, height: 480,
+      id: 'DM_7', objectId: '0x03E8', kind: 'data-mask', x: 90, y: 100, width: 480, height: 480,
       locked: false, childObjectIds: [], softKeyMaskId: '', nextMaskId: '', previousMaskId: '',
     });
     expect(softKeyMaskModule.createDefault?.({ current, x: 0, y: 0, parentId: 'DM_1' })).toMatchObject({
-      id: 'SKM_7', objectId: '0x0207', kind: 'soft-key-mask', x: 0, y: 0, width: 0, height: 0,
+      id: 'SKM_7', objectId: '0x0FA0', kind: 'soft-key-mask', x: 0, y: 0, width: 0, height: 0,
       locked: false, keys: [], layoutPreview: 'vertical', softKeyCountPreview: 6,
     });
     expect(alarmMaskModule.createDefault?.({ current, x: 0, y: 0, parentId: '' })).toMatchObject({
-      id: 'AM_7', objectId: '0x0207', kind: 'alarm-mask', x: 150, y: 100, width: 480, height: 480,
+      id: 'AM_7', objectId: '0x07D0', kind: 'alarm-mask', x: 150, y: 100, width: 480, height: 480,
       locked: false, childObjectIds: [], priority: 1, acousticSignal: 3, alarmSoftKeyMaskId: '',
     });
   });
