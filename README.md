@@ -2,11 +2,15 @@
 
 Browser-based editor for ISO 11783-6 Virtual Terminal Object Pools (.iop). Built with React + TypeScript + Vite.
 
+> **Beta software:** this project is under active development and is not ready for production use. Validate any exported `.iop` files thoroughly before using them with real equipment or operational Virtual Terminals.
+
 ## What
 
 ISOBUS (ISO 11783) is the standard protocol for communication between tractors, implements, and their electronic control units. Part 6 defines the Virtual Terminal — a display that dynamically renders a machine's user interface from a binary Object Pool (.iop) file.
 
-This editor lets you design those VT screens in a browser: place objects on a canvas, configure their properties, reference variables and attributes, and export a standards-compliant `.iop` file ready for a VT3 terminal.
+This editor lets you design those VT screens in a browser: place objects on a canvas, configure their properties, reference variables and attributes, and export `.iop` files for testing and validation.
+
+<img src="./ui.png" alt="ISOBUS IOP Editor UI" width="800">
 
 ## Quick start
 
