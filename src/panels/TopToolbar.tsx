@@ -1,14 +1,15 @@
-import { BarChart, Circle, CircleDot, Crosshair, Download, Eye, EyeOff, Gauge, Grid3X3, Hand, Hash, Hexagon, Image, Info, List, Minus, MousePointer2, MousePointerClick, MoveUpRight, Plus, Redo2, Square, TextCursorInput, ToggleLeft, Type, Undo2 } from 'lucide-react';
+import { BarChart, Circle, CircleDot, Crosshair, Download, FileCode, Eye, EyeOff, Gauge, Grid3X3, Hand, Hash, Hexagon, Image, Info, List, Minus, MousePointer2, MousePointerClick, MoveUpRight, Plus, Redo2, Square, TextCursorInput, ToggleLeft, Type, Undo2 } from 'lucide-react';
 import type { ToolMode } from '../domain/types';
 import { ToolButton } from '../ui/primitives';
 import logoSrc from '../assets/logo.png';
 
-export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, sidebarsVisible, onToggleSidebars, onUndo, onRedo, canUndo, canRedo, vtVersion, onVtVersionChange, onAbout }: {
+export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, onExportXml, sidebarsVisible, onToggleSidebars, onUndo, onRedo, canUndo, canRedo, vtVersion, onVtVersionChange, onAbout }: {
   tool: ToolMode;
   onToolChange: (tool: ToolMode) => void;
   zoom: number;
   onZoom: (zoom: number) => void;
   onExportIop: () => void;
+  onExportXml: () => void;
   sidebarsVisible: boolean;
   onToggleSidebars: () => void;
   onUndo: () => void;
@@ -63,6 +64,7 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, side
           </select>
         </label>
         <button type="button" className="export export-iop" onClick={onExportIop}><Download size={18} />Export IOP</button>
+        <button type="button" className="export export-xml" onClick={onExportXml} title="vt2iso project (.xml + .vtp + images) for ISOAgLib"><FileCode size={18} />Export XML</button>
         <button type="button" className="about-btn" onClick={onAbout} title="About"><Info size={18} /></button>
       </div>
     </header>

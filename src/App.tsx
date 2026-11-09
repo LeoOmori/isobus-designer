@@ -3,8 +3,10 @@ import { EditorCanvas } from './canvas/EditorCanvas';
 import { clamp } from './domain/isobus';
 import type { ToolMode, Viewport } from './domain/types';
 import { validate } from './domain/validation';
-import { defaultIopFilename, downloadIopFile } from './domain/export/downloadIop';
+import { defaultIopFilename, downloadFile } from './domain/export/downloadIop';
 import { exportObjectPool } from './domain/export/exportObjectPool';
+import { exportXml } from './domain/export/xml/exportXml';
+import { zipStore } from './domain/export/xml/zip';
 import { AboutDialog } from './panels/AboutDialog';
 import { ExportErrorsDialog } from './panels/ExportErrorsDialog';
 import { LeftSidebar } from './panels/LeftSidebar';
@@ -59,7 +61,16 @@ export function App() {
       setExportErrors(exportErrs);
       return;
     }
-    downloadIopFile(bytes, defaultIopFilename(project));
+    downloadFile(bytes, defaultIopFilename(project));
+  }
+
+  function handleExportXml() {
+    const { files, errors: exportErrs } = exportXml(project);
+    if (exportErrs.length > 0) {
+      setExportErrors(exportErrs);
+      return;
+    }
+    downloadFile(zipStore(files), defaultIopFilename(project).replace(/\.iop$/, '-vt2iso.zip'));
   }
 
   return (
@@ -70,6 +81,7 @@ export function App() {
         zoom={viewport.zoom}
         onZoom={(zoom) => setViewport({ ...viewport, zoom: clamp(zoom, 0.25, 3) })}
         onExportIop={handleExportIop}
+        onExportXml={handleExportXml}
         sidebarsVisible={sidebarsVisible}
         onToggleSidebars={() => setSidebarsVisible((v) => !v)}
         onUndo={undo}

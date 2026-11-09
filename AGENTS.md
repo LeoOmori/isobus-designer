@@ -16,6 +16,7 @@
 - Project state lives in `src/state/useProjectState.ts`, persists to localStorage under `isobus-iop-editor-project`, and migrates stale saved objects on load.
 - Selection state (single + multi) lives in `src/state/useSelection.ts`; object commands (create/delete/clone/patch) live in `src/state/useObjectCommands.ts`; z-order in `src/state/useLayerCommands.ts`. Background effects: `usePersistence`, `useKeyboardShortcuts`, `usePictureGraphicSync`.
 - Core domain shape is `src/domain/types.ts`; ISO/VT constants and helpers are in `src/domain/isobus.ts` and `src/domain/vtPalette.ts`.
+- vt2iso XML export (ISOAgLib) starts at `src/domain/export/xml/exportXml.ts` and downloads a store-only `.zip` (`.xml` + `.vtp` + `images/*.bmp`).
 - Binary `.iop` export starts at `src/domain/export/exportObjectPool.ts`; writer dispatch goes through `src/objects/registry.ts`, while per-object writers live under `src/domain/export/writers/`.
 - Object-specific architecture lives under `src/objects/<kind>/`; all current `ObjectKind`s plus the special Working Set have object modules, properties/render helpers, or tests under `src/objects/`.
 - `src/domain/objectFactory.ts` delegates default object creation to `objectRegistry[kind].createDefault`; keep new object defaults in their `src/objects/<kind>/` module.
@@ -58,6 +59,9 @@ When implementing a new ISOBUS object kind, touch these files in order:
 
 ### 4. Export writer
 - `src/domain/export/writers/<kind>.ts` — binary serialization function following the spec layout
+
+### 4b. vt2iso XML mapping
+- `src/domain/export/xml/exportXml.ts` — add an entry to `XML_OBJECTS` (tag + attributes, spelled as in ISOAgLib `tools/vt2iso/src/vt2iso-defines.cpp`); `tsc` fails until it exists. Nested children/points go in `writeObject`.
 
 ### 5. Export smoke validator
 - `src/domain/export/smokeValidateObjectPool.ts` — add a `case N:` to `parseObject()` with the correct field layout

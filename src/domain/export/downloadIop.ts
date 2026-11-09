@@ -1,10 +1,10 @@
 import type { ProjectState } from '../types';
 
 /**
- * Trigger a browser file download of the given bytes as a .iop file.
+ * Trigger a browser file download of the given bytes (.iop, .zip, ...).
  * Appends a temporary <a> element, clicks it, then removes it.
  */
-export function downloadIopFile(bytes: Uint8Array<ArrayBuffer>, filename: string): void {
+export function downloadFile(bytes: Uint8Array<ArrayBuffer>, filename: string): void {
   const blob = new Blob([bytes], { type: 'application/octet-stream' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');

@@ -139,6 +139,17 @@ export function packPictureGraphicImageData(
   return packed;
 }
 
+/** Palette index of pixel (x, y) in packed rawData (rows padded to whole bytes). */
+export function pictureGraphicPaletteIndexAt(rawData: number[], width: number, format: PictureGraphicFormat, x: number, y: number) {
+  const rowStart = y * (format === 0 ? Math.ceil(width / 8) : format === 1 ? Math.ceil(width / 2) : width);
+  if (format === 0) return (rawData[rowStart + Math.floor(x / 8)] & (0x80 >> (x % 8))) !== 0 ? 1 : 0;
+  if (format === 1) {
+    const byte = rawData[rowStart + Math.floor(x / 2)];
+    return x % 2 === 0 ? (byte >> 4) & 0x0f : byte & 0x0f;
+  }
+  return rawData[rowStart + x] & 0xff;
+}
+
 export function unpackPictureGraphicRawData(
   rawData: number[] | undefined,
   width: number,
@@ -155,23 +166,11 @@ export function unpackPictureGraphicRawData(
   const sanitizedOptions = clearUnsupportedPictureGraphicOptions(options);
   const transparent = (sanitizedOptions & PICTURE_GRAPHIC_OPTION_TRANSPARENT) !== 0;
   const transparentIndex = Math.min(pictureFormatMaxIndex(format), clampPaletteIndex(transparencyColor));
-  const rowBytes = format === 0 ? Math.ceil(width / 8) : format === 1 ? Math.ceil(width / 2) : width;
   const pixels = new Uint8ClampedArray(width * height * 4);
 
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      const rowStart = y * rowBytes;
-      let paletteIndex = 0;
-
-      if (format === 0) {
-        paletteIndex = (rawData[rowStart + Math.floor(x / 8)] & (0x80 >> (x % 8))) !== 0 ? 1 : 0;
-      } else if (format === 1) {
-        const byte = rawData[rowStart + Math.floor(x / 2)];
-        paletteIndex = x % 2 === 0 ? (byte >> 4) & 0x0f : byte & 0x0f;
-      } else {
-        paletteIndex = rawData[rowStart + x] & 0xff;
-      }
-
+      const paletteIndex = pictureGraphicPaletteIndexAt(rawData, width, format, x, y);
       const color = VT_PALETTE_RGB[paletteIndex] ?? VT_PALETTE_RGB[0];
       const target = (y * width + x) * 4;
       pixels[target] = color.r;

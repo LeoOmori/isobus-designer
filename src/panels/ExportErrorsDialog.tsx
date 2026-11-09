@@ -10,7 +10,7 @@ export function ExportErrorsDialog({ errors, onClose }: {
         <div className="export-modal-header">
           <div className="export-modal-title">
             <AlertCircle size={18} className="export-modal-icon" />
-            <strong>Export to .iop failed — {errors.length} issue{errors.length !== 1 ? 's' : ''}</strong>
+            <strong>Export failed — {errors.length} issue{errors.length !== 1 ? 's' : ''}</strong>
           </div>
           <button className="export-modal-close" onClick={onClose} title="Close">
             <X size={16} />
