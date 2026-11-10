@@ -80,7 +80,6 @@ When implementing a new ISOBUS object kind, touch these files in order:
   - Add to `KEY_CHILD_TOOLS` if the tool can place children inside a Key slot
 
 ### 8. UI tool & picker
-- `src/panels/TopToolbar.tsx` — import lucide icon, add `<ToolButton>` in toolbar
 - `src/panels/LeftSidebar.tsx` — import lucide icon, add `<PaletteCard>` in the appropriate section
 
 ### 9. IDs

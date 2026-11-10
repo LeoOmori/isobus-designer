@@ -1,8 +1,7 @@
 import { useCallback, useState, type SetStateAction } from 'react';
 import { initialProject } from '../domain/initialProject';
-import { nearestVtColorIndex } from '../domain/isobus';
-import type { EditorObject, ProjectState } from '../domain/types';
-import { objectRegistry } from '../objects/registry';
+import { migrateProject } from '../domain/projectFile';
+import type { ProjectState } from '../domain/types';
 
 export const storageKey = 'isobus-iop-editor-project';
 
@@ -13,29 +12,6 @@ function loadProject(): ProjectState {
   } catch {
     return initialProject;
   }
-}
-
-function migrateProject(project: ProjectState): ProjectState {
-  return {
-    ...project,
-    objects: project.objects.map(migrateObject),
-  };
-}
-
-function migrateObject(object: EditorObject): EditorObject {
-  const backgroundColorIndex = object.backgroundColorIndex ?? backgroundColorToIndex(object.backgroundColor);
-  const migrate = objectRegistry[object.kind]?.migrate;
-  if (migrate) return migrate({ ...object, backgroundColorIndex });
-
-  return {
-    ...object,
-    backgroundColorIndex,
-  };
-}
-
-function backgroundColorToIndex(color: string | undefined) {
-  if (!color || color === 'transparent') return 1;
-  return nearestVtColorIndex(color);
 }
 
 export function useProjectState() {

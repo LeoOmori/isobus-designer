@@ -7,6 +7,8 @@ import { defaultIopFilename, downloadFile } from './domain/export/downloadIop';
 import { exportObjectPool } from './domain/export/exportObjectPool';
 import { exportXml } from './domain/export/xml/exportXml';
 import { zipStore } from './domain/export/xml/zip';
+import { initialProject } from './domain/initialProject';
+import { parseProjectFile, serializeProject } from './domain/projectFile';
 import { AboutDialog } from './panels/AboutDialog';
 import { ExportErrorsDialog } from './panels/ExportErrorsDialog';
 import { LeftSidebar } from './panels/LeftSidebar';
@@ -32,7 +34,7 @@ export function App() {
 
   const [tool, setTool] = useState<ToolMode>('select');
   const [viewport, setViewport] = useState<Viewport>({ x: 200, y: 100, zoom: 0.85 });
-  const [exportErrors, setExportErrors] = useState<string[] | null>(null);
+  const [exportErrors, setExportErrors] = useState<{ title?: string; errors: string[] } | null>(null);
   const [sidebarsVisible, setSidebarsVisible] = useState(true);
   const [aboutVisible, setAboutVisible] = useState(false);
 
@@ -58,7 +60,7 @@ export function App() {
   function handleExportIop() {
     const { bytes, errors: exportErrs } = exportObjectPool(project);
     if (exportErrs.length > 0) {
-      setExportErrors(exportErrs);
+      setExportErrors({ errors: exportErrs });
       return;
     }
     downloadFile(bytes, defaultIopFilename(project));
@@ -67,10 +69,27 @@ export function App() {
   function handleExportXml() {
     const { files, errors: exportErrs } = exportXml(project);
     if (exportErrs.length > 0) {
-      setExportErrors(exportErrs);
+      setExportErrors({ errors: exportErrs });
       return;
     }
     downloadFile(zipStore(files), defaultIopFilename(project).replace(/\.iop$/, '-vt2iso.zip'));
+  }
+
+  function handleNewProject() {
+    commit(() => initialProject); // undoable, like Open
+  }
+
+  function handleSaveProject() {
+    downloadFile(new TextEncoder().encode(serializeProject(project)), defaultIopFilename(project).replace(/\.iop$/, '.json'));
+  }
+
+  async function handleOpenProject(file: File) {
+    try {
+      const opened = parseProjectFile(await file.text());
+      commit(() => opened); // undoable, like any other edit
+    } catch (error) {
+      setExportErrors({ title: `Could not open ${file.name}`, errors: [(error as Error).message] });
+    }
   }
 
   return (
@@ -80,8 +99,13 @@ export function App() {
         onToolChange={setTool}
         zoom={viewport.zoom}
         onZoom={(zoom) => setViewport({ ...viewport, zoom: clamp(zoom, 0.25, 3) })}
-        onExportIop={handleExportIop}
-        onExportXml={handleExportXml}
+        fileActions={{
+          onNewProject: handleNewProject,
+          onOpenProject: handleOpenProject,
+          onSaveProject: handleSaveProject,
+          onExportIop: handleExportIop,
+          onExportXml: handleExportXml,
+        }}
         sidebarsVisible={sidebarsVisible}
         onToggleSidebars={() => setSidebarsVisible((v) => !v)}
         onUndo={undo}
@@ -156,7 +180,7 @@ export function App() {
         {errors.length ? `${errors.length} validation issue(s)` : 'Valid object pool draft'}
       </div>
       {exportErrors && (
-        <ExportErrorsDialog errors={exportErrors} onClose={() => setExportErrors(null)} />
+        <ExportErrorsDialog title={exportErrors.title} errors={exportErrors.errors} onClose={() => setExportErrors(null)} />
       )}
       {aboutVisible && (
         <AboutDialog onClose={() => setAboutVisible(false)} />

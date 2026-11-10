@@ -1,15 +1,15 @@
-import { BarChart, Circle, CircleDot, Crosshair, Download, FileCode, Eye, EyeOff, Gauge, Grid3X3, Hand, Hash, Hexagon, Image, Info, List, Minus, MousePointer2, MousePointerClick, MoveUpRight, Plus, Redo2, Square, TextCursorInput, ToggleLeft, Type, Undo2 } from 'lucide-react';
+import { Crosshair, Eye, EyeOff, Hand, Info, Minus, MousePointer2, Plus, Redo2, Undo2 } from 'lucide-react';
 import type { ToolMode } from '../domain/types';
 import { ToolButton } from '../ui/primitives';
+import { FileMenu, type FileMenuActions } from './FileMenu';
 import logoSrc from '../assets/logo.png';
 
-export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, onExportXml, sidebarsVisible, onToggleSidebars, onUndo, onRedo, canUndo, canRedo, vtVersion, onVtVersionChange, onAbout }: {
+export function TopToolbar({ fileActions, tool, onToolChange, zoom, onZoom, sidebarsVisible, onToggleSidebars, onUndo, onRedo, canUndo, canRedo, vtVersion, onVtVersionChange, onAbout }: {
   tool: ToolMode;
   onToolChange: (tool: ToolMode) => void;
   zoom: number;
   onZoom: (zoom: number) => void;
-  onExportIop: () => void;
-  onExportXml: () => void;
+  fileActions: FileMenuActions;
   sidebarsVisible: boolean;
   onToggleSidebars: () => void;
   onUndo: () => void;
@@ -32,23 +32,6 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, onEx
         <ToolButton active={tool === 'select'}           onClick={() => onToolChange('select')}           title="Select">          <MousePointer2 size={20} /></ToolButton>
         <ToolButton active={tool === 'pan'}              onClick={() => onToolChange('pan')}              title="Pan">             <Hand size={20} /></ToolButton>
         <span className="divider" />
-        <ToolButton active={tool === 'container'}        onClick={() => onToolChange('container')}        title="Container">       <Grid3X3 size={20} /></ToolButton>
-        <ToolButton active={tool === 'output-rectangle'} onClick={() => onToolChange('output-rectangle')} title="Output Rectangle"><Square size={20} /></ToolButton>
-        <ToolButton active={tool === 'output-line'}      onClick={() => onToolChange('output-line')}      title="Output Line">     <MoveUpRight size={20} /></ToolButton>
-        <ToolButton active={tool === 'output-polygon'}   onClick={() => onToolChange('output-polygon')}   title="Output Polygon">  <Hexagon size={20} /></ToolButton>
-        <ToolButton active={tool === 'output-ellipse'}   onClick={() => onToolChange('output-ellipse')}   title="Output Ellipse">  <Circle size={20} /></ToolButton>
-        <ToolButton active={tool === 'output-string'}    onClick={() => onToolChange('output-string')}    title="Output String">   <Type size={20} /></ToolButton>
-        <ToolButton active={tool === 'output-number'}    onClick={() => onToolChange('output-number')}    title="Output Number">   <Hash size={20} /></ToolButton>
-        <ToolButton active={tool === 'output-meter'}     onClick={() => onToolChange('output-meter')}     title="Output Meter">    <Gauge size={20} /></ToolButton>
-        <ToolButton active={tool === 'output-linear-bar-graph'} onClick={() => onToolChange('output-linear-bar-graph')} title="Linear Bar Graph"><BarChart size={20} /></ToolButton>
-        <ToolButton active={tool === 'output-arched-bar-graph'} onClick={() => onToolChange('output-arched-bar-graph')} title="Arched Bar Graph"><CircleDot size={20} /></ToolButton>
-        <ToolButton active={tool === 'button'}           onClick={() => onToolChange('button')}           title="Button">          <MousePointerClick size={20} /></ToolButton>
-        <ToolButton active={tool === 'input-boolean'}    onClick={() => onToolChange('input-boolean')}    title="Input Boolean">   <ToggleLeft size={20} /></ToolButton>
-        <ToolButton active={tool === 'input-string'}     onClick={() => onToolChange('input-string')}     title="Input String">    <TextCursorInput size={20} /></ToolButton>
-        <ToolButton active={tool === 'input-number'}    onClick={() => onToolChange('input-number')}     title="Input Number">    <Hash size={20} /></ToolButton>
-        <ToolButton active={tool === 'input-list'}      onClick={() => onToolChange('input-list')}       title="Input List">      <List size={20} /></ToolButton>
-        <ToolButton active={tool === 'picture-graphic'}  onClick={() => onToolChange('picture-graphic')}  title="Picture Graphic"> <Image size={20} /></ToolButton>
-        <ToolButton active={tool === 'object-pointer'}   onClick={() => onToolChange('object-pointer')}   title="Object Pointer">  <Crosshair size={20} /></ToolButton>
         <span className="divider" />
         <button type="button" className="zoom-btn" onClick={() => onZoom(zoom - 0.1)}><Minus size={17} /></button>
         <strong className="zoom-label">{Math.round(zoom * 100)}%</strong>
@@ -56,6 +39,7 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, onEx
         <button type="button" className="zoom-btn" onClick={() => onZoom(1)}><Crosshair size={17} /></button>
       </div>
       <div className="top-actions">
+        <FileMenu {...fileActions} />
         <label className="top-action-select" title="VT version target for export">
           <span>VT</span>
           <select value={String(vtVersion)} onChange={(e) => onVtVersionChange(Number(e.target.value) as 3 | 4)}>
@@ -63,8 +47,6 @@ export function TopToolbar({ tool, onToolChange, zoom, onZoom, onExportIop, onEx
             <option value="4">v4</option>
           </select>
         </label>
-        <button type="button" className="export export-iop" onClick={onExportIop}><Download size={18} />Export IOP</button>
-        <button type="button" className="export export-xml" onClick={onExportXml} title="vt2iso project (.xml + .vtp + images) for ISOAgLib"><FileCode size={18} />Export XML</button>
         <button type="button" className="about-btn" onClick={onAbout} title="About"><Info size={18} /></button>
       </div>
     </header>

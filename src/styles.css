@@ -213,15 +213,64 @@ button:focus-visible {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.top-actions .export-iop {
-  background: var(--accent-strong) !important;
-  border-color: var(--accent-strong) !important;
+.file-menu {
+  position: relative;
+}
+
+.top-actions .file-menu-trigger {
+  gap: 4px;
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
   color: white;
 }
 
-.top-actions .export-iop:hover {
-  background: var(--accent) !important;
-  border-color: var(--accent) !important;
+.top-actions .file-menu-trigger:hover,
+.top-actions .file-menu-trigger[aria-expanded="true"] {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.file-menu-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 230px;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: #222734;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.file-menu-panel hr {
+  margin: 4px 2px;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.top-actions .file-menu-item {
+  height: 32px;
+  justify-content: flex-start;
+  border-color: transparent;
+  background: transparent;
+  text-align: left;
+}
+
+.top-actions .file-menu-item:hover,
+.top-actions .file-menu-item:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: transparent;
+}
+
+.file-menu-item span {
+  flex: 1;
+}
+
+.file-menu-item small {
+  color: #94a3b8;
+  font-size: 11px;
 }
 
 .top-action-select {
